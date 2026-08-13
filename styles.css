@@ -2776,3 +2776,42 @@ body#page-mod-quiz-report .aigrader-container .aigrader-section-label::before {
     cursor: pointer !important;
     margin-left: 4px !important;
 }
+
+/* ============================================================
+   INACTIVE STUDENT NOTICE (v3.9.7)
+   Shown above the essay cards when submissions from suspended,
+   expired or unenrolled students are being withheld from the queue.
+   ============================================================ */
+.aigrader-inactive-notice {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 0 16px 0;
+    padding: 10px 14px;
+    background: var(--ag-info-light);
+    border: 1px solid var(--ag-info);
+    border-radius: 8px;
+    font-size: 0.875rem;
+    color: var(--ag-text-secondary);
+}
+
+.aigrader-inactive-notice-showing {
+    background: var(--ag-bg-muted);
+    border-color: var(--ag-border);
+}
+
+.aigrader-inactive-notice-text {
+    flex: 1 1 auto;
+}
+
+.aigrader-inactive-notice-link {
+    flex: 0 0 auto;
+    font-weight: 600;
+    color: var(--ag-primary);
+    text-decoration: underline;
+}
+
+.aigrader-inactive-notice-link:hover {
+    color: var(--ag-primary-hover);
+}

@@ -269,3 +269,11 @@ $string['filter_group_label'] = 'Filter by group:';
 $string['filter_all_groups'] = 'All groups';
 $string['filter_apply'] = 'Apply';
 $string['filter_clear_group'] = 'Clear group filter';
+
+// Inactive student filter (v3.9.7).
+$string['hide_inactive_students'] = 'Hide submissions from inactive students';
+$string['hide_inactive_students_desc'] = 'When enabled, essays awaiting grading are only shown for students with an active enrolment in the course. Submissions from suspended, expired and unenrolled students are hidden from the grading queue and from the AI Grader Dashboard block, with a notice showing how many are hidden. Nothing is deleted — staff with the "View suspended users" capability can still reveal them at any time. Recommended on sites with historical course data.';
+$string['inactive_hidden_notice'] = '{$a} submission(s) from students who are no longer active in this course are hidden.';
+$string['inactive_show_link'] = 'Show them';
+$string['inactive_hide_link'] = 'Hide them again';
+$string['inactive_showing_notice'] = 'Including submissions from students who are no longer active in this course.';

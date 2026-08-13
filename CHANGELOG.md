@@ -2,6 +2,40 @@
 
 All notable changes to this plugin will be documented in this file.
 
+## [3.9.7] - 2026-08-03
+
+### Added
+- **Inactive student filter**: submissions awaiting grading are now only listed for students
+  with an active enrolment in the course. Previously the queue included every attempt ever
+  made against the quiz, because attempt rows survive suspension and unenrolment — on sites
+  with historical data this buried current work under years of old submissions.
+  `render_essay_table()` now applies `get_enrolled_sql($coursecontext, '', 0, true)`, which
+  covers all four inactive cases in one place: suspended enrolments
+  (`user_enrolments.status`), expired or not-yet-started enrolment dates
+  (`timestart`/`timeend`), disabled enrolment methods (`enrol.status`), and users with no
+  enrolment row at all. Course context is used deliberately rather than module context, so
+  the filter does not interact with group mode or availability restrictions.
+- **Hidden-count notice**: when submissions are withheld, a notice bar above the essay cards
+  states how many. Staff holding `moodle/course:viewsuspendedusers` get a "Show them" link
+  (`?showinactive=1`) and a matching "Hide them again" link when inactive students are shown.
+  Hiding is a display filter only — no attempt or grading data is modified or deleted.
+- **New setting** `quiz_aigrader/hide_inactive_students` (checkbox, default on). Also read by
+  block_aigrader_dashboard 2.1.0, so one switch governs the whole suite. The default is
+  applied in code as well as in the admin tree, so the filter is active immediately on
+  upgrade without an admin visiting the settings page.
+
+### Changed
+- **Blank-answer detection unified**: the check that skips empty essays moved from an inline
+  `trim(strip_tags())` to the shared `answer_is_blank()` rule, which also decodes entities and
+  treats `&nbsp;` as empty. block_aigrader_dashboard 2.1.0 applies the equivalent test in SQL.
+  This resolves the long-standing discrepancy where the dashboard's ungraded total was higher
+  than the number of cards actually rendered on this page.
+
+### Notes
+- No database schema changes.
+- If every remaining submission belongs to an inactive student, the notice is shown alongside
+  the "all graded" state rather than the page appearing silently empty.
+
 ## [3.8.7] - 2026-04-23
 
 ### Fixed

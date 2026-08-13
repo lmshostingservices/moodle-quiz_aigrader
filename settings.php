@@ -118,6 +118,16 @@ if ($ADMIN->fulltree) {
         1
     ));
 
+    // v3.9.7: hides ungraded work from suspended / expired / unenrolled students.
+    // Read by both this plugin and block_aigrader_dashboard so one switch governs
+    // the whole suite. Default 1 — historical data is hidden out of the box.
+    $aigrader_page->add(new admin_setting_configcheckbox(
+        'quiz_aigrader/hide_inactive_students',
+        get_string('hide_inactive_students', 'quiz_aigrader'),
+        get_string('hide_inactive_students_desc', 'quiz_aigrader'),
+        1
+    ));
+
     $aigrader_page->add(new admin_setting_configtext(
         'quiz_aigrader/min_review_time',
         get_string('min_review_time', 'quiz_aigrader'),
