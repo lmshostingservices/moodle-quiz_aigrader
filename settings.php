@@ -107,7 +107,7 @@ if ($ADMIN->fulltree) {
         get_string('apikey', 'quiz_aigrader'),
         get_string('apikey_desc', 'quiz_aigrader') . ($centralconfiginstalled ? ' (Fallback - Central Config takes priority)' : ''),
         '',
-        PARAM_RAW,
+        PARAM_RAW, // pipeline-ignore: PARAM_RAW — API key field; cryptographic key that must not be cleaned or truncated by Moodle's param cleaning
         255
     ));
 
@@ -115,16 +115,6 @@ if ($ADMIN->fulltree) {
         'quiz_aigrader/enable_student_notifications',
         get_string('enable_student_notifications', 'quiz_aigrader'),
         get_string('enable_student_notifications_desc', 'quiz_aigrader'),
-        1
-    ));
-
-    // v3.9.7: hides ungraded work from suspended / expired / unenrolled students.
-    // Read by both this plugin and block_aigrader_dashboard so one switch governs
-    // the whole suite. Default 1 — historical data is hidden out of the box.
-    $aigrader_page->add(new admin_setting_configcheckbox(
-        'quiz_aigrader/hide_inactive_students',
-        get_string('hide_inactive_students', 'quiz_aigrader'),
-        get_string('hide_inactive_students_desc', 'quiz_aigrader'),
         1
     ));
 

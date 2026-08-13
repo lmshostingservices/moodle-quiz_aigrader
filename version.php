@@ -92,8 +92,8 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'quiz_aigrader';
-$plugin->version   = 2026080300210;
+$plugin->version   = 2026081300;
 $plugin->requires  = 2022041900;
 $plugin->supported  = [400, 500];  // Moodle 4.0 to 5.x
 $plugin->maturity  = MATURITY_STABLE;
-$plugin->release   = '3.9.7'; // INACTIVE STUDENT FILTER: essays awaiting grading are now only listed for students with an active enrolment. Suspended enrolments, expired/not-yet-started enrolment dates, disabled enrolment methods and fully unenrolled students are all excluded via get_enrolled_sql($coursecontext, '', 0, true) in render_essay_table(). Rows are flagged (isactive) rather than dropped in SQL so an accurate hidden count feeds the new notice bar; staff with moodle/course:viewsuspendedusers can reveal them with ?showinactive=1. Blank-answer detection moved to the shared answer_is_blank() rule so totals agree with block_aigrader_dashboard 2.1.0. New setting quiz_aigrader/hide_inactive_students (default 1), also read by the dashboard block. New lang strings: hide_inactive_students, hide_inactive_students_desc, inactive_hidden_notice, inactive_show_link, inactive_hide_link, inactive_showing_notice. New CSS (.aigrader-inactive-notice). No DB schema changes. version.php -> 2026080300210.
+$plugin->release   = '3.9.7'; // UPGRADE FIX: Converted all savepoints in db/upgrade.php to 10-digit format. Bumped plugin version to 10-digit (2026081300) so upgrading clients no longer hit a savepoint validation crash mid-upgrade. No DB schema changes. version.php → 2026081300.

@@ -129,39 +129,39 @@ function xmldb_quiz_aigrader_upgrade($oldversion) {
     }
 
     // v3.7.3: VERSION BUMP — Maintenance release. No DB changes.
-    if ($oldversion < 2026032200373) {
-        upgrade_plugin_savepoint(true, 2026032200373, 'quiz', 'aigrader');
+    if ($oldversion < 2026032200) {
+        upgrade_plugin_savepoint(true, 2026032200, 'quiz', 'aigrader');
     }
 
     // v3.7.4: SETTINGS FIX — settings.php self-registers admin_settingpage. No DB changes.
-    if ($oldversion < 2026032200374) {
-        upgrade_plugin_savepoint(true, 2026032200374, 'quiz', 'aigrader');
+    if ($oldversion < 2026032200) {
+        upgrade_plugin_savepoint(true, 2026032200, 'quiz', 'aigrader');
     }
 
     // v3.7.5: SETTINGS FIX — Robust parent category detection for settings page. No DB changes.
-    if ($oldversion < 2026032200375) {
-        upgrade_plugin_savepoint(true, 2026032200375, 'quiz', 'aigrader');
+    if ($oldversion < 2026032200) {
+        upgrade_plugin_savepoint(true, 2026032200, 'quiz', 'aigrader');
     }
 
     // v3.7.6: SETTINGS FIX — Section ID must be 'quiz_aigrader' to match get_settings_section_name(). No DB changes.
-    if ($oldversion < 2026032200376) {
-        upgrade_plugin_savepoint(true, 2026032200376, 'quiz', 'aigrader');
+    if ($oldversion < 2026032200) {
+        upgrade_plugin_savepoint(true, 2026032200, 'quiz', 'aigrader');
     }
 
     // v3.7.7: SETTINGS FIX — Bulletproof self-registration, null $settings to prevent double-add. No DB changes.
-    if ($oldversion < 2026032200377) {
-        upgrade_plugin_savepoint(true, 2026032200377, 'quiz', 'aigrader');
+    if ($oldversion < 2026032200) {
+        upgrade_plugin_savepoint(true, 2026032200, 'quiz', 'aigrader');
     }
 
     // v3.7.8: REPORT FIX — get_grader_totals() now accepts $graderid filter. Stat cards update when grader selected.
-    if ($oldversion < 2026032200378) {
-        upgrade_plugin_savepoint(true, 2026032200378, 'quiz', 'aigrader');
+    if ($oldversion < 2026032200) {
+        upgrade_plugin_savepoint(true, 2026032200, 'quiz', 'aigrader');
     }
 
     // v3.8.0: CRITICAL FIX — Approve & Save now works in mixed-question quizzes.
     // method_exists() guard prevents fatal on question_state_finished::requires_grading().
-    if ($oldversion < 2026032500380) {
-        upgrade_plugin_savepoint(true, 2026032500380, 'quiz', 'aigrader');
+    if ($oldversion < 2026032500) {
+        upgrade_plugin_savepoint(true, 2026032500, 'quiz', 'aigrader');
     }
 
     // v3.8.1 - BUG FIX: Student notification email was sent after every single Approve click
@@ -175,18 +175,18 @@ function xmldb_quiz_aigrader_upgrade($oldversion) {
     //   one row per (qubaid, slot) only when the teacher clicks Approve & Save (upsert, no
     //   duplicates). We count logged slots vs total is_manual_graded() slots in the usage.
     //   Notification fires only when every manually-gradeable slot has a log entry.
-    //   No DB schema changes. PHP only (ajax.php). version.php → 2026041700381.
-    if ($oldversion < 2026041700381) {
-        upgrade_plugin_savepoint(true, 2026041700381, 'quiz', 'aigrader');
+    //   No DB schema changes. PHP only (ajax.php). version.php → 2026041700.
+    if ($oldversion < 2026041700) {
+        upgrade_plugin_savepoint(true, 2026041700, 'quiz', 'aigrader');
     }
 
     // v3.8.2 - BUMP: Consolidation release. Server-side fix: maxMark Zod schema in
     //   server/routes.ts updated to accept 0 (min(0)) for ungraded questions sent by
     //   Moodle (previously min(1) caused /api/grade-essay to reject requests with
     //   "Number must be greater than 0" when maxMark was 0). No DB schema changes.
-    //   No PHP or AMD changes. version.php → 2026041700382.
-    if ($oldversion < 2026041700382) {
-        upgrade_plugin_savepoint(true, 2026041700382, 'quiz', 'aigrader');
+    //   No PHP or AMD changes. version.php → 2026041700.
+    if ($oldversion < 2026041700) {
+        upgrade_plugin_savepoint(true, 2026041700, 'quiz', 'aigrader');
     }
 
     // v3.8.3 - BUG FIX: Approve & Save to Gradebook button now works on all Moodle versions.
@@ -194,9 +194,9 @@ function xmldb_quiz_aigrader_upgrade($oldversion) {
     //   added function_exists() guard with quiz_update_grades() fallback. Also widened
     //   inner approve catch to \Throwable so PHP Errors are caught and returned as
     //   descriptive ok:false messages instead of bubbling silently. No DB schema changes.
-    //   PHP only (ajax.php). version.php → 2026041700383.
-    if ($oldversion < 2026041700383) {
-        upgrade_plugin_savepoint(true, 2026041700383, 'quiz', 'aigrader');
+    //   PHP only (ajax.php). version.php → 2026041700.
+    if ($oldversion < 2026041700) {
+        upgrade_plugin_savepoint(true, 2026041700, 'quiz', 'aigrader');
     }
 
     // v3.8.4 - BUG FIX: 'Approve & Save to Gradebook' intermittent failure.
@@ -207,21 +207,21 @@ function xmldb_quiz_aigrader_upgrade($oldversion) {
     //   Root cause 2: no transaction around sumgrades update — wrapped update_record in
     //   delegated transaction for atomicity.
     //   Root cause 3: approve .fail() now surfaces xhr.responseJSON.message.
-    //   AMD rebuilt. PHP (ajax.php) changed. No DB schema changes. version.php → 2026041700384.
-    if ($oldversion < 2026041700384) {
-        upgrade_plugin_savepoint(true, 2026041700384, 'quiz', 'aigrader');
+    //   AMD rebuilt. PHP (ajax.php) changed. No DB schema changes. version.php → 2026041700.
+    if ($oldversion < 2026041700) {
+        upgrade_plugin_savepoint(true, 2026041700, 'quiz', 'aigrader');
     }
 
     // v3.8.5 - MAINTENANCE: AMD build sync — aigrader.min.js was a 1-line stale
     //   placeholder; src/aigrader.js is 1488 lines. Resynced build/aigrader.min.js
     //   to match src and build/aigrader.js (now triple-match). No PHP/DB/logic
-    //   changes. version.php → 2026042200385.
-    if ($oldversion < 2026042200385) {
-        upgrade_plugin_savepoint(true, 2026042200385, 'quiz', 'aigrader');
+    //   changes. version.php → 2026042200.
+    if ($oldversion < 2026042200) {
+        upgrade_plugin_savepoint(true, 2026042200, 'quiz', 'aigrader');
     }
     // v3.8.6: AMD ENCODING FIX: All non-ASCII characters (em dashes, arrows, box-drawing chars, ellipsis, bullets, emoji, accented Latin) scrubbed from all AMD JS files (amd/src, amd/build, amd/build/*.min.js). Root cause of Moodle primary/secondary navigation menus disappearing site-wide: non-ASCII bytes in any installed plugin's AMD file cause a SyntaxError inside RequireJS's first.js bundle, throwing "No define call for core/first" and aborting the entire AMD module chain. No PHP, DB schema, or functional changes in this release.
-    if ($oldversion < 2026042200386) {
-        upgrade_plugin_savepoint(true, 2026042200386, 'quiz', 'aigrader');
+    if ($oldversion < 2026042200) {
+        upgrade_plugin_savepoint(true, 2026042200, 'quiz', 'aigrader');
     }
 
     // v3.8.7: AMD REGEX FIX: Invalid regular expression in aigrader.js/aigrader.min.js
@@ -234,11 +234,11 @@ function xmldb_quiz_aigrader_upgrade($oldversion) {
     //   Fix: escaped brackets to \[chart-down\], \[thumbs-up\], \[tip\] so they match
     //   the literal bracket notation. Strip regexes updated to /^(\[icon\]|\s)+/ pattern.
     //   No PHP, DB schema, or functional changes.
-    if ($oldversion < 2026042300387) {
-        upgrade_plugin_savepoint(true, 2026042300387, 'quiz', 'aigrader');
+    if ($oldversion < 2026042300) {
+        upgrade_plugin_savepoint(true, 2026042300, 'quiz', 'aigrader');
     }
 
-    if ($oldversion < 2026050500389) {
+    if ($oldversion < 2026050500) {
         // v3.8.9: FIX-QUIZ-SAVE-GRADE-DEPRECATION (MDL-76897).
         // ajax.php was guarding with function_exists('quiz_save_best_grade') — this returns
         // TRUE on Moodle 4.2+ (the function still exists but is deprecated), causing the
@@ -246,10 +246,10 @@ function xmldb_quiz_aigrader_upgrade($oldversion) {
         // \mod_quiz\grade_calculator::recompute_final_grade — TRUE on 4.2+, so new API
         // is used; FALSE on older Moodle, so legacy quiz_save_best_grade() is called.
         // Works on all Moodle versions. No DB schema changes.
-        upgrade_plugin_savepoint(true, 2026050500389, 'quiz', 'aigrader');
+        upgrade_plugin_savepoint(true, 2026050500, 'quiz', 'aigrader');
     }
 
-    if ($oldversion < 2026070300391) {
+    if ($oldversion < 2026070300) {
         // v3.9.1: GROUP FILTER — Added group selector dropdown to the AI Essay Grader
         // report page. Trainers can pick any course group from a dropdown above the essay
         // cards; only submissions from students in that group are loaded via a JOIN on
@@ -265,10 +265,10 @@ function xmldb_quiz_aigrader_upgrade($oldversion) {
         } elseif (function_exists('opcache_reset')) {
             opcache_reset();
         }
-        upgrade_plugin_savepoint(true, 2026070300391, 'quiz', 'aigrader');
+        upgrade_plugin_savepoint(true, 2026070300, 'quiz', 'aigrader');
     }
 
-    if ($oldversion < 2026072300200) {
+    if ($oldversion < 2026072300) {
         // FIX-API-DOMAIN: Updated all API endpoint URLs from lms-labs.com to lms-labs.com.
         // lms-labs.com has no DNS resolution from Moodle server side; lms-labs.com is the
         // correct working domain. All ajax.php, api_client, unlock_verifier, lib.php calls updated.
@@ -283,10 +283,10 @@ function xmldb_quiz_aigrader_upgrade($oldversion) {
         } elseif (function_exists('opcache_reset')) {
             opcache_reset();
         }
-        upgrade_plugin_savepoint(true, 2026072300200, 'quiz', 'aigrader');
+        upgrade_plugin_savepoint(true, 2026072300, 'quiz', 'aigrader');
     }
 
-    if ($oldversion < 2026072300201) {
+    if ($oldversion < 2026072300) {
         // FIX-API-DOMAIN: Reverted API endpoint to lms-labs.com (correct domain).
         // essaygraderai.app was the original single-plugin domain; lms-labs.com is correct.
         if (function_exists('opcache_invalidate')) {
@@ -296,10 +296,10 @@ function xmldb_quiz_aigrader_upgrade($oldversion) {
                 if (file_exists($_full)) { opcache_invalidate($_full, true); }
             }
         } elseif (function_exists('opcache_reset')) { opcache_reset(); }
-        upgrade_plugin_savepoint(true, 2026072300201, 'quiz', 'aigrader');
+        upgrade_plugin_savepoint(true, 2026072300, 'quiz', 'aigrader');
     }
 
-    if ($oldversion < 2026072300202) {
+    if ($oldversion < 2026072300) {
         // Domain update: lms-labs.com → lms-labs.com
         if (function_exists('opcache_invalidate')) {
             $_pluginDir = realpath(__DIR__ . '/..');
@@ -308,7 +308,13 @@ function xmldb_quiz_aigrader_upgrade($oldversion) {
                 if (file_exists($_full)) { opcache_invalidate($_full, true); }
             }
         } elseif (function_exists('opcache_reset')) { opcache_reset(); }
-        upgrade_plugin_savepoint(true, 2026072300202, 'quiz', 'aigrader');
+        upgrade_plugin_savepoint(true, 2026072300, 'quiz', 'aigrader');
+    }
+
+    if ($oldversion < 2026081300) {
+        // v3.9.7: UPGRADE FIX — Converted all savepoints to 10-digit format so upgrading
+        // clients no longer hit a savepoint validation crash. No DB schema changes.
+        upgrade_plugin_savepoint(true, 2026081300, 'quiz', 'aigrader');
     }
 
     return true;

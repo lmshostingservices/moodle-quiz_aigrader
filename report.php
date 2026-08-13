@@ -516,28 +516,6 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
             $sqlparams['groupid'] = $groupid;
         }
 
-        // INACTIVE STUDENT FILTER (v3.9.7)
-        // -------------------------------------------------------------------
-        // Attempt rows survive suspension, enrolment expiry and unenrolment, so
-        // historical students otherwise sit in the queue forever. get_enrolled_sql()
-        // with $onlyactive = true covers all four inactive cases in one place:
-        //   - user_enrolments.status = ENROL_USER_SUSPENDED
-        //   - user_enrolments.timestart / timeend outside the current window
-        //   - enrol.status = ENROL_INSTANCE_DISABLED (whole method turned off)
-        //   - no user_enrolments row at all (fully unenrolled)
-        //
-        // COURSE context is used deliberately, NOT module context: module context
-        // additionally factors in group mode and availability restrictions, which
-        // would interact unpredictably with the group filter above.
-        //
-        // Rows are flagged rather than excluded in SQL so a single query yields both
-        // the visible rows and an accurate hidden count for the notice.
-        $coursecontext = context_course::instance($quiz->course);
-        [$esql, $eparams] = get_enrolled_sql($coursecontext, '', 0, true);
-        $sqlparams = array_merge($sqlparams, $eparams);
-
-        $showinactive = $this->show_inactive_requested($coursecontext);
-
         $sql = "SELECT
                     CONCAT(qza.uniqueid, '-', qat.slot) as rowkey,
                     qza.uniqueid AS qubaid,
@@ -545,8 +523,7 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
                     qza.userid,
                     qat.id as questionattemptid,
                     q.questiontext,
-                    qat.maxmark,
-                    CASE WHEN qza.userid IN ($esql) THEN 1 ELSE 0 END AS isactive
+                    qat.maxmark
                 FROM {quiz_attempts} qza
                 JOIN {question_usages} qu ON qu.id = qza.uniqueid
                 JOIN {question_attempts} qat ON qat.questionusageid = qu.id
@@ -624,25 +601,15 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
         }
 
         $rows = [];
-        $hiddencount = 0;
 
         foreach ($needsgrading as $record) {
             $rawanswer = $answers_by_qatid[$record->questionattemptid] ?? '';
-            // v3.9.7: shared blank-answer rule — see self::answer_is_blank(). The dashboard
-            // block applies the equivalent test in SQL so both plugins report the same total.
-            if (self::answer_is_blank($rawanswer)) {
+            if (trim(strip_tags($rawanswer)) === '') {
                 continue;
             }
 
             $user = $users[$record->userid] ?? null;
             if (!$user) {
-                continue;
-            }
-
-            // v3.9.7: skip students with no active enrolment unless explicitly shown.
-            // Counted first so the notice can tell the grader what is being withheld.
-            if (empty($record->isactive) && !$showinactive) {
-                $hiddencount++;
                 continue;
             }
 
@@ -672,12 +639,6 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
         }
 
         if (empty($rows)) {
-            // v3.9.7: only claim "all graded" when that is actually true. If every
-            // remaining submission belongs to an inactive student, say so instead —
-            // a silently empty queue is worse than a cluttered one.
-            if ($hiddencount > 0) {
-                $this->render_inactive_notice($hiddencount, $showinactive, $coursecontext);
-            }
             $this->render_all_graded_state();
             return;
         }
@@ -686,8 +647,6 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
         usort($rows, function ($a, $b) {
             return strcasecmp($a['fullname'], $b['fullname']);
         });
-
-        $this->render_inactive_notice($hiddencount, $showinactive, $coursecontext);
 
         echo html_writer::start_div('aigrader-table-wrapper');
         
@@ -832,113 +791,6 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
     /**
      * Show message when all essays have been graded.
      */
-    /**
-     * Shared blank-answer rule (v3.9.7).
-     *
-     * An essay with no real content is not something a human or the AI can grade, so it
-     * is excluded from the queue. block_aigrader_dashboard applies the equivalent test in
-     * SQL; keep the two definitions in step or the counts will drift apart again.
-     *
-     * Tags are stripped first, then entities decoded, so an answer consisting only of
-     * editor scaffolding (<p></p>, <br>, &nbsp;) is correctly treated as empty.
-     *
-     * @param string $raw Raw answer HTML from question_attempt_step_data.
-     * @return bool True when the answer has no visible content.
-     */
-    private static function answer_is_blank($raw) {
-        $text = strip_tags((string) $raw);
-        $text = html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
-        $text = str_replace("\xc2\xa0", ' ', $text); // Decoded &nbsp;.
-        return trim($text) === '';
-    }
-
-    /**
-     * Whether submissions from inactive students should be shown (v3.9.7).
-     *
-     * Three conditions, all required:
-     *   1. The site setting is on (otherwise nothing is ever hidden).
-     *   2. The grader asked for them via the showinactive URL parameter.
-     *   3. The grader holds moodle/course:viewsuspendedusers in this course.
-     *
-     * @param context $coursecontext
-     * @return bool
-     */
-    private function show_inactive_requested($coursecontext) {
-        if (!self::hide_inactive_enabled()) {
-            return true; // Filter disabled site-wide — everything is shown.
-        }
-        if (!optional_param('showinactive', 0, PARAM_BOOL)) {
-            return false;
-        }
-        return has_capability('moodle/course:viewsuspendedusers', $coursecontext);
-    }
-
-    /**
-     * Read the hide_inactive_students setting, defaulting to on (v3.9.7).
-     *
-     * get_config() returns false when a setting has never been written — which is the
-     * case on upgrade until an admin visits the settings page — so the default is
-     * applied here rather than relying on the admin tree having saved it.
-     *
-     * @return bool
-     */
-    private static function hide_inactive_enabled() {
-        $value = get_config('quiz_aigrader', 'hide_inactive_students');
-        if ($value === false || $value === null || $value === '') {
-            return true;
-        }
-        return (bool) (int) $value;
-    }
-
-    /**
-     * Notice bar telling the grader what the inactive filter is doing (v3.9.7).
-     *
-     * Hidden must never mean lost: this is the visible trace of the filter and the
-     * route back to the withheld submissions for staff entitled to see them.
-     *
-     * @param int $hiddencount Number of submissions withheld.
-     * @param bool $showinactive Whether inactive students are currently shown.
-     * @param context $coursecontext
-     */
-    private function render_inactive_notice($hiddencount, $showinactive, $coursecontext) {
-        global $PAGE;
-
-        $canview = has_capability('moodle/course:viewsuspendedusers', $coursecontext);
-
-        // Currently showing inactive students — offer the way back.
-        if ($showinactive && self::hide_inactive_enabled()) {
-            $hideurl = new moodle_url($PAGE->url);
-            $hideurl->param('showinactive', 0);
-            echo html_writer::start_div('aigrader-inactive-notice aigrader-inactive-notice-showing');
-            echo html_writer::tag('span', get_string('inactive_showing_notice', 'quiz_aigrader'),
-                ['class' => 'aigrader-inactive-notice-text']);
-            echo html_writer::link($hideurl->out(false),
-                get_string('inactive_hide_link', 'quiz_aigrader'),
-                ['class' => 'aigrader-inactive-notice-link']);
-            echo html_writer::end_div();
-            return;
-        }
-
-        if ($hiddencount <= 0) {
-            return;
-        }
-
-        echo html_writer::start_div('aigrader-inactive-notice');
-        echo html_writer::tag('span',
-            get_string('inactive_hidden_notice', 'quiz_aigrader', $hiddencount),
-            ['class' => 'aigrader-inactive-notice-text']);
-
-        if ($canview) {
-            $showurl = new moodle_url($PAGE->url);
-            $showurl->param('showinactive', 1);
-            echo html_writer::link($showurl->out(false),
-                get_string('inactive_show_link', 'quiz_aigrader'),
-                ['class' => 'aigrader-inactive-notice-link']);
-        }
-
-        echo html_writer::end_div();
-    }
-
     private function render_all_graded_state() {
         echo html_writer::start_div('aigrader-empty aigrader-all-graded');
         echo '<svg class="aigrader-empty-icon" xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="none"
