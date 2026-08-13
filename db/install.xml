@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<XMLDB PATH="mod/quiz/report/aigrader/db" VERSION="20251228" COMMENT="AI Grader quiz report plugin tables">
+  <TABLES>
+    <TABLE NAME="quiz_aigrader_attempt_ctx" COMMENT="Stores attempt context for consistent grading across attempts">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="quizid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="questionid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Question ID being graded"/>
+        <FIELD NAME="slot" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="attemptnum" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="1" COMMENT="Which attempt number"/>
+        <FIELD NAME="criteriamet" TYPE="text" NOTNULL="false" COMMENT="JSON array of criterion IDs that were met"/>
+        <FIELD NAME="feedbacksummary" TYPE="text" NOTNULL="false" COMMENT="Summary of last feedback for consistency"/>
+        <FIELD NAME="lastgrade" TYPE="number" LENGTH="10" DECIMALS="2" NOTNULL="false" COMMENT="Last grade awarded (percentage)"/>
+        <FIELD NAME="humanreview" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" COMMENT="Flagged for human review"/>
+        <FIELD NAME="autolocked" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" COMMENT="Auto-locked to full marks"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="quizid" TYPE="foreign" FIELDS="quizid" REFTABLE="quiz" REFFIELDS="id"/>
+        <KEY NAME="userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="quiz_user_question_slot" UNIQUE="true" FIELDS="quizid, userid, questionid, slot"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="quiz_aigrader_grading_logs" COMMENT="Logs each essay grading event for time tracking">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="quizid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Quiz that was graded"/>
+        <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Course containing the quiz"/>
+        <FIELD NAME="graderid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="User who approved the grade"/>
+        <FIELD NAME="qubaid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Question usage by activity ID"/>
+        <FIELD NAME="slot" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Question slot number"/>
+        <FIELD NAME="timegraded" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Timestamp when grade was approved"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="quizid" TYPE="foreign" FIELDS="quizid" REFTABLE="quiz" REFFIELDS="id"/>
+        <KEY NAME="courseid" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
+        <KEY NAME="graderid" TYPE="foreign" FIELDS="graderid" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="graderid_timegraded" UNIQUE="false" FIELDS="graderid, timegraded"/>
+        <INDEX NAME="courseid_timegraded" UNIQUE="false" FIELDS="courseid, timegraded"/>
+        <INDEX NAME="quizid_qubaid_slot" UNIQUE="true" FIELDS="quizid, qubaid, slot"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="quiz_aigrader_schedules" COMMENT="Stores scheduled report email configurations">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="User who created the schedule"/>
+        <FIELD NAME="frequency" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="weekly" COMMENT="daily, weekly, or monthly"/>
+        <FIELD NAME="recipients" TYPE="text" NOTNULL="false" COMMENT="Comma-separated email addresses to CC"/>
+        <FIELD NAME="lastrun" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="Timestamp of last email sent"/>
+        <FIELD NAME="nextrun" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="Timestamp of next scheduled run"/>
+        <FIELD NAME="enabled" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" COMMENT="Whether schedule is active"/>
+        <FIELD NAME="format" TYPE="char" LENGTH="10" NOTNULL="true" DEFAULT="excel" COMMENT="excel or pdf"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="enabled_nextrun" UNIQUE="false" FIELDS="enabled, nextrun"/>
+      </INDEXES>
+    </TABLE>
+  </TABLES>
+</XMLDB>
