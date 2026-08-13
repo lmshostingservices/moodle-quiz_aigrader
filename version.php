@@ -92,8 +92,8 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'quiz_aigrader';
-$plugin->version   = 2026081300;
+$plugin->version   = 2026080300;
 $plugin->requires  = 2022041900;
 $plugin->supported  = [400, 500];  // Moodle 4.0 to 5.x
 $plugin->maturity  = MATURITY_STABLE;
-$plugin->release   = '3.9.7'; // UPGRADE FIX: Converted all savepoints in db/upgrade.php to 10-digit format. Bumped plugin version to 10-digit (2026081300) so upgrading clients no longer hit a savepoint validation crash mid-upgrade. No DB schema changes. version.php → 2026081300.
+$plugin->release   = '3.9.7'; // UPGRADE FIX: Converted all savepoints in db/upgrade.php to 10-digit format. Coordination stamp: aligned to 10-digit target 2026080300 to match wombatlms server reset so upgrading clients no longer hit a savepoint validation crash mid-upgrade. No DB schema changes. version.php → 2026080300.

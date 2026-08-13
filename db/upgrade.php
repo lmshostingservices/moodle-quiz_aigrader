@@ -311,11 +311,35 @@ function xmldb_quiz_aigrader_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026072300, 'quiz', 'aigrader');
     }
 
-    if ($oldversion < 2026081300) {
+    if ($oldversion < 2026080300) {
         // v3.9.7: UPGRADE FIX — Converted all savepoints to 10-digit format so upgrading
         // clients no longer hit a savepoint validation crash. No DB schema changes.
-        upgrade_plugin_savepoint(true, 2026081300, 'quiz', 'aigrader');
+        upgrade_plugin_savepoint(true, 2026080300, 'quiz', 'aigrader');
     }
+
+    // ── 13-digit → 10-digit DOWNGRADE BLOCK (DB RECOVERY REQUIRED) ──────────
+    // Sites that ran the 13-digit promoted build (2026080300210) cannot upgrade
+    // directly via Moodle's plugin installer.  Moodle's core upgrade dispatcher
+    // compares $plugin->version (2026080300) against the stored version in
+    // mdl_config_plugins.  Because 2026080300 < 2026080300210 numerically, core
+    // interprets the install as a downgrade and aborts BEFORE calling this
+    // function.  The upgrade function is never reached.
+    //
+    // Recovery procedure (run on the Moodle server before installing the ZIP):
+    //   1.  Reset the stored version to the previous safe 10-digit checkpoint:
+    //         UPDATE mdl_config_plugins
+    //         SET    value = '2026072300'
+    //         WHERE  plugin = 'quiz_aigrader' AND name = 'version';
+    //   2.  Install the new quiz_aigrader ZIP through Site admin → Plugins.
+    //   3.  Run the Moodle upgrade:
+    //         php admin/cli/upgrade.php --non-interactive
+    //       Moodle now sees 2026072300 < 2026080300 (upgrade, not downgrade),
+    //       calls xmldb_quiz_aigrader_upgrade(2026072300), which executes the
+    //       final savepoint block and returns true cleanly.
+    //   4.  Verify plugin version shows 2026080300 in Site admin → Plugins.
+    //
+    // See also: db/fix_13digit_version.php (CLI helper that runs step 1 above).
+    // ─────────────────────────────────────────────────────────────────────────
 
     return true;
 }
