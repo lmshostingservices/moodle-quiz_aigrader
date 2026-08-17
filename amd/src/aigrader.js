@@ -9,7 +9,7 @@
  *
  * @module     quiz_aigrader/aigrader
  */
-define(['jquery', 'core/str', 'core/notification'], function($, Str, Notification) {
+define(['jquery', 'core/str', 'core/notification'], function ($, Str, Notification) {
 
     let config = {};
     let strings = {};
@@ -75,7 +75,7 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
         $('.aigrader-header').after(html);
 
         setTimeout(() => {
-            $('.aigrader-alert').fadeOut(300, function() {
+            $('.aigrader-alert').fadeOut(300, function () {
                 $(this).remove();
             });
         }, 4000);
@@ -677,7 +677,7 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                 const slot = $btn.data('slot');
 
                 // Grade this essay
-                gradeOneAsync(qubaid, slot, $btn, function() {
+                gradeOneAsync(qubaid, slot, $btn, function () {
                     completed++;
                     activeRequests--;
                     showLoading(true, `${strings.grading} ${completed}/${total}`);
@@ -879,7 +879,7 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
     function hideGradedCard(id) {
         const $card = $(`.aigrader-card[data-rowid="${id}"]`);
         if ($card.length) {
-            $card.fadeOut(500, function() {
+            $card.fadeOut(500, function () {
                 $(this).remove();
                 // Update the essay count after removal
                 updateEssayCount();
@@ -1201,14 +1201,14 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
     function registerHandlers() {
         $(document).on('click', '#aigrader-refresh-btn', fetchCredits);
 
-        $(document).on('click', '.aigrader-grade-btn', function() {
+        $(document).on('click', '.aigrader-grade-btn', function () {
             gradeOne($(this).data('qubaid'), $(this).data('slot'), $(this));
         });
 
         $(document).on('click', '#aigrader-gradeall-btn', gradeAll);
         
 
-        $(document).on('click', '.aigrader-answer-toggle', function() {
+        $(document).on('click', '.aigrader-answer-toggle', function () {
             // Find either .aigrader-answer or .aigrader-question (both can be truncated)
             let $txt = $(this).siblings('.aigrader-answer');
             if ($txt.length === 0) {
@@ -1227,11 +1227,11 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
 
         // Search handler - works with new card-based layout
         // Searches student name, question text, and answer content
-        $(document).on('input', '#aigrader-search', function() {
+        $(document).on('input', '#aigrader-search', function () {
             const searchTerm = $(this).val().toLowerCase().trim();
             const $cards = $('.aigrader-card');
             
-            $cards.each(function() {
+            $cards.each(function () {
                 const $card = $(this);
                 const studentName = $card.data('studentname') || '';
                 const questionText = $card.data('questiontext') || '';
@@ -1255,13 +1255,13 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
         });
 
         // Document section toggle
-        $(document).on('click', '#aigrader-documents-header, #aigrader-documents-toggle', function(e) {
+        $(document).on('click', '#aigrader-documents-header, #aigrader-documents-toggle', function (e) {
             e.stopPropagation();
             $('#aigrader-documents').toggleClass('is-collapsed');
         });
 
         // Document upload handler
-        $(document).on('change', '#aigrader-doc-input', function() {
+        $(document).on('change', '#aigrader-doc-input', function () {
             const file = this.files[0];
             if (file) {
                 uploadDocument(file);
@@ -1270,20 +1270,20 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
         });
 
         // Document delete handler
-        $(document).on('click', '.aigrader-doc-delete', function(e) {
+        $(document).on('click', '.aigrader-doc-delete', function (e) {
             e.stopPropagation();
             const docId = $(this).data('docid');
             deleteDocument(docId);
         });
 
         // Auto-resize feedback textarea as user types
-        $(document).on('input', '.aigrader-feedback-edit', function() {
+        $(document).on('input', '.aigrader-feedback-edit', function () {
             this.style.height = 'auto';
             this.style.height = (this.scrollHeight + 4) + 'px';
         });
 
         // Approve grade handler
-        $(document).on('click', '.aigrader-approve-btn', function(e) {
+        $(document).on('click', '.aigrader-approve-btn', function (e) {
             e.preventDefault();
             const qubaid = $(this).data('qubaid');
             const slot = $(this).data('slot');
@@ -1292,7 +1292,7 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
         });
 
         // Toggle edit section (for pending approval feedback)
-        $(document).on('click', '.aigrader-toggle-edit-btn', function(e) {
+        $(document).on('click', '.aigrader-toggle-edit-btn', function (e) {
             e.preventDefault();
             const id = $(this).data('id');
             const $editSection = $('#edit-section-' + id);
@@ -1320,7 +1320,7 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
         });
 
         // Update preview button handler
-        $(document).on('click', '.aigrader-update-preview-btn', function(e) {
+        $(document).on('click', '.aigrader-update-preview-btn', function (e) {
             e.preventDefault();
             const id = $(this).data('id');
             const rawText = $('#feedback-edit-' + id).val();
@@ -1329,13 +1329,13 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
         });
 
         // Instructions section toggle
-        $(document).on('click', '#aigrader-instructions-toggle', function(e) {
+        $(document).on('click', '#aigrader-instructions-toggle', function (e) {
             e.stopPropagation();
             $('.aigrader-instructions-section').toggleClass('is-collapsed');
         });
 
         // Previous attempt toggle (collapsible section for multi-attempt context)
-        $(document).on('click', '.aigrader-previous-toggle', function(e) {
+        $(document).on('click', '.aigrader-previous-toggle', function (e) {
             e.preventDefault();
             e.stopPropagation();
             const $toggle = $(this);
@@ -1355,26 +1355,26 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
         });
 
         // Save instructions handler
-        $(document).on('click', '#aigrader-save-instructions', function(e) {
+        $(document).on('click', '#aigrader-save-instructions', function (e) {
             e.preventDefault();
             saveSettings();
         });
 
         // Language dropdown change handler - update config.language immediately (using native JS)
-        $(document).on('change', '#aigrader-feedback-language', function() {
+        $(document).on('change', '#aigrader-feedback-language', function () {
             const langSelect = document.getElementById('aigrader-feedback-language');
             config.language = langSelect ? langSelect.value : 'en';
             log('Language changed to:', config.language);
         });
 
         // Grading stats toggle
-        $(document).on('click', '#aigrader-stats-toggle', function() {
+        $(document).on('click', '#aigrader-stats-toggle', function () {
             $('#aigrader-stats-content').slideToggle(200);
             $(this).find('svg').toggleClass('aigrader-chevron-rotated');
         });
 
         // Grading stats apply filters
-        $(document).on('click', '#aigrader-stats-apply', function() {
+        $(document).on('click', '#aigrader-stats-apply', function () {
             loadGradingStats();
         });
     }
@@ -1397,7 +1397,7 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
             datefrom: datefrom ? Math.floor(new Date(datefrom).getTime() / 1000) : 0,
             dateto: dateto ? Math.floor(new Date(dateto + 'T23:59:59').getTime() / 1000) : 0
         }, null, 'json')
-        .done(function(resp) {
+        .done(function (resp) {
             if (resp.ok) {
                 $('#aigrader-stat-essays').text(resp.totalEssays);
                 $('#aigrader-stat-time').text(resp.totalTimeFormatted);
@@ -1406,10 +1406,10 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
 
                 // Populate filter dropdowns (only once)
                 if ($('#aigrader-filter-course option').length <= 1 && resp.filterOptions) {
-                    resp.filterOptions.courses.forEach(function(c) {
+                    resp.filterOptions.courses.forEach(function (c) {
                         $('#aigrader-filter-course').append('<option value="' + c.id + '">' + c.shortname + '</option>');
                     });
-                    resp.filterOptions.graders.forEach(function(g) {
+                    resp.filterOptions.graders.forEach(function (g) {
                         $('#aigrader-filter-grader').append('<option value="' + g.id + '">' + g.name + '</option>');
                     });
                 }
@@ -1420,19 +1420,19 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                 if (!resp.graders || resp.graders.length === 0) {
                     tbody.append('<tr><td colspan="4" class="aigrader-stats-empty">No grading data</td></tr>');
                 } else {
-                    resp.graders.forEach(function(g) {
+                    resp.graders.forEach(function (g) {
                         tbody.append('<tr><td>' + g.name + '</td><td>' + g.essays + '</td><td>' + g.timeFormatted + '</td><td>' + g.avgSecondsPerEssay + 's</td></tr>');
                     });
                 }
             }
         })
-        .fail(function() {
+        .fail(function () {
             log('Failed to load grading stats');
         });
     }
 
     return {
-        init: function(cfg) {
+        init: function (cfg) {
             config = cfg || {};
 
             log('Raw config received:', JSON.stringify(config));

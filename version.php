@@ -17,6 +17,42 @@
 /**
  * Version information for AI Essay Grader quiz report plugin.
  *
+ * v3.9.8 - CRITICAL FIX: AI-approved grades never reached the gradebook.
+ *   Symptom: after "Approve & Save to Gradebook", the quiz attempt showed the
+ *   correct mark (e.g. 28.00/28.00) but the course gradebook showed "-" for that
+ *   student, permanently, on every quiz using AI grading, across all courses.
+ *   Manually marking the same question through Moodle's own Manual grading screen
+ *   worked correctly, as did a quiz regrade, which is what masked the defect.
+ *
+ *   Root cause: ajax.php called
+ *       \mod_quiz\grade_calculator::create($quizobj)->recompute_final_grade();
+ *   with no argument. The method signature is
+ *       recompute_final_grade(?int $userid = null, array $attempts = [])
+ *   and its first action is:
+ *       if (empty($userid)) { $userid = $USER->id; }
+ *   It does NOT inherit the userid from the quiz_settings object passed to
+ *   create(), despite that object being constructed with the student's id.
+ *   Every approve therefore recomputed the grade of the logged-in TEACHER, who
+ *   has no attempts — yielding a null best grade and a DELETE against the
+ *   teacher's quiz_grades row — while the student's quiz_grades and grade_grades
+ *   rows were never written at all. The attempt's sumgrades was updated correctly
+ *   a few lines earlier, which is why the quiz UI looked right and only the
+ *   gradebook was wrong.
+ *
+ *   Regression origin: the legacy quiz_save_best_grade($quiz, $attempt->userid)
+ *   fallback always passed the userid. The defect was introduced in v3.8.3 when
+ *   the Moodle 4.2+ grade_calculator branch was added and the userid argument was
+ *   not carried across. Sites on Moodle < 4.2 were unaffected.
+ *
+ *   Fix: pass $attempt->userid explicitly to recompute_final_grade().
+ *
+ *   Also added: gradebook write verification. After the push, the grade is read
+ *   back from grade_grades and the result returned in the approve JSON response
+ *   as gradebookverified / gradebookwarning. A failed gradebook write can no
+ *   longer present to the teacher as a success. Non-fatal by design — the mark
+ *   and feedback are already committed, so verification failure warns rather
+ *   than aborts. No DB schema changes. version.php → 2026081700.
+ *
  * v3.8.4 - BUG FIX: 'Approve & Save to Gradebook' intermittent failure.
  *   Root cause 1 (primary): feedbackRaw was injected into <textarea> via jQuery .html(),
  *   which passes the string through the browser HTML parser — AI feedback containing &, <,
@@ -92,8 +128,8 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'quiz_aigrader';
-$plugin->version   = 2026080300;
+$plugin->version   = 2026081700;
 $plugin->requires  = 2022041900;
 $plugin->supported  = [400, 500];  // Moodle 4.0 to 5.x
 $plugin->maturity  = MATURITY_STABLE;
-$plugin->release   = '3.9.7'; // UPGRADE FIX: Converted all savepoints in db/upgrade.php to 10-digit format. Coordination stamp: aligned to 10-digit target 2026080300 to match wombatlms server reset so upgrading clients no longer hit a savepoint validation crash mid-upgrade. No DB schema changes. version.php → 2026080300.
+$plugin->release   = '3.9.8'; // CRITICAL FIX: recompute_final_grade() was called without $userid, so AI-approved grades were computed against the logged-in teacher instead of the student and never reached the gradebook. See header for full analysis. No DB schema changes. version.php -> 2026081700.

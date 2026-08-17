@@ -2,6 +2,76 @@
 
 All notable changes to this plugin will be documented in this file.
 
+## [3.9.8] - 2026-08-17
+
+### Fixed
+- **CRITICAL: AI-approved grades never reached the gradebook.** After a teacher clicked
+  "Approve & Save to Gradebook", the quiz attempt displayed the correct mark (e.g.
+  `28.00/28.00 (100%)`) but the course gradebook showed `-` for that student — permanently,
+  on every quiz using AI grading, across all courses. Marking the same question through
+  Moodle's own Manual grading screen worked correctly, as did a quiz regrade, which is
+  what masked the defect in testing.
+
+  **Root cause.** `ajax.php` (approve action) called:
+
+  ```php
+  \mod_quiz\grade_calculator::create($quizobj)->recompute_final_grade();
+  ```
+
+  with no argument. The Moodle signature is:
+
+  ```php
+  public function recompute_final_grade(?int $userid = null, array $attempts = []): void
+  ```
+
+  and its first action is:
+
+  ```php
+  if (empty($userid)) { $userid = $USER->id; }
+  ```
+
+  `recompute_final_grade()` does **not** inherit the userid from the `quiz_settings`
+  object passed to `create()`, even though that object was constructed with the
+  student's id via `quiz_settings::create($quiz->id, $attempt->userid)`. That userid
+  is used for access and context resolution only.
+
+  Every approve therefore recomputed the grade of the **logged-in teacher**, who has no
+  attempts at the quiz. `compute_final_grade_from_attempts([])` returned null, which sent
+  execution down the `is_null($bestgrade)` branch and issued a `DELETE` against the
+  teacher's `quiz_grades` row. The student's `quiz_grades` and `grade_grades` rows were
+  never written at all.
+
+  The attempt's `sumgrades` was updated correctly a few lines earlier by the plugin's own
+  code, which is why the quiz UI showed the right mark and only the gradebook was wrong —
+  the two are written by separate code paths.
+
+  **Regression origin.** The legacy `quiz_save_best_grade($quiz, $attempt->userid)`
+  fallback always passed the userid correctly. The defect was introduced in v3.8.3 when
+  the Moodle 4.2+ `grade_calculator` branch was added and the userid argument was not
+  carried across. Sites running Moodle < 4.2 took the legacy branch and were unaffected.
+
+  **Fix.** Pass `$attempt->userid` explicitly to `recompute_final_grade()`.
+
+### Added
+- **Gradebook write verification.** After the grade push, the plugin now reads the grade
+  back from `grade_grades` and returns the outcome in the approve JSON response as
+  `gradebookverified` (bool) and `gradebookwarning` (string|null). It also checks for a
+  missing grade item and for `grade_items.needsupdate` being set. A failed gradebook write
+  can no longer present to the teacher as a success.
+
+  Deliberately non-fatal: the question mark and feedback are already committed to the
+  question engine at that point, so a verification failure is reported as a warning rather
+  than aborting the response and losing the teacher's work. Failures are also written to
+  the Moodle debug log at `DEBUG_DEVELOPER`.
+
+### Notes
+- No DB schema changes. No AMD rebuild required. `version.php` → `2026081700`.
+- **Remediation required for existing data.** This fix applies to grades approved from
+  now on. Attempts approved under v3.8.3–v3.9.7 have correct `sumgrades` but no gradebook
+  row, and must be repaired by regrading the affected quizzes
+  (Quiz → Results → select all → Regrade selected attempts). Cohorts finalised from
+  gradebook figures during that window may have understated results.
+
 ## [3.8.7] - 2026-04-23
 
 ### Fixed

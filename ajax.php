@@ -843,11 +843,67 @@ try {
                 // Prefer Moodle 4.2+ grade_calculator API; fall back to legacy for older sites.
                 // quiz_save_best_grade() was deprecated in MDL-76897 (Moodle 4.2) and triggers
                 // a deprecation error even when it still exists. Always use the new API first.
+                //
+                // v3.9.8 CRITICAL FIX — $userid MUST be passed explicitly.
+                // grade_calculator::recompute_final_grade(?int $userid = null) does NOT read
+                // the userid from the quiz_settings object it was constructed with. Its first
+                // lines are:
+                //     if (empty($userid)) { $userid = $USER->id; }
+                // So calling it with no argument recomputed the grade of the logged-in TEACHER
+                // (who has no attempts, therefore null best grade, therefore a delete of any
+                // quiz_grades row for the teacher) and never touched the student at all.
+                // The student's quiz_grades / grade_grades rows were consequently never
+                // written, producing a permanent "-" in the gradebook even though the
+                // attempt's sumgrades had been updated correctly a few lines above.
+                // The legacy quiz_save_best_grade() branch below always passed the userid,
+                // which is why this only began failing once the new-API branch was taken.
                 if (method_exists('\mod_quiz\grade_calculator', 'recompute_final_grade')) {
                     $quizobj = \mod_quiz\quiz_settings::create($quiz->id, $attempt->userid);
-                    \mod_quiz\grade_calculator::create($quizobj)->recompute_final_grade();
+                    \mod_quiz\grade_calculator::create($quizobj)->recompute_final_grade($attempt->userid);
                 } else {
                     quiz_save_best_grade($quiz, $attempt->userid);
+                }
+
+                // -------------------------------------------------------
+                // GRADEBOOK WRITE VERIFICATION (v3.9.8)
+                // -------------------------------------------------------
+                // Read the grade back so a failed push can never again present
+                // to the teacher as a success. The UI shows "saved to gradebook";
+                // this makes that claim verifiable rather than assumed.
+                // Non-fatal: the question mark and feedback are already committed,
+                // so a verification failure is reported as a warning, not an abort.
+                // -------------------------------------------------------
+                $gradebookverified = false;
+                $gradebookwarning = null;
+                try {
+                    $gradeitem = $DB->get_record('grade_items', [
+                        'itemtype'     => 'mod',
+                        'itemmodule'   => 'quiz',
+                        'iteminstance' => $quiz->id,
+                        'courseid'     => $quiz->course,
+                    ]);
+                    if (!$gradeitem) {
+                        $gradebookwarning = 'No grade item exists for this quiz.';
+                    } else if ($gradeitem->needsupdate) {
+                        $gradebookwarning = 'Grade item is flagged as needing a regrade.';
+                    } else {
+                        $gradegrade = $DB->get_record('grade_grades', [
+                            'itemid' => $gradeitem->id,
+                            'userid' => $attempt->userid,
+                        ]);
+                        if (!$gradegrade || $gradegrade->finalgrade === null) {
+                            $gradebookwarning = 'Grade did not reach the gradebook for this user.';
+                        } else {
+                            $gradebookverified = true;
+                        }
+                    }
+                } catch (\Throwable $verifyerr) {
+                    $gradebookwarning = 'Verification check failed: ' . $verifyerr->getMessage();
+                }
+                if (!$gradebookverified) {
+                    debugging('AI Grader: gradebook verification failed for userid '
+                        . $attempt->userid . ' on quiz ' . $quiz->id . ' — ' . $gradebookwarning,
+                        DEBUG_DEVELOPER);
                 }
 
                 // -------------------------------------------------------
@@ -1037,7 +1093,14 @@ try {
                 'gradedhuman' => userdate(time()),
                 'mark' => $mark,
                 'maxmark' => $maxmark,
-                'notificationsent' => $notificationsent
+                'notificationsent' => $notificationsent,
+                // v3.9.8: gradebookverified is true only when the grade was read back
+                // from grade_grades after the push. If false, gradebookwarning explains
+                // why. The mark and feedback are saved either way — this reports on the
+                // gradebook write specifically, so a silent failure can never again be
+                // presented to the teacher as a success.
+                'gradebookverified' => isset($gradebookverified) ? (bool) $gradebookverified : null,
+                'gradebookwarning'  => isset($gradebookwarning) ? $gradebookwarning : null
             ]);
         } catch (\Throwable $e) {
             // Catch both Exception and Error (e.g. removed Moodle functions in newer versions)
