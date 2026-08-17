@@ -17,6 +17,15 @@
 /**
  * Version information for AI Essay Grader quiz report plugin.
  *
+ * v3.9.9 - RELEASE HOUSEKEEPING ONLY. Identical grade-fix code to v3.9.8.
+ *   v3.9.8 was promoted to the release pipeline before the compliance fixes
+ *   (GPL headers on db/fix_13digit_version.php and tests/upgrade_simulation.php,
+ *   @package/@copyright/@license on tests/upgrade_simulation.php, AMD function
+ *   spacing, removal of the unreferenced lang/en/quizreport_aigrader.php, and
+ *   the aigrader/ ZIP root folder). This release carries those fixes and
+ *   supersedes 3.9.8, which should not be deployed. Version numeric kept to
+ *   Moodle's 10-digit YYYYMMDDXX format: 2026081701.
+ *
  * v3.9.8 - CRITICAL FIX: AI-approved grades never reached the gradebook.
  *   Symptom: after "Approve & Save to Gradebook", the quiz attempt showed the
  *   correct mark (e.g. 28.00/28.00) but the course gradebook showed "-" for that
@@ -51,7 +60,7 @@
  *   as gradebookverified / gradebookwarning. A failed gradebook write can no
  *   longer present to the teacher as a success. Non-fatal by design — the mark
  *   and feedback are already committed, so verification failure warns rather
- *   than aborts. No DB schema changes. version.php → 2026081700.
+ *   than aborts. No DB schema changes. version.php → 2026081701.
  *
  * v3.8.4 - BUG FIX: 'Approve & Save to Gradebook' intermittent failure.
  *   Root cause 1 (primary): feedbackRaw was injected into <textarea> via jQuery .html(),
@@ -128,8 +137,8 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'quiz_aigrader';
-$plugin->version   = 2026081700;
+$plugin->version   = 2026081701;
 $plugin->requires  = 2022041900;
 $plugin->supported  = [400, 500];  // Moodle 4.0 to 5.x
 $plugin->maturity  = MATURITY_STABLE;
-$plugin->release   = '3.9.8'; // CRITICAL FIX: recompute_final_grade() was called without $userid, so AI-approved grades were computed against the logged-in teacher instead of the student and never reached the gradebook. See header for full analysis. No DB schema changes. version.php -> 2026081700.
+$plugin->release   = '3.9.9'; // CRITICAL FIX: recompute_final_grade() was called without $userid, so AI-approved grades were computed against the logged-in teacher instead of the student and never reached the gradebook. See header for full analysis. No DB schema changes. version.php -> 2026081701.

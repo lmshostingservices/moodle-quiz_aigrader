@@ -2,6 +2,35 @@
 
 All notable changes to this plugin will be documented in this file.
 
+## [3.9.9] - 2026-08-17
+
+### Changed
+- Release housekeeping only. The grade fix is byte-identical to v3.9.8; see that entry
+  below for the full root-cause analysis.
+
+  v3.9.8 reached the release pipeline's promoted slot before the compliance fixes were
+  applied, so that artefact is missing them. This release supersedes it and **3.9.8
+  should not be deployed**. Confirm the promoted artefact is 3.9.9 before any deployment.
+
+  Carried in this release and absent from the promoted 3.9.8:
+  - GPL headers added to `db/fix_13digit_version.php` and `tests/upgrade_simulation.php`
+  - `@package` / `@copyright` / `@license` added to `tests/upgrade_simulation.php`
+  - AMD `function(` → `function (` across `amd/src` and `amd/build` (27 each)
+  - Removed unreferenced `lang/en/quizreport_aigrader.php` (duplicate-lang-file warning)
+  - ZIP root folder corrected to `aigrader/`
+
+- Version numeric `2026081700` → `2026081701`. Deliberately kept to Moodle's 10-digit
+  `YYYYMMDDXX` format — see the v3.8.x notes on the 13-digit stored-version incident
+  that previously blocked upgrades on this plugin.
+
+### Known pipeline warnings (3, intentionally not fixed)
+- *Lowercase inline comments* — majority are the GPL boilerplate continuation lines and
+  multi-line comment continuations. Auto-capitalising would corrupt the licence text.
+- *Multi-statement lines* — both remaining hits are semicolons inside string literals
+  (`Content-Type: application/json; charset=utf-8` and a SQL string in a `cli_writeln`).
+  False positives; the checker does not exclude string contents.
+- *Multi-line call layout* — advisory only; verify with phpcs against the Moodle standard.
+
 ## [3.9.8] - 2026-08-17
 
 ### Fixed
@@ -65,7 +94,11 @@ All notable changes to this plugin will be documented in this file.
   the Moodle debug log at `DEBUG_DEVELOPER`.
 
 ### Notes
-- No DB schema changes. No AMD rebuild required. `version.php` → `2026081700`.
+- No DB schema changes. No AMD rebuild required. `version.php` → `2026081701`.
+  (Numeric incremented from `2026081700` to clear a release-pipeline version
+  collision; code is unchanged between the two. Deliberately kept to Moodle's
+  10-digit `YYYYMMDDXX` format — see the v3.8.x notes on the 13-digit stored
+  version incident that blocked upgrades on this plugin previously.)
 - **Remediation required for existing data.** This fix applies to grades approved from
   now on. Attempts approved under v3.8.3–v3.9.7 have correct `sumgrades` but no gradebook
   row, and must be repaired by regrading the affected quizzes
