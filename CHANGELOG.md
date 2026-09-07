@@ -3,9 +3,30 @@
 All notable changes to this plugin are documented here, newest first. This project
 follows [Semantic Versioning](https://semver.org/).
 
+## 4.1.2 - 2026-09-07
+
+Supersedes 4.1.1, which was promoted before the supported-version change below was
+finalised. No functional change to grading or the date filter.
+
+### Changed
+
+- Declared Moodle support is 4.4 to 5.2. Earlier builds said 4.0 to 5.0, so Moodle flagged
+  the plugin as unsupported on 5.1 and 5.2, the current releases. Verified against Moodle
+  5.2.2, including the move of the webroot into `public/` in 5.1. The minimum PHP is 8.1,
+  matching Moodle 4.4.
+- The CI matrix covers 4.4, 4.5, 5.0, 5.1 and 5.2 across PostgreSQL and MariaDB.
+
 ## 4.1.1 - 2026-09-07
 
 ### Changed
+
+- Declared Moodle support is now 4.4 to 5.2. It previously said 4.0 to 5.0, which meant
+  Moodle flagged the plugin as unsupported on 5.1 and 5.2, the current releases. Verified
+  against Moodle 5.2.2, including the move of the webroot into `public/` in 5.1: the plugin
+  registers, creates its tables, both settings pages appear, and the report class alias
+  resolves correctly now that `quiz_default_report` has been removed from core. The minimum
+  PHP is now 8.1, matching Moodle 4.4.
+- The CI matrix now covers 4.4, 4.5, 5.0, 5.1 and 5.2 rather than stopping at 5.0.
 
 - The date filter logic no longer reads the request directly. `resolve_date_filter()` now
   takes the submitted values as an argument, and a separate `read_filter_request()` does the

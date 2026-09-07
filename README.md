@@ -7,8 +7,8 @@ with a teacher approval step before any mark reaches the gradebook.
 |---|---|
 | Plugin type | Quiz report (`quiz_aigrader`) |
 | Install path | `mod/quiz/report/aigrader/` |
-| Moodle | 4.0 - 5.x (`2022041900` or later) |
-| PHP | 7.4 or later |
+| Moodle | 4.4 - 5.2 (`2024042200` or later) |
+| PHP | 8.1 or later |
 | Databases | MySQL, MariaDB, PostgreSQL |
 | Licence | GNU GPL v3 or later |
 | Issue tracker | https://github.com/lmshostingservices/moodle-aigrader/issues |
