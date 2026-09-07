@@ -25,7 +25,5 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
-
 // No callbacks required for this report plugin at present.
 // The admin report page is registered in settings.php.

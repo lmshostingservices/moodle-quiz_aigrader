@@ -14,21 +14,16 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-// This file is part of Moodle - https://moodle.org/
-//
-// Moodle is free software: you can redistribute it and/or modify
-// it under the terms of the GNU GPL v3.
-
-defined('MOODLE_INTERNAL') || die();
-
 /**
- * English language strings for AI Grader quiz report.
+ * English language strings for the AI Essay Grader quiz report.
  *
  * @package    quiz_aigrader
  * @category   string
  * @copyright  2025 Essay Grader AI
- * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
+defined('MOODLE_INTERNAL') || die();
 
 // General.
 $string['pluginname'] = 'AI Essay Grader';
@@ -41,7 +36,6 @@ AI feedback is competency-aware: for RTO/VET assessments, students who demonstra
 Students receive a Moodle notification (email and/or app message) when their essay has been graded, with a direct link to their attempt and feedback. Notification emails can be enabled or disabled site-wide. Analytics panels show total essays graded, grading time, average time per essay, and students graded per course — all filterable by date range and course. Credit cost: 1 credit per essay graded (re-grading is free).';
 $string['aigrader'] = 'AI Essay Grader';
 $string['aigraderreport'] = 'AI Essay Grader';
-$string['privacy:metadata'] = 'The AI Essay Grader quiz report plugin does not store any personal data itself. It sends question text and student responses to the Essay Grader AI service for grading.';
 
 // Settings.
 $string['siteid'] = 'Site ID';
@@ -51,7 +45,7 @@ $string['apikey_desc'] = 'Enter your API key from Essay Grader AI. You can find 
 $string['credits'] = 'Credits';
 
 // Report header / footer.
-$string['powered_by'] = 'Powered by Essay Grader AI';
+$string['powered_by'] = 'AI Essay Grader';
 
 // Not configured.
 $string['not_configured'] = 'AI Essay Grader is not configured';
@@ -103,7 +97,6 @@ $string['error_grading'] = 'An error occurred while requesting an AI grade. Plea
 
 $string['credits_error'] = 'Credit lookup error';
 $string['insufficient_credits'] = 'You do not have enough credits to grade this essay.';
-$string['buy_credits'] = 'Buy credits';
 
 // Backend-only error strings (ajax.php).
 $string['notconfigured'] = 'AI Essay Grader is not configured. Please enter your Site ID and API key in the plugin settings.';
@@ -264,8 +257,114 @@ $string['enable_student_notifications_desc'] = 'Send a notification to students 
 $string['min_review_time'] = 'Minimum review time (seconds)';
 $string['min_review_time_desc'] = 'Require graders to wait this many seconds before they can approve each essay. Set to 0 to disable. The approve button will show a countdown timer reminding the grader to carefully consider the student response and AI feedback.';
 
-// Group filter.
-$string['filter_group_label'] = 'Filter by group:';
-$string['filter_all_groups'] = 'All groups';
+
+// Error messages returned by the AJAX endpoint.
+$string['error_sessionexpired'] = 'Your session has expired. Please reload the page and try again.';
+$string['error_missingparams'] = 'Required parameters are missing from the request.';
+$string['error_invalidcoursemodule'] = 'The quiz could not be found.';
+$string['error_notloggedin'] = 'You are not logged in.';
+$string['error_nopermission'] = 'You do not have permission to perform this action.';
+$string['error_invalidslot'] = 'The requested question is not part of this attempt.';
+$string['error_loadfailed'] = 'The requested data could not be loaded.';
+$string['error_savefailed'] = 'The changes could not be saved.';
+$string['error_nofile'] = 'No file was received.';
+$string['error_uploadfailed'] = 'The file could not be uploaded.';
+$string['error_filetoolarge'] = 'The file is larger than the maximum allowed size.';
+$string['error_invalidfiletype'] = 'That file type is not accepted. Allowed types are PDF, DOC, DOCX, TXT and MD.';
+$string['error_missingdocid'] = 'No document was specified.';
+$string['error_unknownaction'] = 'The requested action is not recognised.';
+$string['error_servererror'] = 'The grading service could not be reached. Please try again shortly.';
+
+// Gradebook verification warnings.
+$string['gradebookwarning_noitem'] = 'The grade was saved, but no matching gradebook item was found for this quiz.';
+$string['gradebookwarning_needsupdate'] = 'The grade was saved, but the gradebook has not finished updating.';
+$string['gradebookwarning_nograde'] = 'The grade was saved, but no gradebook grade was recorded for this student.';
+$string['gradebookwarning_verifyfailed'] = 'The grade was saved, but the gradebook entry could not be verified.';
+
+// Settings.
+$string['apiurl'] = 'API URL';
+$string['apiurl_desc'] = 'Base URL of the Essay Grader AI service. Only change this if you have been given a different endpoint.';
+$string['centralconfig'] = 'Central configuration';
+$string['centralconfig_detected'] = 'AI Grader Central Config is installed on this site. The site ID and API key can be managed there: {$a}';
+$string['centralconfig_notdetected'] = 'AI Grader Central Config is not installed. Enter the site ID and API key below.';
+$string['centralconfig_fallback'] = 'If AI Grader Central Config is installed, its value is used instead of this one.';
+
+// Reports and exports.
+$string['avg_time_per_question'] = 'Avg time / question';
+$string['daterange'] = 'Date range: {$a->from} - {$a->to}';
+$string['seconds_suffix'] = '{$a}s';
+$string['invalidfrequency'] = 'Invalid report frequency.';
+$string['cc_recipients_placeholder'] = 'finance@example.com, manager@example.com';
+$string['csv_daterange'] = 'Date range: {$a->from} - {$a->to}';
+$string['csv_course'] = 'Course';
+$string['csv_quiz'] = 'Quiz';
+$string['csv_grader'] = 'Grader';
+$string['csv_approved'] = 'Questions approved';
+$string['csv_avgtime'] = 'Average time per question';
+$string['report_email_subject'] = '{$a->period} AI Essay Grader activity report - {$a->date}';
+$string['report_email_body'] = 'Please find attached your {$a->period} AI Essay Grader activity report.
+
+Period: {$a->from} - {$a->to}
+Total records: {$a->count}
+
+This is an automated message from AI Essay Grader.';
+$string['report_email_summary_line'] = '- {$a->name}: {$a->count} questions approved';
+
+// Privacy API.
+$string['privacy:path:attemptcontext'] = 'AI grading context';
+$string['privacy:path:gradinglogs'] = 'AI grading activity';
+$string['privacy:path:schedules'] = 'Scheduled activity reports';
+$string['privacy:metadata:quiz_aigrader_attempt_ctx'] = 'Grading context retained for each student and question so that repeated attempts are graded consistently.';
+$string['privacy:metadata:quiz_aigrader_attempt_ctx:quizid'] = 'The quiz the graded question belongs to.';
+$string['privacy:metadata:quiz_aigrader_attempt_ctx:userid'] = 'The student whose answer was graded.';
+$string['privacy:metadata:quiz_aigrader_attempt_ctx:questionid'] = 'The question that was graded.';
+$string['privacy:metadata:quiz_aigrader_attempt_ctx:slot'] = 'The slot the question occupies in the attempt.';
+$string['privacy:metadata:quiz_aigrader_attempt_ctx:attemptnum'] = 'The attempt number this context relates to.';
+$string['privacy:metadata:quiz_aigrader_attempt_ctx:criteriamet'] = 'The rubric criteria the answer satisfied.';
+$string['privacy:metadata:quiz_aigrader_attempt_ctx:feedbacksummary'] = 'A summary of the feedback previously given to the student.';
+$string['privacy:metadata:quiz_aigrader_attempt_ctx:lastgrade'] = 'The most recent grade awarded, as a percentage.';
+$string['privacy:metadata:quiz_aigrader_attempt_ctx:humanreview'] = 'Whether the answer was flagged for human review.';
+$string['privacy:metadata:quiz_aigrader_attempt_ctx:autolocked'] = 'Whether the answer was automatically locked to full marks.';
+$string['privacy:metadata:quiz_aigrader_attempt_ctx:timecreated'] = 'The time the grading context was created.';
+$string['privacy:metadata:quiz_aigrader_attempt_ctx:timemodified'] = 'The time the grading context was last changed.';
+$string['privacy:metadata:quiz_aigrader_grading_logs'] = 'A record of each grade approved by a marker, used for grading activity reporting.';
+$string['privacy:metadata:quiz_aigrader_grading_logs:quizid'] = 'The quiz containing the graded question.';
+$string['privacy:metadata:quiz_aigrader_grading_logs:courseid'] = 'The course containing the quiz.';
+$string['privacy:metadata:quiz_aigrader_grading_logs:graderid'] = 'The user who approved the grade.';
+$string['privacy:metadata:quiz_aigrader_grading_logs:qubaid'] = 'The question usage the graded question belongs to.';
+$string['privacy:metadata:quiz_aigrader_grading_logs:slot'] = 'The slot the graded question occupies.';
+$string['privacy:metadata:quiz_aigrader_grading_logs:timegraded'] = 'The time the grade was approved.';
+$string['privacy:metadata:quiz_aigrader_schedules'] = 'Scheduled grading activity reports configured by a user.';
+$string['privacy:metadata:quiz_aigrader_schedules:userid'] = 'The user who created the schedule.';
+$string['privacy:metadata:quiz_aigrader_schedules:frequency'] = 'How often the report is sent.';
+$string['privacy:metadata:quiz_aigrader_schedules:recipients'] = 'Additional email addresses the report is copied to.';
+$string['privacy:metadata:quiz_aigrader_schedules:lastrun'] = 'The time the report was last sent.';
+$string['privacy:metadata:quiz_aigrader_schedules:nextrun'] = 'The time the report is next due.';
+$string['privacy:metadata:quiz_aigrader_schedules:enabled'] = 'Whether the schedule is active.';
+$string['privacy:metadata:quiz_aigrader_schedules:format'] = 'The file format the report is sent in.';
+$string['privacy:metadata:quiz_aigrader_schedules:timecreated'] = 'The time the schedule was created.';
+$string['privacy:metadata:quiz_aigrader_schedules:timemodified'] = 'The time the schedule was last changed.';
+
+// Date filter on the grading screen.
+$string['filter_submitted_from'] = 'Submitted from';
+$string['filter_submitted_to'] = 'Submitted to';
+$string['filter_form_label'] = 'Filter outstanding essays by submission date';
 $string['filter_apply'] = 'Apply';
-$string['filter_clear_group'] = 'Clear group filter';
+$string['filter_clear'] = 'Clear filter';
+$string['filter_saved_notice'] = 'Showing {$a}. This filter is saved and will be applied next time you open this page.';
+$string['filter_range_between'] = 'submissions between {$a->from} and {$a->to}';
+$string['filter_range_from'] = 'submissions from {$a} onwards';
+$string['filter_range_to'] = 'submissions up to {$a}';
+$string['filter_no_results'] = 'Nothing to mark in this date range';
+$string['filter_no_results_message'] = 'There are no ungraded essay responses submitted in the selected date range. There may be outstanding work outside it.';
+
+// Privacy API: user preferences.
+$string['privacy:metadata:preference:datefrom'] = 'The start of the submission date range a marker last chose on the grading screen for a quiz.';
+$string['privacy:metadata:preference:dateto'] = 'The end of the submission date range a marker last chose on the grading screen for a quiz.';
+$string['privacy:metadata:preference:reportstartdate'] = 'The start of the date range last chosen on the grading activity report.';
+$string['privacy:metadata:preference:reportenddate'] = 'The end of the date range last chosen on the grading activity report.';
+$string['privacy:metadata:preference:reportgraderid'] = 'The marker last selected as a filter on the grading activity report.';
+$string['privacy:preference:datefilter'] = 'The saved submission date filter for one quiz grading screen.';
+$string['privacy:preference:reportstartdate'] = 'The saved start date for the grading activity report.';
+$string['privacy:preference:reportenddate'] = 'The saved end date for the grading activity report.';
+$string['privacy:preference:reportgraderid'] = 'The saved marker filter for the grading activity report.';

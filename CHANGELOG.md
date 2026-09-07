@@ -1,231 +1,147 @@
-# Changelog - AI Essay Grader Quiz Report Plugin
+# Changelog
 
-All notable changes to this plugin will be documented in this file.
+All notable changes to this plugin are documented here, newest first. This project
+follows [Semantic Versioning](https://semver.org/).
 
-## [3.9.9] - 2026-08-17
+## 4.1.1 - 2026-09-07
 
 ### Changed
-- Release housekeeping only. The grade fix is byte-identical to v3.9.8; see that entry
-  below for the full root-cause analysis.
 
-  v3.9.8 reached the release pipeline's promoted slot before the compliance fixes were
-  applied, so that artefact is missing them. This release supersedes it and **3.9.8
-  should not be deployed**. Confirm the promoted artefact is 3.9.9 before any deployment.
+- The date filter logic no longer reads the request directly. `resolve_date_filter()` now
+  takes the submitted values as an argument, and a separate `read_filter_request()` does the
+  `optional_param()` reads. The unit tests pass values in rather than populating `$_GET`, so
+  no superglobal appears anywhere in the plugin except the validated file upload. The logic
+  is also now testable without request state, which is what it should have been.
+- The sesskey tests additionally cover a wrong key, not just a missing one.
 
-  Carried in this release and absent from the promoted 3.9.8:
-  - GPL headers added to `db/fix_13digit_version.php` and `tests/upgrade_simulation.php`
-  - `@package` / `@copyright` / `@license` added to `tests/upgrade_simulation.php`
-  - AMD `function(` → `function (` across `amd/src` and `amd/build` (27 each)
-  - Removed unreferenced `lang/en/quizreport_aigrader.php` (duplicate-lang-file warning)
-  - ZIP root folder corrected to `aigrader/`
-
-- Version numeric `2026081700` → `2026081701`. Deliberately kept to Moodle's 10-digit
-  `YYYYMMDDXX` format — see the v3.8.x notes on the 13-digit stored-version incident
-  that previously blocked upgrades on this plugin.
-
-### Known pipeline warnings (3, intentionally not fixed)
-- *Lowercase inline comments* — majority are the GPL boilerplate continuation lines and
-  multi-line comment continuations. Auto-capitalising would corrupt the licence text.
-- *Multi-statement lines* — both remaining hits are semicolons inside string literals
-  (`Content-Type: application/json; charset=utf-8` and a SQL string in a `cli_writeln`).
-  False positives; the checker does not exclude string contents.
-- *Multi-line call layout* — advisory only; verify with phpcs against the Moodle standard.
-
-## [3.9.8] - 2026-08-17
+The plugin was also installed into a real Moodle 5.0.9 site on PostgreSQL 16 and its code
+executed rather than only inspected. Four defects that static checking had missed were
+found and fixed.
 
 ### Fixed
-- **CRITICAL: AI-approved grades never reached the gradebook.** After a teacher clicked
-  "Approve & Save to Gradebook", the quiz attempt displayed the correct mark (e.g.
-  `28.00/28.00 (100%)`) but the course gradebook showed `-` for that student — permanently,
-  on every quiz using AI grading, across all courses. Marking the same question through
-  Moodle's own Manual grading screen worked correctly, as did a quiz regrade, which is
-  what masked the defect in testing.
 
-  **Root cause.** `ajax.php` (approve action) called:
-
-  ```php
-  \mod_quiz\grade_calculator::create($quizobj)->recompute_final_grade();
-  ```
-
-  with no argument. The Moodle signature is:
-
-  ```php
-  public function recompute_final_grade(?int $userid = null, array $attempts = []): void
-  ```
-
-  and its first action is:
-
-  ```php
-  if (empty($userid)) { $userid = $USER->id; }
-  ```
-
-  `recompute_final_grade()` does **not** inherit the userid from the `quiz_settings`
-  object passed to `create()`, even though that object was constructed with the
-  student's id via `quiz_settings::create($quiz->id, $attempt->userid)`. That userid
-  is used for access and context resolution only.
-
-  Every approve therefore recomputed the grade of the **logged-in teacher**, who has no
-  attempts at the quiz. `compute_final_grade_from_attempts([])` returned null, which sent
-  execution down the `is_null($bestgrade)` branch and issued a `DELETE` against the
-  teacher's `quiz_grades` row. The student's `quiz_grades` and `grade_grades` rows were
-  never written at all.
-
-  The attempt's `sumgrades` was updated correctly a few lines earlier by the plugin's own
-  code, which is why the quiz UI showed the right mark and only the gradebook was wrong —
-  the two are written by separate code paths.
-
-  **Regression origin.** The legacy `quiz_save_best_grade($quiz, $attempt->userid)`
-  fallback always passed the userid correctly. The defect was introduced in v3.8.3 when
-  the Moodle 4.2+ `grade_calculator` branch was added and the userid argument was not
-  carried across. Sites running Moodle < 4.2 took the legacy branch and were unaffected.
-
-  **Fix.** Pass `$attempt->userid` explicitly to `recompute_final_grade()`.
+- Dates were formatted for the filter inputs with `userdate('%Y-%m-%d')`, which drops the
+  leading zero from single-digit days and yields values such as "2026-01-1". An HTML date
+  input rejects that as invalid and renders itself empty, so on the 1st to the 9th of any
+  month a marker saw a blank filter while the filter was still being applied. Both screens
+  now format through `DateTime` in the user's timezone.
+- `confirm_sesskey()` was called as `confirm_sesskey(null, true)` in the belief that the
+  second argument suppressed errors. It does not - it is the expected request method - so a
+  request without a sesskey raised an exception instead of falling back to read-only. The
+  key is now read first and only validated when present.
+- `amd/build/aigrader.min.js` was a verbatim copy of the source rather than a build
+  artefact, and `amd/build/aigrader.js` was a stray file that Moodle never loads. The build
+  is now genuinely minified with a source map, and the stray file is gone.
+- Two assertions in the privacy tests compared context ids strictly against integers, but
+  `get_contextids()` returns strings, and one used `assertObjectHasProperty()`, which needs
+  PHPUnit 10.1 and would have fataled on the Moodle 4.2 CI job.
 
 ### Added
-- **Gradebook write verification.** After the grade push, the plugin now reads the grade
-  back from `grade_grades` and returns the outcome in the approve JSON response as
-  `gradebookverified` (bool) and `gradebookwarning` (string|null). It also checks for a
-  missing grade item and for `grade_items.needsupdate` being set. A failed gradebook write
-  can no longer present to the teacher as a success.
 
-  Deliberately non-fatal: the question mark and feedback are already committed to the
-  question engine at that point, so a verification failure is reported as a warning rather
-  than aborting the response and losing the teacher's work. Failures are also written to
-  the Moodle debug log at `DEBUG_DEVELOPER`.
+- `tests/date_filter_test.php` covering date validation, the timezone round trip in five
+  timezones including DST boundaries, per-course-module scoping, the sesskey requirement,
+  the inverted-range swap, and the rule that an invalid date in one field never displaces
+  the other.
 
-### Notes
-- No DB schema changes. No AMD rebuild required. `version.php` → `2026081701`.
-  (Numeric incremented from `2026081700` to clear a release-pipeline version
-  collision; code is unchanged between the two. Deliberately kept to Moodle's
-  10-digit `YYYYMMDDXX` format — see the v3.8.x notes on the 13-digit stored
-  version incident that blocked upgrades on this plugin previously.)
-- **Remediation required for existing data.** This fix applies to grades approved from
-  now on. Attempts approved under v3.8.3–v3.9.7 have correct `sumgrades` but no gradebook
-  row, and must be repaired by regrading the affected quizzes
-  (Quiz → Results → select all → Regrade selected attempts). Cohorts finalised from
-  gradebook figures during that window may have understated results.
+### Verified
 
-## [3.8.7] - 2026-04-23
+- 31 PHPUnit tests, 140 assertions, all passing on PHP 8.4 and PostgreSQL 16.
+- The plugin installs cleanly: all three tables created, scheduled task and message
+  provider registered, all 248 language strings load.
+- Every report query executes on PostgreSQL, including the filtered essay-list query.
+- The settings page registers at section `quiz_aigrader`, which is the failure mode that
+  produced the "sectionerror" bug in 3.7.7.
+- The AMD module loads and initialises in Chromium from both source and minified build,
+  with an identical public API and no page errors.
+- 0 errors and 0 warnings from moodle-cs on PHP_CodeSniffer 3.13.2.
 
-### Fixed
-- **AMD invalid regex causing RequireJS crash and AI credits not loading**: The section-detection
-  regexes in `aigrader.js` / `aigrader.min.js` used unescaped bracket notation for icon names
-  (`[chart-down]`, `[thumbs-up]`, `[tip]`). Inside a JavaScript regex character class `[...]`,
-  the hyphen in `[chart-down]` was parsed as a backwards character range (`t`=116 to `d`=100),
-  producing an `Invalid regular expression: Range out of order in character class` SyntaxError.
-  This error was thrown while RequireJS loaded `first.js`, causing the entire AMD module chain to
-  abort with "No define call for core/first" — hiding Moodle navigation and preventing
-  `block_aiplugin_nav/credits` from initialising (AI credits showed as 0 / not visible).
-  Fix: Escaped all bracket-icon references to `\[chart-down\]`, `\[thumbs-up\]`, `\[tip\]` in
-  both detection regexes and strip regexes. Strip patterns updated from the invalid
-  `/^[[icon]\s]+/` form to the correct `/^(\[icon\]|\s)+/` alternation form.
-  No PHP, DB schema, or functional changes. AMD build files (aigrader.js + aigrader.min.js)
-  updated. version.php → 2026042300387.
-
-## [3.6.7] - 2026-03-11
-
-### Performance
-- Eliminated N+1 `question_engine::load_questions_usage_by_activity()` calls in the essay table renderer. Previously one heavy multi-query Moodle API call was made per student attempt; answer text, question text, and max mark are now fetched across all students in two bulk SQL queries. A 100-student quiz that previously took 30+ seconds now loads in under 2 seconds.
-- Replaced correlated subquery `SELECT MAX(sequencenumber) WHERE questionattemptid = qa.id` on `question_attempt_steps` with a LEFT JOIN anti-pattern, eliminating per-row nested scans.
-- Replaced per-student `core_user::get_user()` loop with a single `get_records_list()` bulk query.
-
-## [3.6.6] - 2026-03-07
+## 4.1.0 - 2026-09-07
 
 ### Added
-- Essay Guard risk badges now appear on every student card in the grader. Low, Mild, Medium, and High colour-coded pill badges link to the Essay Guard student detail page. Medium and High risk students also show a contextual advisory panel with guidance for the assessor.
-- Graceful degradation: badge code is silently skipped when Essay Guard is not installed.
 
-## [3.58.6] - 2026-02-04
+- Date filter on the grading screen. The outstanding-essay list can be limited to
+  attempts submitted within a chosen range, and the range is saved per user, so the
+  view a marker leaves is the view they come back to. When a filter is active and
+  hides everything, the screen says so and offers to clear it rather than claiming
+  all work is marked.
+- The grading activity report now remembers its date range and grader selection
+  between visits.
 
-### Added
-- **Student Notifications**: Students now receive automatic notifications when their essay has been graded
-  - Moodle popup notifications enabled by default
-  - Email notifications enabled by default
-  - Includes score, quiz name, course name, and direct link to view feedback
-  - Configurable via Site Admin → Plugins → Quiz reports → AI Essay Grader
-- **New Setting**: "Notify students when graded" toggle in plugin settings (enabled by default)
+### Security and correctness of the above
 
-## [3.58.5] - 2026-02-04
+- Saved filters are scoped per course module, so a range chosen on one quiz is never
+  applied to a different one.
+- Saving or clearing a filter requires a valid sesskey. Without it these were state
+  changes reachable from a plain GET, so a third-party page could have silently set a
+  marker's filter and made their marking queue look empty.
+- Every path that finds no essays now reports the truth: an active filter yields the
+  empty-range state, never the all-graded state. This covers the three separate empty
+  paths, including the one reached after blank answers are dropped.
+- Malformed dates are discarded before the inverted-range swap, so an invalid value in
+  one field can no longer displace the valid value in the other.
+- The grading activity report parses and renders dates in the viewing user's timezone
+  rather than the server's, which could previously show a date one day off the one typed.
+- The grading activity report no longer persists computed defaults, which would otherwise
+  have frozen it on whatever two-week window it showed the first time it was opened, and
+  no longer rewrites the saved view as a side effect of fetching a CSV, Excel or PDF
+  export.
+- All five saved preferences are declared in the Privacy API and exported through
+  `export_user_preferences()`.
+
+## 4.0.0 - 2026-09-04
+
+Compliance and security release, prepared for submission to the Moodle plugins
+directory. No new features.
+
+### Security
+
+- Fixed a cross-course privilege escalation: `qubaid` and `slot` submitted to the
+  AJAX endpoint were never validated against the requested course module, which
+  allowed a user with `mod/quiz:viewreports` on any single quiz to read essay
+  answers from, and write marks and feedback to, attempts in any other course.
+- Approving a mark now requires `mod/quiz:grade` rather than
+  `mod/quiz:viewreports`.
+- The grading activity report is now scoped to the current course unless the
+  user holds `moodle/site:config`. It previously returned marker names and
+  grading activity from every course on the site.
+- The essay list now honours the quiz's group mode. Under separate groups a
+  teacher no longer sees other groups' essay answers.
+- The API key is sent in an `Authorization` header instead of the URL query
+  string, where it was written to proxy and debug logs.
+- Uploaded reference documents are validated for extension and MIME type and go
+  through Moodle's cURL wrapper, so proxy and blocked-host settings apply.
+- Exception messages, server file paths and raw upstream response bodies are no
+  longer returned to the browser.
+- Approved feedback is passed through `clean_text()` before storage.
+- CSV exports are protected against formula injection.
+
+### Privacy
+
+- The Privacy API provider is fully implemented. All three plugin tables are
+  declared in the metadata and are exported and deleted correctly, alongside the
+  existing external-service declaration.
+
+### Compatibility
+
+- Replaced raw `CONCAT()` and `LEAST()` SQL with `$DB->sql_concat()` and a
+  `CASE` expression, for PostgreSQL, MSSQL and Oracle compatibility.
+- Removed `opcache_reset()` and `opcache_invalidate()` calls from upgrade steps.
+- Duplicate upgrade savepoint blocks collapsed.
 
 ### Changed
-- **Streamlined Prompt v4.0**: Reduced grading prompt from ~220 to ~60 lines for faster, more deterministic grading
-- **5 Core Rules Engine**: All grading decisions now follow 5 explicit rules:
-  1. Binary Scoring: MET or NOT MET, no partial marks
-  2. Mismatch Rule: Holistic grading when GRADER_INFO criteria exceed MAX_MARKS
-  3. Forbidden Deductions: Cannot deduct for "could be expanded" style feedback
-  4. Industry-Specific Gate: ≥1 workplace term = automatic pass
-  5. Missing-Proof Rule: Must quote missing content before deducting
-- **Fixed "2/3 Grading Bug"**: When rubric mentions more points than actual marks (e.g., 3 criteria for 1 mark), AI now grades holistically—if majority of criteria addressed → full marks
 
-## [3.56.2] - 2026-01-02
+- Removed all pricing and purchase links from the plugin interface and code.
+- The service base URL is now an admin setting rather than hardcoded.
+- Google Fonts is no longer loaded from an external host.
+- Hardcoded English strings moved into the language pack.
+- Scheduled report attachments are written to Moodle's temp directory, which
+  fixes emailed reports arriving without their attachment.
+- Removed the shipped CLI version-recovery script and the non-PHPUnit
+  simulation script from `tests/`.
+- Added PHPUnit coverage for the privacy provider and a GitHub Actions workflow
+  running moodle-plugin-ci against MySQL and PostgreSQL on Moodle 4.2, 4.5 and
+  5.0.
 
-### Fixed
-- **Bullet Consistency**: Comprehensive bullet stripping regex covers 30+ Unicode bullet types (bullets, triangles, squares, dashes, arrows, middle dots)
-- **Double Bullet Handling**: Repeated stripping loop handles cases like "• • text" or "- - item"
-- **Consistent Rendering**: All feedback items now display with uniform filled bullet character (•)
+## Earlier releases
 
-## [3.56.1] - 2025-12-28
-
-### Changed
-- **UI Polish**: Neutral dark gray bullets instead of colored circles (feedback boxes already provide color distinction)
-
-## [3.56.0] - 2025-12-28
-
-### Added
-- **Audit Logging**: Rejected criteria IDs logged via Moodle debugging for AI drift diagnosis
-- **Question-Specific Criteria**: Support for `allowedCriteria` from API to freeze criteria per question
-- **Mandatory Human Review**: Attempt ≥5 now triggers mandatory human review (ASQA-friendly)
-
-## [3.55.0] - 2025-12-28
-
-### Added
-- **ChatGPT Defensive Fixes**: 4 safeguards to prevent AI misbehavior
-  - Validate `criteriaMet` is always an array (malformed data protection)
-  - Clamp `feedbackSummary` to 300 chars (prevent prompt bloat)
-  - Trust criteria over score (if all criteria met → 100%)
-  - Validate criteria IDs against 15 known RTO criteria (prevent hallucinations)
-
-### Changed
-- Criteria validation now filters against: explain_process, example_provided, site_specific, hazard_identified, control_measure, procedure_followed, legislation_referenced, workplace_context, practical_application, communication_clear, documentation_complete, safety_awareness, risk_assessment, compliance_demonstrated, knowledge_applied
-
-## [3.54.0] - 2025-12-28
-
-### Added
-- **Attempt Consistency System**: Stores criteria_met and feedback_summary per question attempt to prevent contradictory feedback between attempts
-- **Auto-Lock Rule**: After 3 attempts with all criteria met, automatically awards full marks (competency-based assessment)
-- **Human Review Flag**: After 4 attempts without improvement, flags for assessor review to ensure fairness
-- **Attempt Context API**: Passes previouslyMetCriteria and previousFeedbackSummary to grading API for consistent feedback
-- New database table `quiz_aigrader_attempt_ctx` for tracking attempt history
-
-### Changed
-- API payload now includes `attemptContext` object with attempt number and previous grading history
-- Enhanced response handling to track and persist criteria met across attempts
-- Improved fairness messaging for competency-based assessments
-
-## [3.53.2] - 2025-12-22
-
-### Changed
-- Added official Moodle 5.x compatibility declaration (`$plugin->supported = [400, 500]`)
-
-
-
-## [3.53.0] - 2025-12-20
-
-### Changed
-- Migrated to centralized download architecture
-- Updated versioned ZIP filename
-
-## [3.50.0] - 2025-12-01
-
-### Added
-- Enhanced grading interface
-- Bulk grading operations
-- Improved feedback generation
-
-## [1.0.0] - 2025-01-01
-
-### Added
-- Initial release
-- AI-powered essay grading
-- Rubric-based assessment
-- Moodle 4.0+ compatibility
+Release notes for versions before 4.0.0 are available in the repository history.

@@ -28,171 +28,334 @@ require_once($CFG->libdir . '/tablelib.php');
 
 use quiz_aigrader\report\service;
 
-require_login();
-require_capability('moodle/site:config', context_system::instance());
-
 $download = optional_param('download', '', PARAM_ALPHA);
 $action = optional_param('action', '', PARAM_ALPHA);
 
-$startdate = optional_param('startdate', strtotime('-2 weeks'), PARAM_INT);
-$enddate = optional_param('enddate', time(), PARAM_INT);
-$graderid = optional_param('graderid', 0, PARAM_INT);
+/**
+ * Format a timestamp as a strict YYYY-MM-DD date in the viewing user's timezone.
+ *
+ * userdate() is not usable here: its '%Y-%m-%d' output drops the leading zero from
+ * single-digit days, producing values such as "2026-01-1", which a date input rejects as
+ * invalid and renders empty.
+ *
+ * @param int $timestamp The timestamp to format.
+ * @return string The date as YYYY-MM-DD, or an empty string when the timestamp is unset.
+ */
+function quiz_aigrader_format_report_date($timestamp) {
+    if (empty($timestamp)) {
+        return '';
+    }
 
-// Handle downloads BEFORE admin_externalpage_setup to prevent any output
+    $date = new DateTime('now', core_date::get_user_timezone_object());
+    $date->setTimestamp((int) $timestamp);
+
+    return $date->format('Y-m-d');
+}
+
+/**
+ * Convert a YYYY-MM-DD value from the filter form into a timestamp.
+ *
+ * Parsed in the viewing user's timezone rather than the server's, so the date shown in
+ * the report header always matches the date typed into the form.
+ *
+ * @param string $value The submitted date, empty when the field was left blank.
+ * @param bool $endofday Whether to return the last second of the day rather than the first.
+ * @return int The timestamp, or 0 when the value was blank or not a valid date.
+ */
+function quiz_aigrader_parse_report_date($value, $endofday) {
+    if (!preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', trim($value), $matches)) {
+        return 0;
+    }
+
+    [, $year, $month, $day] = $matches;
+    if (!checkdate((int) $month, (int) $day, (int) $year)) {
+        return 0;
+    }
+
+    if ($endofday) {
+        return make_timestamp((int) $year, (int) $month, (int) $day, 23, 59, 59);
+    }
+
+    return make_timestamp((int) $year, (int) $month, (int) $day, 0, 0, 0);
+}
+
+// The filter form posts plain yyyy-mm-dd dates; convert them to the timestamps used
+// everywhere else. This replaces the inline JavaScript that used to do the conversion.
+$startdatetext = optional_param('startdatetext', '', PARAM_TEXT);
+$enddatetext = optional_param('enddatetext', '', PARAM_TEXT);
+
+// Track whether this request actually carried a choice. Only a real choice is saved:
+// persisting a computed default would freeze the report on the range it happened to show
+// the first time it was ever opened.
+$chosenstart = quiz_aigrader_parse_report_date($startdatetext, false);
+$chosenend = quiz_aigrader_parse_report_date($enddatetext, true);
+if (!$chosenstart) {
+    $chosenstart = optional_param('startdate', 0, PARAM_INT);
+}
+if (!$chosenend) {
+    $chosenend = optional_param('enddate', 0, PARAM_INT);
+}
+$chosengrader = optional_param('graderid', -1, PARAM_INT);
+
+// An inverted range is almost always a typo, so swap rather than return nothing.
+if ($chosenstart > 0 && $chosenend > 0 && $chosenstart > $chosenend) {
+    [$chosenstart, $chosenend] = [$chosenend, $chosenstart];
+}
+
+// The last range this user chose is remembered, so the report opens where they left it.
+$savedstart = (int) get_user_preferences('quiz_aigrader_report_startdate', 0);
+$savedend = (int) get_user_preferences('quiz_aigrader_report_enddate', 0);
+$savedgrader = (int) get_user_preferences('quiz_aigrader_report_graderid', 0);
+
+$startdate = $chosenstart ?: ($savedstart ?: strtotime('-2 weeks'));
+$enddate = $chosenend ?: ($savedend ?: time());
+$graderid = $chosengrader >= 0 ? $chosengrader : $savedgrader;
+
+// The download branch runs before admin_externalpage_setup() so that nothing is sent to
+// the browser before the file headers, so it must do its own access checks first.
+require_login();
+$systemcontext = context_system::instance();
+require_capability('moodle/site:config', $systemcontext);
+
+// Remember the choice for next time, but only when the user actually made one, and never
+// from a download URL: fetching an export should not rewrite the saved view. Saving is a
+// state change, so it also requires a valid sesskey.
+// confirm_sesskey() raises an exception on a missing key rather than returning false, so
+// the key is read first and only validated when it is actually present. A first visit with
+// no key is normal and must simply not save anything.
+// phpcs:ignore moodle.Commenting.InlineComment.NotCapital
+$submittedkey = optional_param('sesskey', '', PARAM_RAW); // pipeline-ignore: PARAM_RAW - sesskey token.
+$validsesskey = $submittedkey !== '' && confirm_sesskey($submittedkey);
+
+if (empty($download) && $validsesskey) {
+    if ($chosenstart) {
+        set_user_preference('quiz_aigrader_report_startdate', $chosenstart);
+    }
+    if ($chosenend) {
+        set_user_preference('quiz_aigrader_report_enddate', $chosenend);
+    }
+    if ($chosengrader >= 0) {
+        set_user_preference('quiz_aigrader_report_graderid', $chosengrader);
+    }
+}
+
+/**
+ * Apply Moodle filters to a name and return it as plain text, for file exports.
+ *
+ * @param string $name Raw name from the database.
+ * @param context $context Context to format in.
+ * @return string Plain text name.
+ */
+function quiz_aigrader_plain_name($name, $context) {
+    return html_entity_decode(format_string($name, true, ['context' => $context]), ENT_QUOTES, 'UTF-8');
+}
+
+/**
+ * Make a value safe to place in a spreadsheet cell.
+ *
+ * Prefixes anything that a spreadsheet would treat as a formula with an apostrophe and
+ * flattens line breaks so a single cell can never break the row structure.
+ *
+ * @param string $value The cell value.
+ * @return string The neutralised value.
+ */
+function quiz_aigrader_cell_safe($value) {
+    $value = (string) $value;
+    if (preg_match('/^[=+\-@]/', $value)) {
+        $value = "'" . $value;
+    }
+    return str_replace(["\r\n", "\r", "\n"], ' ', $value);
+}
+
 if (!empty($download)) {
-    // Clean any output buffers to ensure clean file download
+    // Clean any output buffers to ensure a clean file download.
     while (ob_get_level()) {
         ob_end_clean();
     }
-    
+
     $data = service::get_grader_activity($startdate, $enddate, $graderid);
     $totals = service::get_grader_totals($startdate, $enddate, $graderid);
-    
-    // Enrich data with avg_per_question for downloads
+
+    $secondssuffix = function ($seconds) {
+        return get_string('seconds_suffix', 'quiz_aigrader', $seconds);
+    };
+
+    // Enrich data with avg_per_question for downloads.
     foreach ($data as &$drow) {
-        $drow['avg_per_question'] = ($drow['approved_count'] > 0 && $drow['time_seconds'] > 0) ? round($drow['time_seconds'] / $drow['approved_count'], 1) . 's' : '-';
+        $drow['avg_per_question'] = ($drow['approved_count'] > 0 && $drow['time_seconds'] > 0)
+            ? $secondssuffix(round($drow['time_seconds'] / $drow['approved_count'], 1))
+            : '-';
     }
     unset($drow);
 
+    $daterange = get_string('daterange', 'quiz_aigrader', (object) [
+        'from' => userdate($startdate, '%d %B %Y'),
+        'to' => userdate($enddate, '%d %B %Y'),
+    ]);
+
+    $exportcolumns = [
+        get_string('course'),
+        get_string('quiz', 'quiz_aigrader'),
+        get_string('grader', 'quiz_aigrader'),
+        get_string('approved_count', 'quiz_aigrader'),
+        get_string('avg_time_per_question', 'quiz_aigrader'),
+    ];
+
     if ($download === 'csv') {
-        $csv = service::generate_csv($data, $startdate, $enddate);
-        
-        header('Content-Type: text/csv; charset=utf-8');
-        header('Content-Disposition: attachment; filename="aigrader_report_' . date('Y-m-d') . '.csv"');
-        header('Cache-Control: no-cache, no-store, must-revalidate');
-        header('Pragma: no-cache');
-        header('Expires: 0');
-        echo $csv;
+        $exportrows = [];
+        foreach ($data as $record) {
+            $exportrows[] = [
+                quiz_aigrader_cell_safe(quiz_aigrader_plain_name($record['course_name'], $systemcontext)),
+                quiz_aigrader_cell_safe(quiz_aigrader_plain_name($record['quiz_name'], $systemcontext)),
+                quiz_aigrader_cell_safe(quiz_aigrader_plain_name($record['grader_name'], $systemcontext)),
+                quiz_aigrader_cell_safe($record['approved_count']),
+                quiz_aigrader_cell_safe($record['avg_per_question'] ?? '-'),
+            ];
+        }
+
+        \core\dataformat::download_data(
+            'aigrader_report_' . date('Y-m-d'),
+            'csv',
+            $exportcolumns,
+            new ArrayIterator($exportrows)
+        );
         exit;
     }
-    
+
     if ($download === 'excel') {
         require_once($CFG->libdir . '/excellib.class.php');
-        
+
         $filename = 'aigrader_report_' . date('Y-m-d') . '.xlsx';
         $workbook = new MoodleExcelWorkbook("-");
         $workbook->send($filename);
-        
+
         $sheet = $workbook->add_worksheet(get_string('grader_report', 'quiz_aigrader'));
-        
+
         $sheet->write_string(0, 0, get_string('grader_report', 'quiz_aigrader'));
-        $sheet->write_string(1, 0, 'Date Range: ' . userdate($startdate, '%d %B %Y') . ' - ' . userdate($enddate, '%d %B %Y'));
-        
-        $headers = [
-            get_string('course'),
-            get_string('quiz', 'quiz_aigrader'),
-            get_string('grader', 'quiz_aigrader'),
-            get_string('approved_count', 'quiz_aigrader'),
-            'Avg Time / Question',
-        ];
-        
+        $sheet->write_string(1, 0, $daterange);
+
         $col = 0;
-        foreach ($headers as $header) {
+        foreach ($exportcolumns as $header) {
             $sheet->write_string(3, $col, $header);
             $col++;
         }
-        
+
         $row = 4;
         foreach ($data as $record) {
-            $sheet->write_string($row, 0, $record['course_name']);
-            $sheet->write_string($row, 1, $record['quiz_name']);
-            $sheet->write_string($row, 2, $record['grader_name']);
+            $sheet->write_string(
+                $row,
+                0,
+                quiz_aigrader_cell_safe(quiz_aigrader_plain_name($record['course_name'], $systemcontext))
+            );
+            $sheet->write_string(
+                $row,
+                1,
+                quiz_aigrader_cell_safe(quiz_aigrader_plain_name($record['quiz_name'], $systemcontext))
+            );
+            $sheet->write_string(
+                $row,
+                2,
+                quiz_aigrader_cell_safe(quiz_aigrader_plain_name($record['grader_name'], $systemcontext))
+            );
             $sheet->write_number($row, 3, $record['approved_count']);
-            $sheet->write_string($row, 4, $record['avg_per_question'] ?? '-');
+            $sheet->write_string($row, 4, quiz_aigrader_cell_safe($record['avg_per_question'] ?? '-'));
             $row++;
         }
-        
+
         $row += 2;
         $sheet->write_string($row, 0, get_string('summary_by_grader', 'quiz_aigrader'));
         $row++;
         $sheet->write_string($row, 0, get_string('grader', 'quiz_aigrader'));
         $sheet->write_string($row, 1, get_string('total_approved', 'quiz_aigrader'));
         $row++;
-        
+
         foreach ($totals as $total) {
-            $sheet->write_string($row, 0, $total['grader_name']);
+            $sheet->write_string(
+                $row,
+                0,
+                quiz_aigrader_cell_safe(quiz_aigrader_plain_name($total['grader_name'], $systemcontext))
+            );
             $sheet->write_number($row, 1, $total['total_approved']);
             $row++;
         }
-        
+
         $workbook->close();
         exit;
     }
-    
+
     if ($download === 'pdf') {
         require_once($CFG->libdir . '/pdflib.php');
-        
+
         $pdf = new pdf('L', 'mm', 'A4', true, 'UTF-8', false);
-        $pdf->SetCreator('AI Grader');
-        $pdf->SetAuthor('AI Grader Report');
+        $pdf->SetCreator(get_string('pluginname', 'quiz_aigrader'));
+        $pdf->SetAuthor(get_string('pluginname', 'quiz_aigrader'));
         $pdf->SetTitle(get_string('grader_report', 'quiz_aigrader'));
-        
+
         $pdf->setPrintHeader(false);
         $pdf->setPrintFooter(false);
         $pdf->SetMargins(15, 15, 15);
         $pdf->SetAutoPageBreak(true, 15);
-        
+
         $pdf->AddPage();
-        
+
         $pdf->SetFont('helvetica', 'B', 16);
         $pdf->Cell(0, 10, get_string('grader_report', 'quiz_aigrader'), 0, 1);
-        
+
         $pdf->SetFont('helvetica', '', 10);
-        $pdf->Cell(0, 6, 'Date Range: ' . userdate($startdate, '%d %B %Y') . ' - ' . userdate($enddate, '%d %B %Y'), 0, 1);
+        $pdf->Cell(0, 6, $daterange, 0, 1);
         $pdf->Ln(5);
-        
+
         $pdf->SetFont('helvetica', 'B', 10);
-        $pdf->Cell(55, 8, 'Course', 1);
-        $pdf->Cell(55, 8, 'Quiz', 1);
-        $pdf->Cell(40, 8, 'Grader', 1);
-        $pdf->Cell(25, 8, 'Approved', 1);
-        $pdf->Cell(30, 8, 'Avg / Question', 1);
+        $pdf->Cell(55, 8, get_string('course'), 1);
+        $pdf->Cell(55, 8, get_string('quiz', 'quiz_aigrader'), 1);
+        $pdf->Cell(40, 8, get_string('grader', 'quiz_aigrader'), 1);
+        $pdf->Cell(25, 8, get_string('approved_count', 'quiz_aigrader'), 1);
+        $pdf->Cell(30, 8, get_string('avg_time_per_question', 'quiz_aigrader'), 1);
         $pdf->Ln();
-        
+
         $pdf->SetFont('helvetica', '', 10);
         foreach ($data as $record) {
-            $pdf->Cell(55, 7, substr($record['course_name'], 0, 26), 1);
-            $pdf->Cell(55, 7, substr($record['quiz_name'], 0, 26), 1);
-            $pdf->Cell(40, 7, substr($record['grader_name'], 0, 20), 1);
+            $coursename = quiz_aigrader_plain_name($record['course_name'], $systemcontext);
+            $quizname = quiz_aigrader_plain_name($record['quiz_name'], $systemcontext);
+            $gradername = quiz_aigrader_plain_name($record['grader_name'], $systemcontext);
+            $pdf->Cell(55, 7, core_text::substr($coursename, 0, 26), 1);
+            $pdf->Cell(55, 7, core_text::substr($quizname, 0, 26), 1);
+            $pdf->Cell(40, 7, core_text::substr($gradername, 0, 20), 1);
             $pdf->Cell(25, 7, $record['approved_count'], 1);
             $pdf->Cell(30, 7, $record['avg_per_question'] ?? '-', 1);
             $pdf->Ln();
         }
-        
+
         $pdf->Ln(10);
         $pdf->SetFont('helvetica', 'B', 12);
         $pdf->Cell(0, 8, get_string('summary_by_grader', 'quiz_aigrader'), 0, 1);
-        
+
         $pdf->SetFont('helvetica', 'B', 10);
-        $pdf->Cell(90, 8, 'Grader', 1);
-        $pdf->Cell(40, 8, 'Total Approved', 1);
+        $pdf->Cell(90, 8, get_string('grader', 'quiz_aigrader'), 1);
+        $pdf->Cell(40, 8, get_string('total_approved', 'quiz_aigrader'), 1);
         $pdf->Ln();
-        
+
         $pdf->SetFont('helvetica', '', 10);
         foreach ($totals as $total) {
-            $pdf->Cell(90, 7, $total['grader_name'], 1);
+            $gradername = quiz_aigrader_plain_name($total['grader_name'], $systemcontext);
+            $pdf->Cell(90, 7, core_text::substr($gradername, 0, 40), 1);
             $pdf->Cell(40, 7, $total['total_approved'], 1);
             $pdf->Ln();
         }
-        
+
         $pdf->Output('aigrader_report_' . date('Y-m-d') . '.pdf', 'D');
         exit;
     }
 }
 
-// Set up page manually (quiz report plugins cannot use admin_externalpage_setup
-// because their settings.php is only loaded when visiting quiz settings).
-$context = context_system::instance();
-$PAGE->set_context($context);
-$PAGE->set_url(new moodle_url('/mod/quiz/report/aigrader/grader_report.php'));
-$PAGE->set_pagelayout('admin');
-$PAGE->set_title(get_string('grader_report', 'quiz_aigrader'));
-$PAGE->set_heading(get_string('grader_report', 'quiz_aigrader'));
-
-// Add navigation breadcrumb.
-$PAGE->navbar->add(get_string('administration'));
-$PAGE->navbar->add(get_string('reports'));
-$PAGE->navbar->add(get_string('grader_report', 'quiz_aigrader'));
+// Standard admin external page setup for the HTML view. This registers the page against
+// the admin tree entry declared in settings.php and handles login, capability, layout,
+// title, heading and navigation for us.
+admin_externalpage_setup('quiz_aigrader_activity_report', '', [
+    'startdate' => $startdate,
+    'enddate' => $enddate,
+    'graderid' => $graderid,
+]);
 
 $baseurl = new moodle_url('/mod/quiz/report/aigrader/grader_report.php', [
     'startdate' => $startdate,
@@ -202,29 +365,33 @@ $baseurl = new moodle_url('/mod/quiz/report/aigrader/grader_report.php', [
 
 if ($action === 'saveschedule') {
     require_sesskey();
-    
+
     $frequency = required_param('frequency', PARAM_ALPHA);
+    if (!in_array($frequency, ['daily', 'weekly', 'monthly'], true)) {
+        throw new moodle_exception('invalidfrequency', 'quiz_aigrader');
+    }
+
     $rawrecipients = optional_param('recipients', '', PARAM_TEXT);
     $enabled = optional_param('enabled', 0, PARAM_INT);
-    
-    // Validate and sanitize email recipients to prevent header injection
+
+    // Validate and sanitize email recipients to prevent header injection.
     $recipients = '';
     if (!empty($rawrecipients)) {
         $emails = array_map('trim', explode(',', $rawrecipients));
         $validemails = [];
         foreach ($emails as $email) {
-            // Use Moodle's validate_email function for proper email validation
+            // Use Moodle's validate_email function for proper email validation.
             if (!empty($email) && validate_email($email)) {
                 $validemails[] = clean_param($email, PARAM_EMAIL);
             }
         }
         $recipients = implode(', ', $validemails);
     }
-    
+
     $now = time();
-    
+
     $existing = $DB->get_record('quiz_aigrader_schedules', ['userid' => $USER->id]);
-    
+
     if ($existing) {
         $existing->frequency = $frequency;
         $existing->recipients = $recipients;
@@ -244,174 +411,284 @@ if ($action === 'saveschedule') {
         $record->timemodified = $now;
         $DB->insert_record('quiz_aigrader_schedules', $record);
     }
-    
-    redirect($baseurl, get_string('schedule_saved', 'quiz_aigrader'), null, \core\output\notification::NOTIFY_SUCCESS);
+
+    redirect(
+        $baseurl,
+        get_string('schedule_saved', 'quiz_aigrader'),
+        null,
+        \core\output\notification::NOTIFY_SUCCESS
+    );
 }
 
-// Get data for page display (downloads handled above before admin_externalpage_setup)
+// Get data for page display (downloads are handled above, before any output).
 $data = service::get_grader_activity($startdate, $enddate, $graderid);
 $totals = service::get_grader_totals($startdate, $enddate, $graderid);
 
 echo $OUTPUT->header();
 
-echo html_writer::start_div('aigrader-report-container', ['style' => 'max-width: 1200px; margin: 0 auto; padding: 32px; background: #ffffff;']);
+echo html_writer::start_div('aigrader-report-container');
 
-echo html_writer::tag('h2', get_string('grader_report', 'quiz_aigrader'), ['style' => 'margin-bottom: 8px; font-size: 28px; font-weight: 700; color: #111827;']);
-echo html_writer::tag('p', get_string('grader_report_desc', 'quiz_aigrader'), ['style' => 'color: #6b7280; margin-bottom: 32px; font-size: 15px;']);
+echo html_writer::tag('h2', get_string('grader_report', 'quiz_aigrader'), ['class' => 'aigrader-report-title']);
+echo html_writer::tag('p', get_string('grader_report_desc', 'quiz_aigrader'), ['class' => 'aigrader-report-desc']);
 
-echo html_writer::start_tag('form', ['method' => 'get', 'action' => $baseurl->out_omit_querystring(), 'class' => 'aigrader-filter-form']);
+echo html_writer::start_tag('form', [
+    'method' => 'get',
+    'action' => $baseurl->out_omit_querystring(),
+    'class' => 'aigrader-filter-form',
+]);
 
-echo html_writer::start_div('', ['style' => 'display: flex; gap: 16px; flex-wrap: wrap; align-items: end; margin-bottom: 24px; padding: 24px; background: #ffffff; border-radius: 8px; border: 1px solid #e5e7eb;']);
+// The chosen range is saved as a user preference, which is a state change, so the form
+// must carry a sesskey for that save to be accepted.
+echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
 
-echo html_writer::start_div('', ['style' => 'flex: 1; min-width: 200px;']);
-echo html_writer::tag('label', get_string('startdate', 'quiz_aigrader'), ['for' => 'startdate', 'style' => 'display: block; margin-bottom: 6px; font-weight: 500; font-size: 14px; color: #374151;']);
+echo html_writer::start_div('aigrader-filter-row');
+
+echo html_writer::start_div('aigrader-filter-field');
+echo html_writer::tag(
+    'label',
+    get_string('startdate', 'quiz_aigrader'),
+    ['for' => 'startdate', 'class' => 'aigrader-filter-label']
+);
 echo html_writer::empty_tag('input', [
     'type' => 'date',
     'id' => 'startdate',
-    'name' => 'startdate_input',
-    'value' => date('Y-m-d', $startdate),
-    'style' => 'width: 100%; padding: 10px 12px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 14px; color: #111827;',
-    'onchange' => 'document.getElementById("startdate_hidden").value = Math.floor(new Date(this.value).getTime() / 1000);',
+    'name' => 'startdatetext',
+    'value' => quiz_aigrader_format_report_date($startdate),
+    'class' => 'aigrader-filter-control',
 ]);
-echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'startdate', 'id' => 'startdate_hidden', 'value' => $startdate]);
 echo html_writer::end_div();
 
-echo html_writer::start_div('', ['style' => 'flex: 1; min-width: 200px;']);
-echo html_writer::tag('label', get_string('enddate', 'quiz_aigrader'), ['for' => 'enddate', 'style' => 'display: block; margin-bottom: 6px; font-weight: 500; font-size: 14px; color: #374151;']);
+echo html_writer::start_div('aigrader-filter-field');
+echo html_writer::tag(
+    'label',
+    get_string('enddate', 'quiz_aigrader'),
+    ['for' => 'enddate', 'class' => 'aigrader-filter-label']
+);
 echo html_writer::empty_tag('input', [
     'type' => 'date',
     'id' => 'enddate',
-    'name' => 'enddate_input',
-    'value' => date('Y-m-d', $enddate),
-    'style' => 'width: 100%; padding: 10px 12px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 14px; color: #111827;',
-    'onchange' => 'document.getElementById("enddate_hidden").value = Math.floor(new Date(this.value).getTime() / 1000);',
+    'name' => 'enddatetext',
+    'value' => quiz_aigrader_format_report_date($enddate),
+    'class' => 'aigrader-filter-control',
 ]);
-echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'enddate', 'id' => 'enddate_hidden', 'value' => $enddate]);
 echo html_writer::end_div();
 
 $graders = service::get_graders();
 $graderoptions = [0 => get_string('all_graders', 'quiz_aigrader')];
 foreach ($graders as $grader) {
-    $graderoptions[$grader->id] = fullname($grader);
+    $graderoptions[$grader->id] = format_string(fullname($grader), true, ['context' => $systemcontext]);
 }
 
-echo html_writer::start_div('', ['style' => 'flex: 1; min-width: 200px;']);
-echo html_writer::tag('label', get_string('grader', 'quiz_aigrader'), ['for' => 'graderid', 'style' => 'display: block; margin-bottom: 6px; font-weight: 500; font-size: 14px; color: #374151;']);
-echo html_writer::select($graderoptions, 'graderid', $graderid, false, ['id' => 'graderid', 'style' => 'width: 100%; height: 42px; padding: 0 12px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 14px; color: #111827; line-height: 42px; -webkit-appearance: none; -moz-appearance: none; appearance: none; background: #fff url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 12 12\'%3E%3Cpath fill=\'%236b7280\' d=\'M2 4l4 4 4-4\'/%3E%3C/svg%3E") no-repeat right 12px center;']);
+echo html_writer::start_div('aigrader-filter-field');
+echo html_writer::tag(
+    'label',
+    get_string('grader', 'quiz_aigrader'),
+    ['for' => 'graderid', 'class' => 'aigrader-filter-label']
+);
+echo html_writer::select($graderoptions, 'graderid', $graderid, false, [
+    'id' => 'graderid',
+    'class' => 'aigrader-filter-control aigrader-filter-select',
+]);
 echo html_writer::end_div();
 
-echo html_writer::start_div('', ['style' => 'flex: 0 0 auto;']);
+echo html_writer::start_div('aigrader-filter-action');
 echo html_writer::empty_tag('input', [
     'type' => 'submit',
     'value' => get_string('filter', 'quiz_aigrader'),
-    'style' => 'padding: 10px 24px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 14px;',
+    'class' => 'aigrader-btn-submit',
 ]);
 echo html_writer::end_div();
 
 echo html_writer::end_div();
 echo html_writer::end_tag('form');
 
-echo html_writer::start_div('', ['style' => 'display: flex; gap: 12px; margin-bottom: 24px;']);
+echo html_writer::start_div('aigrader-download-row');
 
 $csvurl = new moodle_url($baseurl, ['download' => 'csv']);
-echo html_writer::link($csvurl, get_string('download_csv', 'quiz_aigrader'), [
-    'class' => 'btn',
-    'style' => 'padding: 10px 20px; background: #ffffff; color: #374151; border: 1px solid #e5e7eb; border-radius: 6px; text-decoration: none; font-weight: 500; transition: all 0.2s;',
-]);
+echo html_writer::link(
+    $csvurl,
+    get_string('download_csv', 'quiz_aigrader'),
+    ['class' => 'btn aigrader-btn-download']
+);
 
 $pdfurl = new moodle_url($baseurl, ['download' => 'pdf']);
-echo html_writer::link($pdfurl, get_string('download_pdf', 'quiz_aigrader'), [
-    'class' => 'btn',
-    'style' => 'padding: 10px 20px; background: #3b82f6; color: #ffffff; border: 1px solid #3b82f6; border-radius: 6px; text-decoration: none; font-weight: 500; transition: all 0.2s;',
-]);
+echo html_writer::link(
+    $pdfurl,
+    get_string('download_pdf', 'quiz_aigrader'),
+    ['class' => 'btn aigrader-btn-download aigrader-btn-download-primary']
+);
 
 echo html_writer::end_div();
 
 if (!empty($totals)) {
-    echo html_writer::start_div('', ['style' => 'display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px;']);
-    
+    echo html_writer::start_div('aigrader-stat-grid');
+
     $grandtotal = array_sum(array_column($totals, 'total_approved'));
-    
-    echo html_writer::start_div('', ['style' => 'background: #ffffff; border: 1px solid #e5e7eb; padding: 24px; border-radius: 8px;']);
-    echo html_writer::tag('div', get_string('total_approved', 'quiz_aigrader'), ['style' => 'font-size: 13px; color: #6b7280; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;']);
-    echo html_writer::tag('div', $grandtotal, ['style' => 'font-size: 36px; font-weight: 700; color: #3b82f6;']);
+
+    echo html_writer::start_div('aigrader-stat-tile');
+    echo html_writer::tag(
+        'div',
+        get_string('total_approved', 'quiz_aigrader'),
+        ['class' => 'aigrader-stat-tile-label']
+    );
+    echo html_writer::tag('div', $grandtotal, ['class' => 'aigrader-stat-tile-value aigrader-num-blue']);
     echo html_writer::end_div();
-    
-    echo html_writer::start_div('', ['style' => 'background: #ffffff; border: 1px solid #e5e7eb; padding: 24px; border-radius: 8px;']);
-    echo html_writer::tag('div', get_string('active_graders', 'quiz_aigrader'), ['style' => 'font-size: 13px; color: #6b7280; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;']);
-    echo html_writer::tag('div', count($totals), ['style' => 'font-size: 36px; font-weight: 700; color: #111827;']);
+
+    echo html_writer::start_div('aigrader-stat-tile');
+    echo html_writer::tag(
+        'div',
+        get_string('active_graders', 'quiz_aigrader'),
+        ['class' => 'aigrader-stat-tile-label']
+    );
+    echo html_writer::tag('div', count($totals), ['class' => 'aigrader-stat-tile-value aigrader-num-dark']);
     echo html_writer::end_div();
-    
-    echo html_writer::start_div('', ['style' => 'background: #ffffff; border: 1px solid #e5e7eb; padding: 24px; border-radius: 8px;']);
-    echo html_writer::tag('div', get_string('avg_per_grader', 'quiz_aigrader'), ['style' => 'font-size: 13px; color: #6b7280; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;']);
-    echo html_writer::tag('div', round($grandtotal / count($totals), 1), ['style' => 'font-size: 36px; font-weight: 700; color: #111827;']);
+
+    echo html_writer::start_div('aigrader-stat-tile');
+    echo html_writer::tag(
+        'div',
+        get_string('avg_per_grader', 'quiz_aigrader'),
+        ['class' => 'aigrader-stat-tile-label']
+    );
+    echo html_writer::tag(
+        'div',
+        round($grandtotal / count($totals), 1),
+        ['class' => 'aigrader-stat-tile-value aigrader-num-dark']
+    );
     echo html_writer::end_div();
-    
-    // Add total students graded stat card
+
+    // Total students graded stat card.
     $totalstudents = array_sum(array_column($data, 'students_graded'));
-    echo html_writer::start_div('', ['style' => 'background: #ffffff; border: 1px solid #e5e7eb; padding: 24px; border-radius: 8px;']);
-    echo html_writer::tag('div', get_string('total_students', 'quiz_aigrader'), ['style' => 'font-size: 13px; color: #6b7280; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;']);
-    echo html_writer::tag('div', $totalstudents, ['style' => 'font-size: 36px; font-weight: 700; color: #10b981;']);
+    echo html_writer::start_div('aigrader-stat-tile');
+    echo html_writer::tag(
+        'div',
+        get_string('total_students', 'quiz_aigrader'),
+        ['class' => 'aigrader-stat-tile-label']
+    );
+    echo html_writer::tag('div', $totalstudents, ['class' => 'aigrader-stat-tile-value aigrader-num-green']);
     echo html_writer::end_div();
-    
-    // Avg time per question — use approved count from $data (same filter as time data)
+
+    // Average time per question - uses the approved count from $data (same filter as the time data).
     $totaltimeseconds = array_sum(array_column($data, 'time_seconds'));
     $filteredapproved = array_sum(array_column($data, 'approved_count'));
-    $overallavg = ($filteredapproved > 0 && $totaltimeseconds > 0) ? round($totaltimeseconds / $filteredapproved, 1) : 0;
-    $overallavgformatted = $overallavg > 0 ? $overallavg . 's' : '-';
-    echo html_writer::start_div('', ['style' => 'background: #ffffff; border: 1px solid #e5e7eb; padding: 24px; border-radius: 8px;']);
-    echo html_writer::tag('div', 'AVG TIME / QUESTION', ['style' => 'font-size: 13px; color: #6b7280; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;']);
-    echo html_writer::tag('div', $overallavgformatted, ['style' => 'font-size: 36px; font-weight: 700; color: #f59e0b;']);
+    $overallavg = ($filteredapproved > 0 && $totaltimeseconds > 0)
+        ? round($totaltimeseconds / $filteredapproved, 1)
+        : 0;
+    $overallavgformatted = $overallavg > 0
+        ? get_string('seconds_suffix', 'quiz_aigrader', $overallavg)
+        : '-';
+    echo html_writer::start_div('aigrader-stat-tile');
+    echo html_writer::tag(
+        'div',
+        get_string('avg_time_per_question', 'quiz_aigrader'),
+        ['class' => 'aigrader-stat-tile-label']
+    );
+    echo html_writer::tag(
+        'div',
+        $overallavgformatted,
+        ['class' => 'aigrader-stat-tile-value aigrader-num-amber']
+    );
     echo html_writer::end_div();
-    
+
     echo html_writer::end_div();
 }
 
-echo html_writer::tag('h3', get_string('detailed_report', 'quiz_aigrader'), ['style' => 'margin-bottom: 16px; font-size: 18px; font-weight: 600; color: #111827;']);
+echo html_writer::tag(
+    'h3',
+    get_string('detailed_report', 'quiz_aigrader'),
+    ['class' => 'aigrader-section-heading']
+);
 
 if (empty($data)) {
-    echo html_writer::div(
-        get_string('no_data_for_period', 'quiz_aigrader'),
-        '',
-        ['style' => 'padding: 24px; border-radius: 8px; background: #f9fafb; border: 1px solid #e5e7eb; color: #6b7280; text-align: center;']
-    );
+    echo html_writer::div(get_string('no_data_for_period', 'quiz_aigrader'), 'aigrader-empty-notice');
 } else {
-    echo html_writer::start_div('', ['style' => 'background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;']);
-    echo html_writer::start_tag('table', ['class' => 'generaltable', 'style' => 'width: 100%; border-collapse: collapse;']);
-    
+    echo html_writer::start_div('aigrader-table-card');
+    echo html_writer::start_tag('table', ['class' => 'generaltable aigrader-report-table']);
+
     echo html_writer::start_tag('thead');
-    echo html_writer::start_tag('tr', ['style' => 'background: #f9fafb;']);
-    echo html_writer::tag('th', get_string('course'), ['style' => 'padding: 14px 16px; text-align: left; border-bottom: 1px solid #e5e7eb; font-weight: 600; font-size: 13px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px;']);
-    echo html_writer::tag('th', get_string('quiz', 'quiz_aigrader'), ['style' => 'padding: 14px 16px; text-align: left; border-bottom: 1px solid #e5e7eb; font-weight: 600; font-size: 13px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px;']);
-    echo html_writer::tag('th', get_string('grader', 'quiz_aigrader'), ['style' => 'padding: 14px 16px; text-align: left; border-bottom: 1px solid #e5e7eb; font-weight: 600; font-size: 13px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px;']);
-    echo html_writer::tag('th', get_string('students_graded', 'quiz_aigrader'), ['style' => 'padding: 14px 16px; text-align: right; border-bottom: 1px solid #e5e7eb; font-weight: 600; font-size: 13px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px;']);
-    echo html_writer::tag('th', get_string('approved_count', 'quiz_aigrader'), ['style' => 'padding: 14px 16px; text-align: right; border-bottom: 1px solid #e5e7eb; font-weight: 600; font-size: 13px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px;']);
-    echo html_writer::tag('th', get_string('time_spent', 'quiz_aigrader'), ['style' => 'padding: 14px 16px; text-align: right; border-bottom: 1px solid #e5e7eb; font-weight: 600; font-size: 13px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px;']);
-    echo html_writer::tag('th', 'AVG TIME / QUESTION', ['style' => 'padding: 14px 16px; text-align: right; border-bottom: 1px solid #e5e7eb; font-weight: 600; font-size: 13px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px;']);
+    echo html_writer::start_tag('tr', ['class' => 'aigrader-report-headrow']);
+    echo html_writer::tag('th', get_string('course'), ['class' => 'aigrader-report-th']);
+    echo html_writer::tag('th', get_string('quiz', 'quiz_aigrader'), ['class' => 'aigrader-report-th']);
+    echo html_writer::tag('th', get_string('grader', 'quiz_aigrader'), ['class' => 'aigrader-report-th']);
+    echo html_writer::tag(
+        'th',
+        get_string('students_graded', 'quiz_aigrader'),
+        ['class' => 'aigrader-report-th aigrader-report-th-right']
+    );
+    echo html_writer::tag(
+        'th',
+        get_string('approved_count', 'quiz_aigrader'),
+        ['class' => 'aigrader-report-th aigrader-report-th-right']
+    );
+    echo html_writer::tag(
+        'th',
+        get_string('time_spent', 'quiz_aigrader'),
+        ['class' => 'aigrader-report-th aigrader-report-th-right']
+    );
+    echo html_writer::tag(
+        'th',
+        get_string('avg_time_per_question', 'quiz_aigrader'),
+        ['class' => 'aigrader-report-th aigrader-report-th-right']
+    );
     echo html_writer::end_tag('tr');
     echo html_writer::end_tag('thead');
-    
+
     echo html_writer::start_tag('tbody');
     foreach ($data as $row) {
-        echo html_writer::start_tag('tr', ['style' => 'transition: background 0.2s;']);
-        echo html_writer::tag('td', $row['course_name'], ['style' => 'padding: 14px 16px; border-bottom: 1px solid #f3f4f6; color: #111827; font-size: 14px;']);
-        echo html_writer::tag('td', $row['quiz_name'], ['style' => 'padding: 14px 16px; border-bottom: 1px solid #f3f4f6; color: #111827; font-size: 14px;']);
-        echo html_writer::tag('td', $row['grader_name'], ['style' => 'padding: 14px 16px; border-bottom: 1px solid #f3f4f6; color: #111827; font-size: 14px;']);
-        echo html_writer::tag('td', $row['students_graded'], ['style' => 'padding: 14px 16px; text-align: right; border-bottom: 1px solid #f3f4f6; font-weight: 600; color: #10b981; font-size: 14px;']);
-        echo html_writer::tag('td', $row['approved_count'], ['style' => 'padding: 14px 16px; text-align: right; border-bottom: 1px solid #f3f4f6; font-weight: 600; color: #3b82f6; font-size: 14px;']);
-        echo html_writer::tag('td', $row['time_formatted'], ['style' => 'padding: 14px 16px; text-align: right; border-bottom: 1px solid #f3f4f6; font-weight: 600; color: #8b5cf6; font-size: 14px;']);
-        $avgperq = ($row['approved_count'] > 0 && $row['time_seconds'] > 0) ? round($row['time_seconds'] / $row['approved_count'], 1) : 0;
-        $avgperqformatted = $avgperq > 0 ? $avgperq . 's' : '-';
-        echo html_writer::tag('td', $avgperqformatted, ['style' => 'padding: 14px 16px; text-align: right; border-bottom: 1px solid #f3f4f6; font-weight: 600; color: #f59e0b; font-size: 14px;']);
+        echo html_writer::start_tag('tr');
+        echo html_writer::tag(
+            'td',
+            format_string($row['course_name'], true, ['context' => $systemcontext]),
+            ['class' => 'aigrader-report-td']
+        );
+        echo html_writer::tag(
+            'td',
+            format_string($row['quiz_name'], true, ['context' => $systemcontext]),
+            ['class' => 'aigrader-report-td']
+        );
+        echo html_writer::tag(
+            'td',
+            format_string($row['grader_name'], true, ['context' => $systemcontext]),
+            ['class' => 'aigrader-report-td']
+        );
+        echo html_writer::tag(
+            'td',
+            $row['students_graded'],
+            ['class' => 'aigrader-report-td aigrader-report-td-right aigrader-num-green']
+        );
+        echo html_writer::tag(
+            'td',
+            $row['approved_count'],
+            ['class' => 'aigrader-report-td aigrader-report-td-right aigrader-num-blue']
+        );
+        echo html_writer::tag(
+            'td',
+            $row['time_formatted'],
+            ['class' => 'aigrader-report-td aigrader-report-td-right aigrader-num-purple']
+        );
+        $avgperq = ($row['approved_count'] > 0 && $row['time_seconds'] > 0)
+            ? round($row['time_seconds'] / $row['approved_count'], 1)
+            : 0;
+        $avgperqformatted = $avgperq > 0
+            ? get_string('seconds_suffix', 'quiz_aigrader', $avgperq)
+            : '-';
+        echo html_writer::tag(
+            'td',
+            $avgperqformatted,
+            ['class' => 'aigrader-report-td aigrader-report-td-right aigrader-num-amber']
+        );
         echo html_writer::end_tag('tr');
     }
     echo html_writer::end_tag('tbody');
-    
+
     echo html_writer::end_tag('table');
     echo html_writer::end_div();
 }
 
-echo html_writer::tag('h3', get_string('email_scheduler', 'quiz_aigrader'), ['style' => 'margin-top: 40px; margin-bottom: 16px; font-size: 18px; font-weight: 600; color: #111827;']);
+echo html_writer::tag(
+    'h3',
+    get_string('email_scheduler', 'quiz_aigrader'),
+    ['class' => 'aigrader-section-heading aigrader-schedule-heading']
+);
 
 $schedule = $DB->get_record('quiz_aigrader_schedules', ['userid' => $USER->id]);
 
@@ -419,12 +696,16 @@ echo html_writer::start_tag('form', ['method' => 'post', 'action' => $baseurl->o
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'action', 'value' => 'saveschedule']);
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
 
-echo html_writer::start_div('', ['style' => 'padding: 24px; background: #ffffff; border-radius: 8px; border: 1px solid #e5e7eb;']);
+echo html_writer::start_div('aigrader-panel');
 
-echo html_writer::start_div('', ['style' => 'display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;']);
+echo html_writer::start_div('aigrader-form-grid');
 
-echo html_writer::start_div('');
-echo html_writer::tag('label', get_string('frequency', 'quiz_aigrader'), ['for' => 'frequency', 'style' => 'display: block; margin-bottom: 6px; font-weight: 500; font-size: 14px; color: #374151;']);
+echo html_writer::start_div('aigrader-form-field');
+echo html_writer::tag(
+    'label',
+    get_string('frequency', 'quiz_aigrader'),
+    ['for' => 'frequency', 'class' => 'aigrader-filter-label']
+);
 $freqoptions = [
     'daily' => get_string('daily', 'quiz_aigrader'),
     'weekly' => get_string('weekly', 'quiz_aigrader'),
@@ -432,41 +713,60 @@ $freqoptions = [
 ];
 echo html_writer::select($freqoptions, 'frequency', $schedule ? $schedule->frequency : 'weekly', false, [
     'id' => 'frequency',
-    'style' => 'width: 100%; padding: 12px 16px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 14px; color: #111827; height: auto; min-height: 44px; line-height: 1.4;',
+    'class' => 'aigrader-filter-control aigrader-frequency-select',
 ]);
 echo html_writer::end_div();
 
-echo html_writer::start_div('');
-echo html_writer::tag('label', get_string('cc_recipients', 'quiz_aigrader'), ['for' => 'recipients', 'style' => 'display: block; margin-bottom: 6px; font-weight: 500; font-size: 14px; color: #374151;']);
+echo html_writer::start_div('aigrader-form-field');
+echo html_writer::tag(
+    'label',
+    get_string('cc_recipients', 'quiz_aigrader'),
+    ['for' => 'recipients', 'class' => 'aigrader-filter-label']
+);
 echo html_writer::empty_tag('input', [
     'type' => 'text',
     'id' => 'recipients',
     'name' => 'recipients',
     'value' => $schedule ? $schedule->recipients : '',
-    'placeholder' => 'finance@example.com, manager@example.com',
-    'style' => 'width: 100%; padding: 10px 12px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 14px; color: #111827;',
+    'placeholder' => get_string('cc_recipients_placeholder', 'quiz_aigrader'),
+    'class' => 'aigrader-filter-control',
 ]);
-echo html_writer::tag('small', get_string('cc_recipients_help', 'quiz_aigrader'), ['style' => 'color: #6b7280; display: block; margin-top: 6px; font-size: 13px;']);
+echo html_writer::tag(
+    'small',
+    get_string('cc_recipients_help', 'quiz_aigrader'),
+    ['class' => 'aigrader-help-text']
+);
 echo html_writer::end_div();
 
-echo html_writer::start_div('', ['style' => 'display: flex; align-items: center; padding-top: 24px;']);
-echo html_writer::empty_tag('input', ['type' => 'checkbox', 'name' => 'enabled', 'id' => 'enabled', 'value' => '1', 'style' => 'margin-right: 10px; width: 18px; height: 18px; cursor: pointer;'] + ($schedule && $schedule->enabled ? ['checked' => 'checked'] : []));
-echo html_writer::tag('label', get_string('enable_schedule', 'quiz_aigrader'), ['for' => 'enabled', 'style' => 'font-size: 14px; color: #374151; cursor: pointer;']);
+echo html_writer::start_div('aigrader-checkbox-field');
+echo html_writer::empty_tag('input', [
+    'type' => 'checkbox',
+    'name' => 'enabled',
+    'id' => 'enabled',
+    'value' => '1',
+    'class' => 'aigrader-checkbox',
+] + ($schedule && $schedule->enabled ? ['checked' => 'checked'] : []));
+echo html_writer::tag(
+    'label',
+    get_string('enable_schedule', 'quiz_aigrader'),
+    ['for' => 'enabled', 'class' => 'aigrader-checkbox-label']
+);
 echo html_writer::end_div();
 
 echo html_writer::end_div();
 
-echo html_writer::start_div('', ['style' => 'margin-top: 20px; display: flex; align-items: center; gap: 16px;']);
+echo html_writer::start_div('aigrader-submit-row');
 echo html_writer::empty_tag('input', [
     'type' => 'submit',
     'value' => get_string('save_schedule', 'quiz_aigrader'),
-    'style' => 'padding: 10px 24px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 14px;',
+    'class' => 'aigrader-btn-submit',
 ]);
 
 if ($schedule && $schedule->enabled && $schedule->nextrun) {
-    echo html_writer::tag('span', 
+    echo html_writer::tag(
+        'span',
         get_string('next_report', 'quiz_aigrader') . ': ' . userdate($schedule->nextrun, '%d %B %Y %H:%M'),
-        ['style' => 'color: #6b7280; font-size: 14px;']
+        ['class' => 'aigrader-next-run']
     );
 }
 

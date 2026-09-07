@@ -2,10 +2,9 @@
 /* All selectors MUST be scoped under .aigrader-container to avoid affecting Moodle UI */
 /* Design System: EssayGrader AI Premium SaaS Theme v1.0 */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap');
 
 .aigrader-container {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     /* =============================================================
        DESIGN TOKENS - EssayGrader AI Premium SaaS Theme
        Matches homepage styling (Stripe/Linear/Notion inspired)
@@ -16,7 +15,7 @@
     --ag-primary-active: hsl(217, 91%, 45%);
     --ag-primary-light: hsl(217, 91%, 95%);
     --ag-primary-foreground: hsl(0, 0%, 100%);
-    
+
     /* Semantic Colors */
     --ag-success: hsl(142, 76%, 36%);
     --ag-success-hover: hsl(142, 76%, 30%);
@@ -29,22 +28,22 @@
     --ag-danger-light: hsl(0, 84%, 95%);
     --ag-info: hsl(199, 89%, 48%);
     --ag-info-light: hsl(199, 89%, 95%);
-    
+
     /* Neutral Colors */
     --ag-text: hsl(0, 0%, 9%);
     --ag-text-secondary: hsl(217, 8%, 35%);
     --ag-text-tertiary: hsl(217, 8%, 55%);
     --ag-text-placeholder: hsl(217, 8%, 65%);
-    
+
     --ag-bg: hsl(0, 0%, 100%);
     --ag-bg-subtle: hsl(0, 0%, 98%);
     --ag-bg-muted: hsl(217, 8%, 96%);
     --ag-bg-hover: hsl(217, 8%, 94%);
-    
+
     --ag-border: hsl(0, 0%, 89%);
     --ag-border-light: hsl(0, 0%, 93%);
     --ag-border-focus: hsl(217, 91%, 60%);
-    
+
     /* Shadows - Premium subtle shadows */
     --ag-shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
     --ag-shadow-sm: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
@@ -53,21 +52,21 @@
     --ag-shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
     --ag-shadow-glow: 0 0 20px hsla(217, 91%, 60%, 0.15);
     --ag-ring: 0 0 0 3px hsla(217, 91%, 60%, 0.25);
-    
+
     /* Gradient tokens */
     --ag-gradient-primary: linear-gradient(135deg, hsl(217, 91%, 60%) 0%, hsl(280, 70%, 55%) 100%);
     --ag-gradient-header: linear-gradient(135deg, hsl(217, 91%, 35%) 0%, hsl(217, 91%, 55%) 50%, hsl(280, 70%, 55%) 100%);
     --ag-gradient-subtle: linear-gradient(135deg, hsla(217, 91%, 60%, 0.05) 0%, hsla(280, 70%, 55%, 0.05) 100%);
-    
+
     /* Border Radius */
     --ag-radius-sm: 4px;
     --ag-radius: 6px;
     --ag-radius-lg: 8px;
     --ag-radius-xl: 12px;
-    
+
     /* Transitions */
     --ag-transition: all 150ms ease;
-    
+
     /* Spacing scale */
     --ag-space-xs: 4px;
     --ag-space-sm: 8px;
@@ -106,24 +105,24 @@ body[data-bs-theme="dark"] .aigrader-container,
     --ag-bg-subtle: hsl(222, 47%, 9%);
     --ag-bg-muted: hsl(222, 30%, 12%);
     --ag-bg-hover: hsl(222, 30%, 15%);
-    
+
     /* Text Colors */
     --ag-text: hsl(0, 0%, 98%);
     --ag-text-secondary: hsl(217, 8%, 70%);
     --ag-text-tertiary: hsl(217, 8%, 55%);
     --ag-text-placeholder: hsl(217, 8%, 45%);
-    
+
     /* Borders */
     --ag-border: hsl(222, 30%, 18%);
     --ag-border-light: hsl(222, 30%, 14%);
-    
+
     /* Semantic light colors for dark mode */
     --ag-primary-light: hsl(217, 91%, 15%);
     --ag-success-light: hsl(142, 76%, 12%);
     --ag-warning-light: hsl(27, 87%, 12%);
     --ag-danger-light: hsl(0, 84%, 12%);
     --ag-info-light: hsl(199, 89%, 12%);
-    
+
     /* Shadows for dark mode */
     --ag-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
     --ag-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
@@ -1784,11 +1783,11 @@ table.aigrader-table td.aigrader-feedback {
 
 /* =============================================================
    RESPONSIVE DESIGN - Tablet and Mobile
-   
+
    Strategy:
    - 768px: Tablet - Stack header, horizontal scroll for table
    - 480px: Mobile - Full-width buttons, compact spacing
-   
+
    Note: Table uses horizontal scroll on tablet/mobile as the
    multi-column layout is essential for grading workflow.
    ============================================================= */
@@ -2135,17 +2134,17 @@ table.aigrader-table td.aigrader-feedback {
         max-width: 48px !important;
         max-height: 48px !important;
     }
-    
+
     /* Cards - Mobile responsive */
     .aigrader-container .aigrader-card-header {
         flex-direction: column !important;
         align-items: flex-start !important;
     }
-    
+
     .aigrader-container .aigrader-feedback-section {
         flex-direction: column !important;
     }
-    
+
     .aigrader-container .aigrader-card-actions {
         width: 100% !important;
         justify-content: space-between !important;
@@ -2775,4 +2774,323 @@ body#page-mod-quiz-report .aigrader-container .aigrader-section-label::before {
     text-decoration: underline !important;
     cursor: pointer !important;
     margin-left: 4px !important;
+}
+
+/* ------------------------------------------------------------------
+ * AI Grader - classes replacing former inline style attributes.
+ * ------------------------------------------------------------------ */
+
+/* Essay Guard badge / advisory decorations (quiz report cards). */
+.aigrader-container .aigrader-eg-badge-icon {
+    margin-right: 3px;
+}
+.aigrader-container .aigrader-eg-advisory-icon {
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+.aigrader-container .aigrader-eg-link {
+    color: inherit;
+    font-weight: 600;
+}
+.aigrader-container .aigrader-feedback-hidden {
+    display: none;
+}
+
+/* ------------------------------------------------------------------
+ * Grader activity report page (grader_report.php).
+ * ------------------------------------------------------------------ */
+.aigrader-report-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 32px;
+    background: #ffffff;
+}
+.aigrader-report-container .aigrader-report-title {
+    margin-bottom: 8px;
+    font-size: 28px;
+    font-weight: 700;
+    color: #111827;
+}
+.aigrader-report-container .aigrader-report-desc {
+    color: #6b7280;
+    margin-bottom: 32px;
+    font-size: 15px;
+}
+.aigrader-report-container .aigrader-filter-row {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    align-items: end;
+    margin-bottom: 24px;
+    padding: 24px;
+    background: #ffffff;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+}
+.aigrader-report-container .aigrader-filter-field {
+    flex: 1;
+    min-width: 200px;
+}
+.aigrader-report-container .aigrader-filter-action {
+    flex: 0 0 auto;
+}
+.aigrader-report-container .aigrader-filter-label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 500;
+    font-size: 14px;
+    color: #374151;
+}
+.aigrader-report-container .aigrader-filter-control {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #111827;
+}
+.aigrader-report-container select.aigrader-filter-select {
+    height: 42px;
+    padding: 0 12px;
+    line-height: 42px;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M2 4l4 4 4-4'/%3E%3C/svg%3E") no-repeat right 12px center;
+}
+.aigrader-report-container select.aigrader-frequency-select {
+    padding: 12px 16px;
+    height: auto;
+    min-height: 44px;
+    line-height: 1.4;
+}
+.aigrader-report-container .aigrader-btn-submit {
+    padding: 10px 24px;
+    background: #3b82f6;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 14px;
+}
+.aigrader-report-container .aigrader-download-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+.aigrader-report-container .aigrader-btn-download {
+    padding: 10px 20px;
+    background: #ffffff;
+    color: #374151;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+.aigrader-report-container .aigrader-btn-download-primary {
+    background: #3b82f6;
+    color: #ffffff;
+    border-color: #3b82f6;
+}
+.aigrader-report-container .aigrader-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+.aigrader-report-container .aigrader-stat-tile {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    padding: 24px;
+    border-radius: 8px;
+}
+.aigrader-report-container .aigrader-stat-tile-label {
+    font-size: 13px;
+    color: #6b7280;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+.aigrader-report-container .aigrader-stat-tile-value {
+    font-size: 36px;
+    font-weight: 700;
+}
+.aigrader-report-container .aigrader-num-blue {
+    color: #3b82f6;
+}
+.aigrader-report-container .aigrader-num-dark {
+    color: #111827;
+}
+.aigrader-report-container .aigrader-num-green {
+    color: #10b981;
+}
+.aigrader-report-container .aigrader-num-amber {
+    color: #f59e0b;
+}
+.aigrader-report-container .aigrader-num-purple {
+    color: #8b5cf6;
+}
+.aigrader-report-container .aigrader-section-heading {
+    margin-bottom: 16px;
+    font-size: 18px;
+    font-weight: 600;
+    color: #111827;
+}
+.aigrader-report-container .aigrader-schedule-heading {
+    margin-top: 40px;
+}
+.aigrader-report-container .aigrader-empty-notice {
+    padding: 24px;
+    border-radius: 8px;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    color: #6b7280;
+    text-align: center;
+}
+.aigrader-report-container .aigrader-table-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    overflow: hidden;
+}
+.aigrader-report-container .aigrader-report-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.aigrader-report-container .aigrader-report-headrow {
+    background: #f9fafb;
+}
+.aigrader-report-container .aigrader-report-th {
+    padding: 14px 16px;
+    text-align: left;
+    border-bottom: 1px solid #e5e7eb;
+    font-weight: 600;
+    font-size: 13px;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.aigrader-report-container .aigrader-report-th-right,
+.aigrader-report-container .aigrader-report-td-right {
+    text-align: right;
+}
+.aigrader-report-container .aigrader-report-td {
+    padding: 14px 16px;
+    border-bottom: 1px solid #f3f4f6;
+    color: #111827;
+    font-size: 14px;
+}
+.aigrader-report-container .aigrader-report-td-right {
+    font-weight: 600;
+}
+.aigrader-report-container .aigrader-panel {
+    padding: 24px;
+    background: #ffffff;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+}
+.aigrader-report-container .aigrader-form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+.aigrader-report-container .aigrader-checkbox-field {
+    display: flex;
+    align-items: center;
+    padding-top: 24px;
+}
+.aigrader-report-container .aigrader-checkbox {
+    margin-right: 10px;
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+.aigrader-report-container .aigrader-checkbox-label {
+    font-size: 14px;
+    color: #374151;
+    cursor: pointer;
+}
+.aigrader-report-container .aigrader-help-text {
+    color: #6b7280;
+    display: block;
+    margin-top: 6px;
+    font-size: 13px;
+}
+.aigrader-report-container .aigrader-submit-row {
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+.aigrader-report-container .aigrader-next-run {
+    color: #6b7280;
+    font-size: 14px;
+}
+
+/* Date filter on the grading screen. */
+.aigrader-container .aigrader-date-filter {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0;
+}
+
+.aigrader-container .aigrader-date-filter-label {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ag-text-secondary, #475569);
+}
+
+.aigrader-container .aigrader-date-filter-input {
+    padding: 6px 10px;
+    font-size: 13px;
+    line-height: 1.4;
+    color: var(--ag-text-primary, #0f172a);
+    background: #fff;
+    border: 1px solid var(--ag-border, #cbd5e1);
+    border-radius: 6px;
+}
+
+.aigrader-container .aigrader-date-filter-input:focus {
+    outline: 2px solid var(--ag-primary, hsl(217, 91%, 60%));
+    outline-offset: 1px;
+}
+
+.aigrader-container .aigrader-date-filter-apply {
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    background: var(--ag-primary, hsl(217, 91%, 60%));
+    border: 1px solid transparent;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.aigrader-container .aigrader-date-filter-apply:hover {
+    background: var(--ag-primary-hover, hsl(217, 91%, 50%));
+}
+
+.aigrader-container .aigrader-date-filter-clear {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ag-text-secondary, #475569);
+    text-decoration: underline;
+}
+
+.aigrader-container .aigrader-date-filter-notice {
+    flex-basis: 100%;
+    margin-top: 6px;
+    font-size: 12px;
+    color: var(--ag-text-secondary, #475569);
+}
+
+.aigrader-container .aigrader-no-results .aigrader-date-filter-clear {
+    display: inline-block;
+    margin-top: 12px;
 }

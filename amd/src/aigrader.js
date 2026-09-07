@@ -9,7 +9,7 @@
  *
  * @module     quiz_aigrader/aigrader
  */
-define(['jquery', 'core/str', 'core/notification'], function ($, Str, Notification) {
+define(['jquery', 'core/str', 'core/notification'], function($, Str, Notification) {
 
     let config = {};
     let strings = {};
@@ -62,7 +62,7 @@ define(['jquery', 'core/str', 'core/notification'], function ($, Str, Notificati
 
         const html =
             `<div class="aigrader-alert ${typeClass} ag-flex-center ag-gap-md">
-                <svg class="aigrader-alert-icon ag-icon-md ag-icon-fixed" xmlns="http://www.w3.org/2000/svg" 
+                <svg class="aigrader-alert-icon ag-icon-md ag-icon-fixed" xmlns="http://www.w3.org/2000/svg"
                      viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     ${icon}
                 </svg>
@@ -75,7 +75,7 @@ define(['jquery', 'core/str', 'core/notification'], function ($, Str, Notificati
         $('.aigrader-header').after(html);
 
         setTimeout(() => {
-            $('.aigrader-alert').fadeOut(300, function () {
+            $('.aigrader-alert').fadeOut(300, function() {
                 $(this).remove();
             });
         }, 4000);
@@ -152,26 +152,26 @@ define(['jquery', 'core/str', 'core/notification'], function ($, Str, Notificati
                 text = String(text);
             }
         }
-        
+
         // Parse text into sections
         const sections = [];
         let currentSection = null;
-        
+
         // Comprehensive regex to strip all bullet prefixes consistently
         // Covers: bullets (*****), squares (**), triangles ( >  > ), dashes (--- -  - ), middle dots (***), arrows ( ->  =>  > )
         // Also covers colored circle emoji: [green][orange][blue][purple][yellow][red][black-circle][white-circle] (AI often returns these as bullet markers)
         // Applied to handle double bullets like "* *" and numbered lists like "1." or "1)" or "1:"
         // Uses + quantifier to strip consecutive bullet chars, and repeats if needed
         const STRIP = /^(?:[******* >  > >>**--- -  - *** ->  =>  > \u2022\u2023\u2043\u25CF\u25CB\u25E6\u25AA\u25AB\u25B8\u25B9\u25BA\u25BB\u25C6\u25C7\u2010\u2011\u2012\u2013\u2014\u00B7\u2219\u22C5\u2192\u21D2\u27A4\u{1F7E0}\u{1F7E1}\u{1F7E2}\u{1F7E3}\u{1F7E4}\u{1F534}\u{1F535}\u{1F7E5}\u{1F7E6}\u{1F7E7}\u{1F7E8}\u{1F7E9}\u{1F7EA}\u{1F7EB}\u26AB\u26AA\u2B24]+\s*|\d+[.):]\s*|[-*+]\s+)/u;
-        
+
         const lines = text.split('\n');
-        
+
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i].trim();
             if (!line) continue;
-            
+
             const lower = line.toLowerCase();
-            
+
             // Detect section headers - by emoji first (works in any language), then by English text
             // v8.4.55: Lines longer than 80 chars are content, not headers - prevents
             // sentences like "There are no significant areas for improvement" from
@@ -203,10 +203,10 @@ define(['jquery', 'core/str', 'core/notification'], function ($, Str, Notificati
                 }
             }
         }
-        
+
         // Push last section
         if (currentSection) sections.push(currentSection);
-        
+
         // SVG icons for each section type (inline SVG so they work everywhere)
         const icons = {
             success: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;min-width:18px;min-height:18px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
@@ -248,23 +248,23 @@ define(['jquery', 'core/str', 'core/notification'], function ($, Str, Notificati
                 textColor: '#1e293b'
             }
         };
-        
+
         // Build HTML using CSS classes (premium on grading page) + inline fallbacks (review page)
         let html = '<div style="font-family: Inter, system-ui, sans-serif; line-height: 1.6;">';
-        
+
         for (const section of sections) {
             // v8.4.5: Hide "suggestions/how to improve" box when student achieved full marks
             if (section.type === 'info' && parseInt(grade100) >= 100) continue;
             const s = styles[section.type] || styles.info;
             const icon = icons[section.type] || icons.info;
             const bulletIcon = bulletIcons[section.type] || bulletIcons.info;
-            
+
             html += '<div class="' + s.cardClass + '" style="background:' + s.bg + ';border:' + s.border + ';border-radius:12px;padding:16px 20px;margin-bottom:16px;">';
             html += '<div class="feedback-card-title" style="font-size:14px;font-weight:600;color:' + s.titleColor + ';margin-bottom:12px;display:flex;align-items:center;gap:8px;">';
             html += '<span style="color:' + s.titleColor + ';">' + icon + '</span>';
             html += escapeHtml(section.title);
             html += '</div>';
-            
+
             if (section.items.length > 0) {
                 html += '<div class="feedback-card-list" style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px;">';
                 for (const item of section.items) {
@@ -275,12 +275,12 @@ define(['jquery', 'core/str', 'core/notification'], function ($, Str, Notificati
                 }
                 html += '</div>';
             }
-            
+
             html += '</div>';
         }
-        
+
         html += '</div>';
-        
+
         // If no sections found, show as formatted plain text with paragraph breaks
         if (sections.length === 0) {
             const paragraphs = text.split('\n').filter(p => p.trim());
@@ -290,10 +290,10 @@ define(['jquery', 'core/str', 'core/notification'], function ($, Str, Notificati
             }
             html += '</div>';
         }
-        
+
         return html;
     }
-    
+
     function escapeHtml(text) {
         const div = document.createElement('div');
         div.textContent = text;
@@ -357,17 +357,17 @@ define(['jquery', 'core/str', 'core/notification'], function ($, Str, Notificati
                 }
             }
             const feedbackPreview = formatFeedbackHtml(feedbackRaw, resp.grade100);
-            
+
             // DEBUG: Previous Attempts Feature
             console.log("[AI Grader] Attempt Context:", { attemptNum: resp.attemptnum, maxAttempts: resp.maxattempts, previousAttempt: resp.previousattempt });
-            
+
             // Build attempt context badge
             const attemptNum = resp.attemptnum || 1;
             const maxAttempts = resp.maxattempts || 0;
-            const attemptBadge = maxAttempts > 0 
+            const attemptBadge = maxAttempts > 0
                 ? `<span class="aigrader-attempt-badge ag-badge ag-badge-info">Attempt ${attemptNum} of ${maxAttempts}</span>`
                 : `<span class="aigrader-attempt-badge ag-badge ag-badge-info">Attempt ${attemptNum}</span>`;
-            
+
             // Build previous attempt section if available
             let previousAttemptHtml = '';
             if (resp.previousattempt && (resp.previousattempt.feedback || resp.previousattempt.grade !== null)) {
@@ -392,7 +392,7 @@ define(['jquery', 'core/str', 'core/notification'], function ($, Str, Notificati
 
             // Hide the initial actions row and show the feedback area
             $('#initial-actions-' + id).hide();
-            
+
             // Show full-width feedback with beautiful formatted preview
             $('#feedback-' + id)
                 .show()
@@ -438,7 +438,7 @@ define(['jquery', 'core/str', 'core/notification'], function ($, Str, Notificati
                         <div class="aigrader-approval-actions">
                             <button type="button" class="aigrader-btn aigrader-btn-primary aigrader-approve-btn ag-btn-base ag-btn-primary"
                                     data-qubaid="${qubaid}" data-slot="${slot}" data-id="${id}"
-                                    data-autolocked="${resp.autolocked ? 1 : 0}" data-humanreview="${resp.humanreview ? 1 : 0}">
+>
                                 <svg class="ag-icon-sm ag-icon-fixed" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                     <polyline points="20 6 9 17 4 12"/>
                                 </svg>
@@ -535,10 +535,7 @@ define(['jquery', 'core/str', 'core/notification'], function ($, Str, Notificati
         const feedbackRaw = $('#feedback-edit-' + id).val();
         const feedbackHtml = formatFeedbackHtml(feedbackRaw, grade100);
         const $btn = $(`.aigrader-approve-btn[data-id="${id}"]`);
-        
-        // Get autolocked/humanreview flags from the button data attributes
-        const autolocked = $btn.data('autolocked') || 0;
-        const humanreview = $btn.data('humanreview') || 0;
+
 
         $btn.prop('disabled', true)
             .html(`<span class="aigrader-spinner"></span> ${strings.saving}`);
@@ -552,8 +549,6 @@ define(['jquery', 'core/str', 'core/notification'], function ($, Str, Notificati
         formData.append('slot', slot);
         formData.append('grade100', grade100);
         formData.append('feedbackhtml', feedbackHtml);
-        formData.append('autolocked', autolocked);
-        formData.append('humanreview', humanreview);
 
         $.ajax({
             url: config.ajaxurl,
@@ -602,7 +597,7 @@ define(['jquery', 'core/str', 'core/notification'], function ($, Str, Notificati
                 .removeClass('aigrader-grade-pending');
 
             showAlert('success', strings.success, strings.grade_saved);
-            
+
             // Hide the card after a brief delay (since we only show ungraded)
             setTimeout(() => {
                 hideGradedCard(id);
@@ -627,7 +622,7 @@ define(['jquery', 'core/str', 'core/notification'], function ($, Str, Notificati
         // Count ungraded essays (for Grade All)
         const ungradedCount = $('.aigrader-card:not(.aigrader-search-hidden) .aigrader-grade-btn:not(:disabled)').length;
         $('#aigrader-essay-count').text(ungradedCount);
-        
+
         // Disable Grade All button if no essays to grade
         if (ungradedCount === 0) {
             $('#aigrader-gradeall-btn').prop('disabled', true).addClass('aigrader-btn-disabled');
@@ -677,11 +672,11 @@ define(['jquery', 'core/str', 'core/notification'], function ($, Str, Notificati
                 const slot = $btn.data('slot');
 
                 // Grade this essay
-                gradeOneAsync(qubaid, slot, $btn, function () {
+                gradeOneAsync(qubaid, slot, $btn, function() {
                     completed++;
                     activeRequests--;
                     showLoading(true, `${strings.grading} ${completed}/${total}`);
-                    
+
                     // Small delay then try to start next
                     setTimeout(gradeNext, DELAY_BETWEEN);
                 });
@@ -747,17 +742,17 @@ define(['jquery', 'core/str', 'core/notification'], function ($, Str, Notificati
                 }
             }
             const feedbackPreview = formatFeedbackHtml(feedbackRaw, resp.grade100);
-            
+
             // DEBUG: Previous Attempts Feature
             console.log("[AI Grader] Attempt Context:", { attemptNum: resp.attemptnum, maxAttempts: resp.maxattempts, previousAttempt: resp.previousattempt });
-            
+
             // Build attempt context badge (same as gradeOne)
             const attemptNum = resp.attemptnum || 1;
             const maxAttempts = resp.maxattempts || 0;
-            const attemptBadge = maxAttempts > 0 
+            const attemptBadge = maxAttempts > 0
                 ? `<span class="aigrader-attempt-badge ag-badge ag-badge-info">Attempt ${attemptNum} of ${maxAttempts}</span>`
                 : `<span class="aigrader-attempt-badge ag-badge ag-badge-info">Attempt ${attemptNum}</span>`;
-            
+
             // Build previous attempt section if available
             let previousAttemptHtml = '';
             if (resp.previousattempt && (resp.previousattempt.feedback || resp.previousattempt.grade !== null)) {
@@ -782,7 +777,7 @@ define(['jquery', 'core/str', 'core/notification'], function ($, Str, Notificati
 
             // Hide the initial actions row and show the feedback area
             $('#initial-actions-' + id).hide();
-            
+
             // Show full-width feedback with beautiful formatted preview
             $('#feedback-' + id)
                 .show()
@@ -828,7 +823,7 @@ define(['jquery', 'core/str', 'core/notification'], function ($, Str, Notificati
                         <div class="aigrader-approval-actions">
                             <button type="button" class="aigrader-btn aigrader-btn-primary aigrader-approve-btn ag-btn-base ag-btn-primary"
                                     data-qubaid="${qubaid}" data-slot="${slot}" data-id="${id}"
-                                    data-autolocked="${resp.autolocked ? 1 : 0}" data-humanreview="${resp.humanreview ? 1 : 0}">
+>
                                 <svg class="ag-icon-sm ag-icon-fixed" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                     <polyline points="20 6 9 17 4 12"/>
                                 </svg>
@@ -879,7 +874,7 @@ define(['jquery', 'core/str', 'core/notification'], function ($, Str, Notificati
     function hideGradedCard(id) {
         const $card = $(`.aigrader-card[data-rowid="${id}"]`);
         if ($card.length) {
-            $card.fadeOut(500, function () {
+            $card.fadeOut(500, function() {
                 $(this).remove();
                 // Update the essay count after removal
                 updateEssayCount();
@@ -1201,14 +1196,14 @@ define(['jquery', 'core/str', 'core/notification'], function ($, Str, Notificati
     function registerHandlers() {
         $(document).on('click', '#aigrader-refresh-btn', fetchCredits);
 
-        $(document).on('click', '.aigrader-grade-btn', function () {
+        $(document).on('click', '.aigrader-grade-btn', function() {
             gradeOne($(this).data('qubaid'), $(this).data('slot'), $(this));
         });
 
         $(document).on('click', '#aigrader-gradeall-btn', gradeAll);
-        
 
-        $(document).on('click', '.aigrader-answer-toggle', function () {
+
+        $(document).on('click', '.aigrader-answer-toggle', function() {
             // Find either .aigrader-answer or .aigrader-question (both can be truncated)
             let $txt = $(this).siblings('.aigrader-answer');
             if ($txt.length === 0) {
@@ -1227,41 +1222,41 @@ define(['jquery', 'core/str', 'core/notification'], function ($, Str, Notificati
 
         // Search handler - works with new card-based layout
         // Searches student name, question text, and answer content
-        $(document).on('input', '#aigrader-search', function () {
+        $(document).on('input', '#aigrader-search', function() {
             const searchTerm = $(this).val().toLowerCase().trim();
             const $cards = $('.aigrader-card');
-            
-            $cards.each(function () {
+
+            $cards.each(function() {
                 const $card = $(this);
                 const studentName = $card.data('studentname') || '';
                 const questionText = $card.data('questiontext') || '';
                 const answerText = $card.data('answer') || '';
-                
+
                 // Match against student name, question, or answer
-                const matches = searchTerm === '' || 
-                    studentName.indexOf(searchTerm) !== -1 || 
+                const matches = searchTerm === '' ||
+                    studentName.indexOf(searchTerm) !== -1 ||
                     questionText.indexOf(searchTerm) !== -1 ||
                     answerText.indexOf(searchTerm) !== -1;
-                
+
                 if (matches) {
                     $card.removeClass('aigrader-search-hidden');
                 } else {
                     $card.addClass('aigrader-search-hidden');
                 }
             });
-            
+
             // Update the count after search filter is applied
             updateEssayCount();
         });
 
         // Document section toggle
-        $(document).on('click', '#aigrader-documents-header, #aigrader-documents-toggle', function (e) {
+        $(document).on('click', '#aigrader-documents-header, #aigrader-documents-toggle', function(e) {
             e.stopPropagation();
             $('#aigrader-documents').toggleClass('is-collapsed');
         });
 
         // Document upload handler
-        $(document).on('change', '#aigrader-doc-input', function () {
+        $(document).on('change', '#aigrader-doc-input', function() {
             const file = this.files[0];
             if (file) {
                 uploadDocument(file);
@@ -1270,20 +1265,20 @@ define(['jquery', 'core/str', 'core/notification'], function ($, Str, Notificati
         });
 
         // Document delete handler
-        $(document).on('click', '.aigrader-doc-delete', function (e) {
+        $(document).on('click', '.aigrader-doc-delete', function(e) {
             e.stopPropagation();
             const docId = $(this).data('docid');
             deleteDocument(docId);
         });
 
         // Auto-resize feedback textarea as user types
-        $(document).on('input', '.aigrader-feedback-edit', function () {
+        $(document).on('input', '.aigrader-feedback-edit', function() {
             this.style.height = 'auto';
             this.style.height = (this.scrollHeight + 4) + 'px';
         });
 
         // Approve grade handler
-        $(document).on('click', '.aigrader-approve-btn', function (e) {
+        $(document).on('click', '.aigrader-approve-btn', function(e) {
             e.preventDefault();
             const qubaid = $(this).data('qubaid');
             const slot = $(this).data('slot');
@@ -1292,12 +1287,12 @@ define(['jquery', 'core/str', 'core/notification'], function ($, Str, Notificati
         });
 
         // Toggle edit section (for pending approval feedback)
-        $(document).on('click', '.aigrader-toggle-edit-btn', function (e) {
+        $(document).on('click', '.aigrader-toggle-edit-btn', function(e) {
             e.preventDefault();
             const id = $(this).data('id');
             const $editSection = $('#edit-section-' + id);
             const $btn = $(this);
-            
+
             if ($editSection.is(':visible')) {
                 $editSection.slideUp(200);
                 $btn.html(`<svg class="ag-icon-xs" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1309,7 +1304,7 @@ define(['jquery', 'core/str', 'core/notification'], function ($, Str, Notificati
                 $btn.html(`<svg class="ag-icon-xs" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <polyline points="18 15 12 9 6 15"/>
                 </svg> Hide editor`);
-                
+
                 // Auto-resize textarea when shown
                 const $textarea = $('#feedback-edit-' + id);
                 if ($textarea.length) {
@@ -1320,7 +1315,7 @@ define(['jquery', 'core/str', 'core/notification'], function ($, Str, Notificati
         });
 
         // Update preview button handler
-        $(document).on('click', '.aigrader-update-preview-btn', function (e) {
+        $(document).on('click', '.aigrader-update-preview-btn', function(e) {
             e.preventDefault();
             const id = $(this).data('id');
             const rawText = $('#feedback-edit-' + id).val();
@@ -1329,20 +1324,20 @@ define(['jquery', 'core/str', 'core/notification'], function ($, Str, Notificati
         });
 
         // Instructions section toggle
-        $(document).on('click', '#aigrader-instructions-toggle', function (e) {
+        $(document).on('click', '#aigrader-instructions-toggle', function(e) {
             e.stopPropagation();
             $('.aigrader-instructions-section').toggleClass('is-collapsed');
         });
 
         // Previous attempt toggle (collapsible section for multi-attempt context)
-        $(document).on('click', '.aigrader-previous-toggle', function (e) {
+        $(document).on('click', '.aigrader-previous-toggle', function(e) {
             e.preventDefault();
             e.stopPropagation();
             const $toggle = $(this);
             const $content = $toggle.siblings('.aigrader-previous-content');
             const $chevron = $toggle.find('.aigrader-chevron');
             const isExpanded = $toggle.attr('data-expanded') === 'true';
-            
+
             if (isExpanded) {
                 $content.slideUp(200);
                 $chevron.css('transform', 'rotate(0deg)');
@@ -1355,26 +1350,26 @@ define(['jquery', 'core/str', 'core/notification'], function ($, Str, Notificati
         });
 
         // Save instructions handler
-        $(document).on('click', '#aigrader-save-instructions', function (e) {
+        $(document).on('click', '#aigrader-save-instructions', function(e) {
             e.preventDefault();
             saveSettings();
         });
 
         // Language dropdown change handler - update config.language immediately (using native JS)
-        $(document).on('change', '#aigrader-feedback-language', function () {
+        $(document).on('change', '#aigrader-feedback-language', function() {
             const langSelect = document.getElementById('aigrader-feedback-language');
             config.language = langSelect ? langSelect.value : 'en';
             log('Language changed to:', config.language);
         });
 
         // Grading stats toggle
-        $(document).on('click', '#aigrader-stats-toggle', function () {
+        $(document).on('click', '#aigrader-stats-toggle', function() {
             $('#aigrader-stats-content').slideToggle(200);
             $(this).find('svg').toggleClass('aigrader-chevron-rotated');
         });
 
         // Grading stats apply filters
-        $(document).on('click', '#aigrader-stats-apply', function () {
+        $(document).on('click', '#aigrader-stats-apply', function() {
             loadGradingStats();
         });
     }
@@ -1397,7 +1392,7 @@ define(['jquery', 'core/str', 'core/notification'], function ($, Str, Notificati
             datefrom: datefrom ? Math.floor(new Date(datefrom).getTime() / 1000) : 0,
             dateto: dateto ? Math.floor(new Date(dateto + 'T23:59:59').getTime() / 1000) : 0
         }, null, 'json')
-        .done(function (resp) {
+        .done(function(resp) {
             if (resp.ok) {
                 $('#aigrader-stat-essays').text(resp.totalEssays);
                 $('#aigrader-stat-time').text(resp.totalTimeFormatted);
@@ -1406,10 +1401,10 @@ define(['jquery', 'core/str', 'core/notification'], function ($, Str, Notificati
 
                 // Populate filter dropdowns (only once)
                 if ($('#aigrader-filter-course option').length <= 1 && resp.filterOptions) {
-                    resp.filterOptions.courses.forEach(function (c) {
+                    resp.filterOptions.courses.forEach(function(c) {
                         $('#aigrader-filter-course').append('<option value="' + c.id + '">' + c.shortname + '</option>');
                     });
-                    resp.filterOptions.graders.forEach(function (g) {
+                    resp.filterOptions.graders.forEach(function(g) {
                         $('#aigrader-filter-grader').append('<option value="' + g.id + '">' + g.name + '</option>');
                     });
                 }
@@ -1420,19 +1415,19 @@ define(['jquery', 'core/str', 'core/notification'], function ($, Str, Notificati
                 if (!resp.graders || resp.graders.length === 0) {
                     tbody.append('<tr><td colspan="4" class="aigrader-stats-empty">No grading data</td></tr>');
                 } else {
-                    resp.graders.forEach(function (g) {
+                    resp.graders.forEach(function(g) {
                         tbody.append('<tr><td>' + g.name + '</td><td>' + g.essays + '</td><td>' + g.timeFormatted + '</td><td>' + g.avgSecondsPerEssay + 's</td></tr>');
                     });
                 }
             }
         })
-        .fail(function () {
+        .fail(function() {
             log('Failed to load grading stats');
         });
     }
 
     return {
-        init: function (cfg) {
+        init: function(cfg) {
             config = cfg || {};
 
             log('Raw config received:', JSON.stringify(config));

@@ -15,83 +15,130 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * quiz_aigrader file.
+ * Client for the external Essay Grader AI service.
  *
  * @package    quiz_aigrader
- * @copyright  2026 LMS-Labs
- * @license    http://www.gnu.org/licenses/gpl-3.0.html GNU GPL v3 or later
+ * @copyright  2026 LMS Labs
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 namespace quiz_aigrader;
 
-defined('MOODLE_INTERNAL') || die();
-
+/**
+ * Client for the external Essay Grader AI service.
+ *
+ * Resolves the site credentials, preferring the local_aiconfig plugin when it is
+ * installed and falling back to this plugin's own settings.
+ *
+ * @package    quiz_aigrader
+ * @copyright  2026 LMS Labs
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class api_client {
-    private $siteid;
-    private $apikey;
-    private $endpoint = 'https://lms-labs.com/api/credits';
+    /** @var string Default base URL of the grading service. */
+    const DEFAULT_BASE_URL = 'https://lms-labs.com';
 
+    /** @var string The site identifier issued for this Moodle site. */
+    protected $siteid;
+
+    /** @var string The API key issued for this Moodle site. */
+    protected $apikey;
+
+    /** @var string Base URL of the grading service. */
+    protected $baseurl;
+
+    /**
+     * Resolve the credentials and base URL for this site.
+     */
     public function __construct() {
         global $CFG;
-        
-        // Explicitly include aiconfig lib.php if available
+
         $aiconfiglib = $CFG->dirroot . '/local/aiconfig/lib.php';
         if (file_exists($aiconfiglib)) {
             require_once($aiconfiglib);
         }
-        
-        // Priority 1: Central Config (recommended for multi-plugin setups)
+
         $this->siteid = '';
         $this->apikey = '';
+
+        // Central configuration takes priority when the local_aiconfig plugin is present.
         if (function_exists('local_aiconfig_get_siteid')) {
-            $this->siteid = local_aiconfig_get_siteid();
+            $this->siteid = (string) local_aiconfig_get_siteid();
         }
         if (function_exists('local_aiconfig_get_apikey')) {
-            $this->apikey = local_aiconfig_get_apikey();
+            $this->apikey = (string) local_aiconfig_get_apikey();
         }
-        
-        // Priority 2: Plugin settings as fallback
-        if (empty($this->siteid)) {
-            $this->siteid = get_config('quiz_aigrader', 'siteid');
+
+        if ($this->siteid === '') {
+            $this->siteid = (string) get_config('quiz_aigrader', 'siteid');
         }
-        if (empty($this->apikey)) {
-            $this->apikey = get_config('quiz_aigrader', 'apikey');
+        if ($this->apikey === '') {
+            $this->apikey = (string) get_config('quiz_aigrader', 'apikey');
         }
+
+        $baseurl = trim((string) get_config('quiz_aigrader', 'apiurl'));
+        $this->baseurl = rtrim($baseurl === '' ? self::DEFAULT_BASE_URL : $baseurl, '/');
     }
 
-    public function fetch_credits() {
+    /**
+     * Whether the plugin has the credentials it needs to call the service.
+     *
+     * @return bool True when both a site ID and an API key are configured.
+     */
+    public function is_configured(): bool {
+        return $this->siteid !== '' && $this->apikey !== '';
+    }
 
-        if (empty($this->siteid) || empty($this->apikey)) {
-            return (object)[ 'ok'=>false, 'message'=>'Plugin not configured' ];
+    /**
+     * Fetch the remaining grading credit balance for this site.
+     *
+     * @return \stdClass Object with an ok flag, and either a credits value or a message.
+     */
+    public function fetch_credits() {
+        if (!$this->is_configured()) {
+            return (object) [
+                'ok' => false,
+                'message' => get_string('notconfigured', 'quiz_aigrader'),
+            ];
         }
 
         $curl = new \curl();
-        $resp = $curl->get($this->endpoint, [
-            'siteId'=>$this->siteid,
-            'apiKey'=>$this->apikey
+        $curl->setHeader(['Authorization: Bearer ' . $this->apikey]);
+        $response = $curl->get($this->baseurl . '/api/credits', ['siteId' => $this->siteid], [
+            'CURLOPT_TIMEOUT' => 15,
+            'CURLOPT_CONNECTTIMEOUT' => 10,
         ]);
 
-        if ($resp === false) {
-            return (object)[ 'ok'=>false, 'message'=>'Connection failed' ];
+        if ($response === false || $curl->get_errno()) {
+            return (object) [
+                'ok' => false,
+                'message' => get_string('error_connection', 'quiz_aigrader'),
+            ];
         }
 
-        $json = json_decode($resp);
-
+        $json = json_decode($response);
         if ($json === null) {
-            return (object)[ 'ok'=>false, 'message'=>'Invalid API response' ];
+            return (object) [
+                'ok' => false,
+                'message' => get_string('error_servererror', 'quiz_aigrader'),
+            ];
         }
 
-        // Flexible parsing
-        $credits =
-            $json->credits ??
+        $credits = $json->credits ??
             $json->balance ??
             $json->creditsRemaining ??
             ($json->data->credits ?? null);
 
         if ($credits === null) {
-            return (object)[ 'ok'=>false, 'message'=>'Credits field missing' ];
+            return (object) [
+                'ok' => false,
+                'message' => get_string('error_servererror', 'quiz_aigrader'),
+            ];
         }
 
-        return (object)[ 'ok'=>true, 'credits'=>$credits ];
+        return (object) [
+            'ok' => true,
+            'credits' => $credits,
+        ];
     }
 }

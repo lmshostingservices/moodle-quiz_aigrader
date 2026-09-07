@@ -17,21 +17,12 @@
 /**
  * Settings for AI Grader quiz report plugin.
  *
- * v3.7.7 BULLETPROOF settings registration:
- * Moodle's base::load_settings() behaviour varies across versions:
- *   - Older Moodle 4.0-4.2: $settings = null before include, no post-include add.
- *   - Newer Moodle 4.3+: $settings = pre-created admin_settingpage, post-include
- *     $adminroot->add($parentnodename, $settings) — but $parentnodename for quiz
- *     report subplugins may reference a node that doesn't exist, failing silently.
+ * The settings page is created and added to the admin tree here, then $settings is set to null
+ * so that Moodle's post-include add is skipped and the page is not added twice. The admin tree
+ * holds its own reference to the page object, so clearing the local variable is safe.
  *
- * Fix: Always create the page ourselves, always add to tree with robust fallback,
- * then null $settings so Moodle's post-include add is skipped (if ($settings) → false).
- * The admin tree holds its own reference to the page object, so nulling the local
- * variable does not remove the page or its settings from the tree.
- *
- * Section ID MUST be 'quiz_aigrader' to match get_settings_section_name()
- * (format: type_name). The URL /admin/settings.php?section=quiz_aigrader calls
- * $adminroot->locate('quiz_aigrader') to find this page.
+ * The section id must be 'quiz_aigrader' to match get_settings_section_name(), because
+ * /admin/settings.php?section=quiz_aigrader locates the page by that name.
  *
  * @package    quiz_aigrader
  * @copyright  2025 Essay Grader AI
@@ -49,76 +40,80 @@ if ($hassiteconfig) {
     ));
 }
 
-$aigrader_page = new admin_settingpage(
+$settingspage = new admin_settingpage(
     'quiz_aigrader',
     get_string('pluginname', 'quiz_aigrader')
 );
 
 if ($ADMIN->locate('modsettingsquizcat')) {
-    $ADMIN->add('modsettingsquizcat', $aigrader_page);
+    $ADMIN->add('modsettingsquizcat', $settingspage);
 } else if ($ADMIN->locate('modsettings')) {
-    $ADMIN->add('modsettings', $aigrader_page);
+    $ADMIN->add('modsettings', $settingspage);
 } else {
-    $ADMIN->add('root', $aigrader_page);
+    $ADMIN->add('root', $settingspage);
 }
 
 if ($ADMIN->fulltree) {
-    $centralconfigurl = new moodle_url('/admin/settings.php', ['section' => 'local_aiconfig']);
     $centralconfiginstalled = file_exists($CFG->dirroot . '/local/aiconfig/version.php');
-    
+
     if ($centralconfiginstalled) {
-        $aigrader_page->add(new admin_setting_heading(
-            'quiz_aigrader/centralconfig_notice',
-            get_string('pluginname', 'quiz_aigrader'),
-            '<div style="padding: 12px; background: #ecfdf5; border: 1px solid #10b981; border-radius: 8px; margin-bottom: 16px;">' .
-            '<strong style="color: #047857;">AI Grader Central Config is installed.</strong><br>' .
-            'Site ID and API Key are managed centrally. ' .
-            '<a href="' . $centralconfigurl->out() . '">Configure Central Settings</a>' .
-            '</div>'
-        ));
+        $centralconfigurl = new moodle_url('/admin/settings.php', ['section' => 'local_aiconfig']);
+        $noticedescription = get_string('centralconfig_detected', 'quiz_aigrader', $centralconfigurl->out());
     } else {
-        $aigrader_page->add(new admin_setting_heading(
-            'quiz_aigrader/centralconfig_notice',
-            get_string('pluginname', 'quiz_aigrader'),
-            '<div style="padding: 12px; background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; margin-bottom: 16px;">' .
-            '<strong style="color: #b45309;">Recommended: Install AI Grader Central Config</strong><br>' .
-            'Configure Site ID and API Key once for all AI Grader plugins.' .
-            '</div>'
-        ));
+        $noticedescription = get_string('centralconfig_notdetected', 'quiz_aigrader');
     }
 
-    $reporturl = new moodle_url('/mod/quiz/report/aigrader/grader_report.php');
-    $aigrader_page->add(new admin_setting_heading(
-        'quiz_aigrader/reportlink',
-        get_string('grader_report', 'quiz_aigrader'),
-        html_writer::link($reporturl, get_string('view_grader_report', 'quiz_aigrader'), ['class' => 'btn btn-primary'])
+    $settingspage->add(new admin_setting_heading(
+        'quiz_aigrader/centralconfig_notice',
+        get_string('centralconfig', 'quiz_aigrader'),
+        $noticedescription
     ));
 
-    $aigrader_page->add(new admin_setting_configtext(
+    $reporturl = new moodle_url('/mod/quiz/report/aigrader/grader_report.php');
+    $settingspage->add(new admin_setting_heading(
+        'quiz_aigrader/reportlink',
+        get_string('grader_report', 'quiz_aigrader'),
+        html_writer::link($reporturl, get_string('view_grader_report', 'quiz_aigrader'))
+    ));
+
+    $fallbacknotice = $centralconfiginstalled ? ' ' . get_string('centralconfig_fallback', 'quiz_aigrader') : '';
+
+    $settingspage->add(new admin_setting_configtext(
+        'quiz_aigrader/apiurl',
+        get_string('apiurl', 'quiz_aigrader'),
+        get_string('apiurl_desc', 'quiz_aigrader'),
+        'https://lms-labs.com',
+        PARAM_URL
+    ));
+
+    $settingspage->add(new admin_setting_configtext(
         'quiz_aigrader/siteid',
         get_string('siteid', 'quiz_aigrader'),
-        get_string('siteid_desc', 'quiz_aigrader') . ($centralconfiginstalled ? ' (Fallback - Central Config takes priority)' : ''),
+        get_string('siteid_desc', 'quiz_aigrader') . $fallbacknotice,
         '',
         PARAM_TEXT
     ));
 
-    $aigrader_page->add(new admin_setting_configpasswordunmask(
+    $settingspage->add(new admin_setting_configpasswordunmask(
         'quiz_aigrader/apikey',
         get_string('apikey', 'quiz_aigrader'),
-        get_string('apikey_desc', 'quiz_aigrader') . ($centralconfiginstalled ? ' (Fallback - Central Config takes priority)' : ''),
+        get_string('apikey_desc', 'quiz_aigrader') . $fallbacknotice,
         '',
-        PARAM_RAW, // pipeline-ignore: PARAM_RAW — API key field; cryptographic key that must not be cleaned or truncated by Moodle's param cleaning
+        // An API key is an opaque credential. Any param cleaning could silently alter or
+        // truncate it, so it is stored exactly as issued.
+        // phpcs:ignore moodle.Commenting.InlineComment.NotCapital
+        PARAM_RAW, // pipeline-ignore: PARAM_RAW - opaque API credential.
         255
     ));
 
-    $aigrader_page->add(new admin_setting_configcheckbox(
+    $settingspage->add(new admin_setting_configcheckbox(
         'quiz_aigrader/enable_student_notifications',
         get_string('enable_student_notifications', 'quiz_aigrader'),
         get_string('enable_student_notifications_desc', 'quiz_aigrader'),
         1
     ));
 
-    $aigrader_page->add(new admin_setting_configtext(
+    $settingspage->add(new admin_setting_configtext(
         'quiz_aigrader/min_review_time',
         get_string('min_review_time', 'quiz_aigrader'),
         get_string('min_review_time_desc', 'quiz_aigrader'),
