@@ -15,16 +15,33 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Capability definitions for the AI Grader quiz report.
- *
- * This plugin does not define any capabilities of its own; it relies on
- * mod/quiz:viewreports. Moodle still requires this file to exist.
+ * Capability definitions for the AI Essay Grader quiz report.
  *
  * @package   quiz_aigrader
- * @copyright 2025 Essay Grader AI
+ * @copyright 2026 LMS Labs
  * @license   https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$capabilities = [];
+$capabilities = [
+
+    // Approve an AI suggested mark and write it to the attempt and the gradebook.
+    //
+    // Viewing the report only needs mod/quiz:viewreports, which is a read capability held by
+    // mentors, auditors and other observers. Writing a grade is a separate decision, so it has
+    // its own capability rather than reusing the view one. Both teacher archetypes are allowed
+    // by default, and for custom roles the permission is cloned from mod/quiz:grade, which is
+    // the core capability for marking a quiz question by hand.
+    'quiz/aigrader:approve' => [
+        'riskbitmask' => RISK_XSS,
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_MODULE,
+        'archetypes' => [
+            'teacher' => CAP_ALLOW,
+            'editingteacher' => CAP_ALLOW,
+            'manager' => CAP_ALLOW,
+        ],
+        'clonepermissionsfrom' => 'mod/quiz:grade',
+    ],
+];

@@ -158,11 +158,11 @@ define('quiz_aigrader/aigrader', ['jquery', 'core/str', 'core/notification'], fu
         let currentSection = null;
 
         // Comprehensive regex to strip all bullet prefixes consistently
-        // Covers: bullets (*****), squares (**), triangles ( >  > ), dashes (--- -  - ), middle dots (***), arrows ( ->  =>  > )
+        // Covers: bullets (*****), squares (**), triangles (>>), dashes (--- -  - ), middle dots (***), arrows ( ->  =>  > )
         // Also covers colored circle emoji: [green][orange][blue][purple][yellow][red][black-circle][white-circle] (AI often returns these as bullet markers)
         // Applied to handle double bullets like "* *" and numbered lists like "1." or "1)" or "1:"
         // Uses + quantifier to strip consecutive bullet chars, and repeats if needed
-        const STRIP = /^(?:[******* >  > >>**--- -  - *** ->  =>  > \u2022\u2023\u2043\u25CF\u25CB\u25E6\u25AA\u25AB\u25B8\u25B9\u25BA\u25BB\u25C6\u25C7\u2010\u2011\u2012\u2013\u2014\u00B7\u2219\u22C5\u2192\u21D2\u27A4\u{1F7E0}\u{1F7E1}\u{1F7E2}\u{1F7E3}\u{1F7E4}\u{1F534}\u{1F535}\u{1F7E5}\u{1F7E6}\u{1F7E7}\u{1F7E8}\u{1F7E9}\u{1F7EA}\u{1F7EB}\u26AB\u26AA\u2B24]+\s*|\d+[.):]\s*|[-*+]\s+)/u;
+        const STRIP = /^(?:[*******>>>>**--- -  - *** ->  =>  > \u2022\u2023\u2043\u25CF\u25CB\u25E6\u25AA\u25AB\u25B8\u25B9\u25BA\u25BB\u25C6\u25C7\u2010\u2011\u2012\u2013\u2014\u00B7\u2219\u22C5\u2192\u21D2\u27A4\u{1F7E0}\u{1F7E1}\u{1F7E2}\u{1F7E3}\u{1F7E4}\u{1F534}\u{1F535}\u{1F7E5}\u{1F7E6}\u{1F7E7}\u{1F7E8}\u{1F7E9}\u{1F7EA}\u{1F7EB}\u26AB\u26AA\u2B24]+\s*|\d+[.):]\s*|[-*+]\s+)/u;
 
         const lines = text.split('\n');
 

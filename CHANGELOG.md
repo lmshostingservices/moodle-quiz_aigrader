@@ -3,6 +3,27 @@
 All notable changes to this plugin are documented here, newest first. This project
 follows [Semantic Versioning](https://semver.org/).
 
+## 4.1.3 - 2026-09-08
+
+Fixes the Approve button on sites where it stopped working after 4.1.x.
+
+### Fixed
+
+- **Reverted the AMD build to the file that shipped before 4.0.0.** 4.1.x replaced
+  `amd/build/aigrader.min.js` with a genuinely minified build and added a source map.
+  Moodle's `lib/requirejs.php` serves the plain `amd/src/` source when no `.map` file is
+  present, and the minified build when one is. Adding the map therefore switched sites to
+  executing minified code that had never run a real approve. The previous build files are
+  restored and the map removed.
+- **Approving is now gated on the plugin's own capability, `quiz/aigrader:approve`,**
+  instead of `mod/quiz:grade`. Core allows `mod/quiz:grade` for both teacher archetypes, but
+  a site with a custom assessor role that lacks it would have found approving refused after
+  4.0.0. The new capability is allowed by default for non-editing teacher, editing teacher
+  and manager, and is cloned from `mod/quiz:grade` for existing custom roles. Read-only roles
+  such as mentors and auditors still cannot approve, which was the point of the original fix.
+- A refused approval now returns a clear message naming the capability an administrator needs
+  to grant, rather than throwing and leaving the button looking dead.
+
 ## 4.1.2 - 2026-09-07
 
 Supersedes 4.1.1, which was promoted before the supported-version change below was

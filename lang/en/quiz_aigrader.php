@@ -368,3 +368,7 @@ $string['privacy:preference:datefilter'] = 'The saved submission date filter for
 $string['privacy:preference:reportstartdate'] = 'The saved start date for the grading activity report.';
 $string['privacy:preference:reportenddate'] = 'The saved end date for the grading activity report.';
 $string['privacy:preference:reportgraderid'] = 'The saved marker filter for the grading activity report.';
+
+// Capabilities.
+$string['aigrader:approve'] = 'Approve an AI suggested mark and save it to the gradebook';
+$string['error_noapprovepermission'] = 'You do not have permission to approve grades in this quiz. An administrator can grant the "Approve an AI suggested mark and save it to the gradebook" capability (quiz/aigrader:approve) to your role.';

@@ -761,7 +761,17 @@ try {
 
     // Action: approve / save grade.
     if ($action === 'approve') {
-        require_capability('mod/quiz:grade', $context);
+        // Writing a grade is gated on the plugin's own capability rather than on the read
+        // capability that merely opens the report. Returned as JSON so the interface can show
+        // the reason, instead of throwing and leaving the button looking dead.
+        if (!has_capability('quiz/aigrader:approve', $context)) {
+            echo json_encode([
+                'ok' => false,
+                'message' => get_string('error_noapprovepermission', 'quiz_aigrader'),
+                'error_code' => 'no_approve_capability',
+            ]);
+            exit;
+        }
 
         if (!$qubaid || !$slot) {
             echo json_encode(['ok' => false, 'message' => get_string('error_missingparams', 'quiz_aigrader')]);
