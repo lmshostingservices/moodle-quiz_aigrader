@@ -3,6 +3,84 @@
 All notable changes to this plugin are documented here, newest first. This project
 follows [Semantic Versioning](https://semver.org/).
 
+## 4.1.5 - 2026-09-08
+
+A line-by-line review against the working 3.9.9 release, hunting for more changes of the
+kind that broke approving. Six more were found and fixed. No new features.
+
+### Fixed
+
+- **Marking instructions were silently truncated.** `extraInstructions` had been changed to
+  `PARAM_TEXT`, which ends in `strip_tags()`, so an instruction such as "award 0 if the word
+  count is <200" lost everything from the `<` onwards. Saving still reported success. Back to
+  `PARAM_RAW`; the value is sent only to the AI service and never rendered as HTML.
+- **Deleting a reference document could target the wrong document, or none.** `docid` had been
+  changed to `PARAM_ALPHANUMEXT`, which strips disallowed characters rather than rejecting
+  them, mangling any identifier from the service containing a dot, slash or plus. Back to
+  `PARAM_RAW`; it is only ever url-encoded into a request path.
+- **The Grading Stats panel was broken by an SQL syntax error.** The user-name fields were
+  interpolated without a separating comma, because `core_user\fields::get_sql()` does not
+  return a leading one. Every report query is now executed against PostgreSQL as part of the
+  checks.
+- **AI Suggest, document upload, document delete and settings save answered "server error"
+  for some roles.** Those four actions called `require_capability()`, which throws, and the
+  file-level handler turned it into a generic message naming nothing. All five write actions
+  now share one gate that returns the capability an administrator needs to grant.
+- **Students could be locked out of AI grading after improving.** Approving recomputed the
+  human-review flag with a broader rule than the one that set it, missing the "no improvement
+  on the previous attempt" condition, so any attempt-4 grade below 100% flagged the student
+  for review and skipped AI grading on their next attempt. The flag is now read from the
+  stored attempt context, which is the only place that knows the previous grade.
+- **Score labels changed shape and could break on non-English sites.** `format_float()` turned
+  "3/3" into "3.00/3.00" and uses the site's decimal separator, while one of those strings is
+  parsed back with `floatval()`. Restored to the original form.
+- A missing quiz attempt now reports a clear error instead of raising an exception, and the
+  AMD build files are regenerated from source so they cannot drift apart.
+
+### Verified
+
+Every class, method and function the plugin calls is checked to exist by tokenising all PHP
+files and resolving each reference against a real Moodle install - the check that would have
+caught the invented method behind the 4.1.3 approve failure. Approving is exercised end to
+end as a non-editing teacher on Moodle 5.0.9 / PostgreSQL: the mark reaches the student's
+gradebook, the event triggers, and the feedback icons survive. 31 PHPUnit tests, 140
+assertions.
+
+### Known behaviour changes kept deliberately
+
+- The grading activity report is scoped to the current course unless the user holds
+  `moodle/site:config`, and the essay list honours separate-groups mode. Both are security
+  fixes from 4.0.0; they mean some users see fewer rows than they did in 3.9.9.
+
+## 4.1.4 - 2026-09-08
+
+Fixes approving, and fixes every call to the grading service. Both faults were introduced
+during the 4.x compliance work.
+
+### Fixed
+
+- **Approving threw on every attempt.** 4.x added an event trigger calling
+  `\mod_quiz\event\question_manually_graded::create_from_question_attempt()`. That method
+  does not exist in Moodle. The call was guarded with `class_exists()`, which passes, so PHP
+  raised `Error: Call to undefined method`, the surrounding `catch (\Throwable)` swallowed it,
+  and the interface reported "The changes could not be saved." The event is now created with
+  the parameters core itself uses in `mod/quiz/comment.php`, and is wrapped in its own
+  try/catch so logging can never fail a grade that has already been saved.
+- **Credits, settings and reference documents all failed.** 4.x moved the API key out of the
+  query string into an `Authorization: Bearer` header. The service reads the key from the
+  query string, so every GET was rejected. The `apiKey` parameter is restored on all four
+  endpoints; the bearer header is still sent as well, so the service can move to it and the
+  query parameter can then be dropped.
+- **Feedback lost its icons.** 4.x passed the approved feedback through `clean_text()`, which
+  strips the inline SVG the feedback cards are built from. The call is removed. The value is
+  stored as `FORMAT_HTML` and Moodle sanitises it through `format_text()` on every render.
+
+### Verified
+
+On a live Moodle 5.0.9 / PostgreSQL install, as a **non-editing teacher**: the manual grading
+event triggers, the mark reaches `quiz_grades` and `grade_grades` for the student, the
+attempt's `sumgrades` updates, and the SVG icons survive into the stored feedback.
+
 ## 4.1.3 - 2026-09-08
 
 Fixes the Approve button on sites where it stopped working after 4.1.x.

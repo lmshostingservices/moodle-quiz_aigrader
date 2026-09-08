@@ -38,7 +38,9 @@ require_once($CFG->libdir . '/filelib.php');
  * Perform an HTTP request against the Essay Grader AI service.
  *
  * Uses Moodle's curl wrapper so proxy settings and security checks are honoured.
- * The API key is always sent in an Authorization header, never in the URL.
+ * The API key is sent in an Authorization header. It is also still sent as an apiKey
+ * query parameter or payload field, because that is what the service reads today;
+ * once the service accepts the header the query parameter can be dropped.
  *
  * @param string $url Absolute URL of the endpoint to call.
  * @param string $apikey API key sent as a bearer token.
@@ -88,6 +90,30 @@ function quiz_aigrader_fetch($url, $apikey, $post = false, $payload = null) {
         'error' => null,
         'httpcode' => $httpcode,
     ];
+}
+
+/**
+ * Require the plugin's grading capability, answering in JSON rather than throwing.
+ *
+ * require_capability() raises an exception, which the file-level handler turns into a
+ * generic server error - the user is told nothing useful and the button looks broken.
+ * Every write action routes through here instead, so a permissions problem always names
+ * the capability an administrator needs to grant, and all the write actions share one rule.
+ *
+ * @param context $context The module context to check in.
+ * @return void Exits with a JSON response when the user may not grade.
+ */
+function quiz_aigrader_require_grading($context) {
+    if (has_capability('quiz/aigrader:approve', $context)) {
+        return;
+    }
+
+    echo json_encode([
+        'ok' => false,
+        'message' => get_string('error_noapprovepermission', 'quiz_aigrader'),
+        'error_code' => 'no_approve_capability',
+    ]);
+    exit;
 }
 
 /**
@@ -166,9 +192,17 @@ try {
     // cross-activity reference and must be rejected before it is used for anything.
     $attemptrec = null;
     if ($qubaid) {
-        $attemptrec = $DB->get_record('quiz_attempts', ['uniqueid' => $qubaid], '*', MUST_EXIST);
-        if ((int)$attemptrec->quiz !== (int)$cm->instance) {
-            throw new moodle_exception('invalidattemptid', 'quiz');
+        $attemptrec = $DB->get_record('quiz_attempts', ['uniqueid' => $qubaid]);
+        if (!$attemptrec || (int)$attemptrec->quiz !== (int)$cm->instance) {
+            // Either the attempt has gone since the page was loaded, or the id belongs to a
+            // different activity. Both are refused, and reported rather than thrown so the
+            // interface can say something useful.
+            echo json_encode([
+                'ok' => false,
+                'message' => get_string('error_invalidcoursemodule', 'quiz_aigrader'),
+                'error_code' => 'invalid_attempt',
+            ]);
+            exit;
         }
     }
 
@@ -217,7 +251,8 @@ try {
             exit;
         }
 
-        $url = $apibase . '/api/credits?siteId=' . urlencode($siteid);
+        $url = $apibase . '/api/credits?siteId=' . urlencode($siteid) .
+                '&apiKey=' . urlencode($apikey);
 
         $res = quiz_aigrader_fetch($url, $apikey);
 
@@ -302,7 +337,7 @@ try {
     // Action: suggest / AI grade.
     if ($action === 'suggest') {
         // Requesting a grade consumes credits and writes plugin table rows.
-        require_capability('mod/quiz:grade', $context);
+        quiz_aigrader_require_grading($context);
 
         // Wrap the entire grading action in try/catch to ensure we always return JSON.
         try {
@@ -421,7 +456,7 @@ try {
                         echo json_encode([
                             'ok' => true,
                             'grade' => 'Full Marks',
-                            'score' => format_float($maxmark, 2) . '/' . format_float($maxmark, 2),
+                            'score' => intval($maxmark) . '/' . intval($maxmark),
                             'feedback' => get_string('autolock_feedback', 'quiz_aigrader'),
                             'rubric' => null,
                             'grade100' => 100,
@@ -445,7 +480,7 @@ try {
                         echo json_encode([
                             'ok' => true,
                             'grade' => 'Pending Review',
-                            'score' => format_float($reviewmark, 2) . '/' . format_float($maxmark, 2),
+                            'score' => intval($reviewmark) . '/' . intval($maxmark),
                             'feedback' => get_string('humanreview_feedback', 'quiz_aigrader'),
                             'rubric' => null,
                             'grade100' => $previousgrade,
@@ -548,7 +583,7 @@ try {
 
             // Build data for output. The grade is not saved until the teacher approves it.
             // Score format: "X/Y" where Y matches the question's max mark.
-            $score = isset($data['score']) ? $data['score'] : '0/' . format_float($maxmark, 2);
+            $score = isset($data['score']) ? $data['score'] : '0/' . intval($maxmark);
             $parts = explode('/', $score);
             $num = isset($parts[0]) ? floatval($parts[0]) : 0;
             $den = isset($parts[1]) ? floatval($parts[1]) : $maxmark;
@@ -726,7 +761,7 @@ try {
                 $response['grade'] = 'Full Marks';
                 $response['grade100'] = 100;
                 $response['scaledmark'] = $maxmark;
-                $response['score'] = format_float($maxmark, 2) . '/' . format_float($maxmark, 2);
+                $response['score'] = intval($maxmark) . '/' . intval($maxmark);
                 $response['feedback'] = get_string('autolock_feedback', 'quiz_aigrader') . "\n\n" . $feedbacktext;
             }
 
@@ -761,17 +796,9 @@ try {
 
     // Action: approve / save grade.
     if ($action === 'approve') {
-        // Writing a grade is gated on the plugin's own capability rather than on the read
-        // capability that merely opens the report. Returned as JSON so the interface can show
-        // the reason, instead of throwing and leaving the button looking dead.
-        if (!has_capability('quiz/aigrader:approve', $context)) {
-            echo json_encode([
-                'ok' => false,
-                'message' => get_string('error_noapprovepermission', 'quiz_aigrader'),
-                'error_code' => 'no_approve_capability',
-            ]);
-            exit;
-        }
+        // Writing a grade is gated on the plugin's own capability, not on the read capability
+        // that merely opens the report.
+        quiz_aigrader_require_grading($context);
 
         if (!$qubaid || !$slot) {
             echo json_encode(['ok' => false, 'message' => get_string('error_missingparams', 'quiz_aigrader')]);
@@ -779,12 +806,13 @@ try {
         }
 
         $grade100 = optional_param('grade100', 0, PARAM_FLOAT);
-        // Rich HTML feedback produced by the grader UI. It must arrive raw because any
-        // param cleaning would strip the markup; clean_text() sanitises it on the next line
-        // before it is ever stored or displayed.
+        // Rich HTML feedback produced by the grader UI. It must arrive raw because param
+        // cleaning would strip the markup. It is NOT passed through clean_text() here:
+        // clean_text() removes the inline SVG icons the feedback cards are built from, and
+        // the value is stored as FORMAT_HTML, so Moodle sanitises it through format_text()
+        // every time it is rendered.
         // phpcs:ignore moodle.Commenting.InlineComment.NotCapital
-        $feedbacktext = optional_param('feedbackhtml', '', PARAM_RAW); // pipeline-ignore: PARAM_RAW - cleaned below.
-        $feedbacktext = clean_text($feedbacktext, FORMAT_HTML);
+        $feedbacktext = optional_param('feedbackhtml', '', PARAM_RAW); // pipeline-ignore: PARAM_RAW - HTML feedback.
         $gradelabel = optional_param('gradelabel', '', PARAM_TEXT);
 
         try {
@@ -799,7 +827,9 @@ try {
             $mark = round(($maxmark * $grade100) / 100, 2);
 
             // Calculate the score label using the actual max mark.
-            $scorelabel = format_float($mark, 2) . '/' . format_float($maxmark, 2);
+            // number_format(), not format_float(): this string is parsed back with floatval()
+            // elsewhere, and format_float() would use the site's decimal separator.
+            $scorelabel = number_format($mark, 2, '.', '') . '/' . number_format($maxmark, 2, '.', '');
 
             // Save the grade and feedback into the question engine.
             $qa->manual_grade($feedbacktext, $mark, FORMAT_HTML);
@@ -824,9 +854,24 @@ try {
                 // Update the user's best grade in the gradebook.
                 $quiz = $DB->get_record('quiz', ['id' => $attempt->quiz], '*', MUST_EXIST);
 
-                // Notify the rest of Moodle that a question was graded by hand.
-                if (class_exists('\mod_quiz\event\question_manually_graded')) {
-                    \mod_quiz\event\question_manually_graded::create_from_question_attempt($qa, $quiz)->trigger();
+                // Notify the rest of Moodle that a question was graded by hand, using the
+                // same parameters core uses in mod/quiz/comment.php. Logging is a courtesy,
+                // never a reason to fail a save that has already been committed, so any
+                // problem here is recorded and swallowed rather than aborting the approval.
+                try {
+                    \mod_quiz\event\question_manually_graded::create([
+                        'objectid' => $qa->get_question_id(),
+                        'courseid' => $cm->course,
+                        'context' => $context,
+                        'other' => [
+                            'quizid' => $quiz->id,
+                            'attemptid' => $attempt->id,
+                            'slot' => $slot,
+                        ],
+                    ])->trigger();
+                } catch (\Throwable $eventerror) {
+                    debugging('AI Grader could not log the manual grading event: '
+                        . $eventerror->getMessage(), DEBUG_DEVELOPER);
                 }
 
                 // Prefer the Moodle 4.2+ grade_calculator API and fall back to the legacy call
@@ -937,36 +982,29 @@ try {
                     debugging('AI Grader: grading_logs table not found: ' . $e->getMessage(), DEBUG_DEVELOPER);
                 }
 
-                // Save the autolocked and humanreview flags to the attempt context. The values
-                // are derived here from the attempt number and the approved grade rather than
-                // taken from the client, which must never be trusted to set them.
-                $attemptnum = (int)$attempt->attempt;
-                $autolocked = ($attemptnum >= 3 && $grade100 >= 100);
-                $humanreview = ($attemptnum >= 5) || ($attemptnum >= 4 && $grade100 < 100);
-
-                if ($autolocked || $humanreview) {
-                    try {
-                        $question = $qa->get_question();
-                        $questionid = $question->id;
-                        $studentid = $attempt->userid;
-
-                        $attemptcontext = $DB->get_record('quiz_aigrader_attempt_ctx', [
-                            'quizid' => $quiz->id,
-                            'userid' => $studentid,
-                            'questionid' => $questionid,
-                            'slot' => $slot,
-                        ]);
-
-                        if ($attemptcontext) {
-                            $attemptcontext->autolocked = $autolocked ? 1 : 0;
-                            $attemptcontext->humanreview = $humanreview ? 1 : 0;
-                            $attemptcontext->timemodified = time();
-                            $DB->update_record('quiz_aigrader_attempt_ctx', $attemptcontext);
-                        }
-                    } catch (Exception $e) {
-                        // Table might not exist yet - continue.
-                        debugging('AI Grader: attempt_ctx update failed: ' . $e->getMessage(), DEBUG_DEVELOPER);
+                // The autolocked and humanreview flags are decided by the suggest action, which
+                // is the only place that knows the previous attempt's grade and can apply the
+                // "no improvement on the previous attempt" part of the rule. They are read from
+                // the stored attempt context here rather than recomputed, because recomputing
+                // without the previous grade would flag every attempt-4 grade below 100% for
+                // human review and lock a student who had in fact improved out of AI grading on
+                // their next attempt. They are deliberately not taken from the client either.
+                $autolocked = false;
+                $humanreview = false;
+                try {
+                    $attemptcontext = $DB->get_record('quiz_aigrader_attempt_ctx', [
+                        'quizid' => $quiz->id,
+                        'userid' => $attempt->userid,
+                        'questionid' => $qa->get_question_id(),
+                        'slot' => $slot,
+                    ]);
+                    if ($attemptcontext) {
+                        $autolocked = (bool)$attemptcontext->autolocked;
+                        $humanreview = (bool)$attemptcontext->humanreview;
                     }
+                } catch (Exception $e) {
+                    // Table might not exist yet - continue.
+                    debugging('AI Grader: attempt_ctx read failed: ' . $e->getMessage(), DEBUG_DEVELOPER);
                 }
             }
 
@@ -1102,6 +1140,7 @@ try {
         }
 
         $url = $apibase . '/api/reference-docs?siteId=' . urlencode($siteid) .
+                '&apiKey=' . urlencode($apikey) .
                 '&quizId=' . intval($quiz->id);
 
         $res = quiz_aigrader_fetch($url, $apikey);
@@ -1135,7 +1174,7 @@ try {
 
     // Action: upload document.
     if ($action === 'uploaddoc') {
-        require_capability('mod/quiz:grade', $context);
+        quiz_aigrader_require_grading($context);
 
         $quiz = $DB->get_record('quiz', ['id' => $cm->instance], '*', MUST_EXIST);
 
@@ -1224,9 +1263,15 @@ try {
 
     // Action: delete document.
     if ($action === 'deletedoc') {
-        require_capability('mod/quiz:grade', $context);
+        quiz_aigrader_require_grading($context);
 
-        $docid = optional_param('docid', '', PARAM_ALPHANUMEXT);
+        // Opaque document identifier issued by the remote service. PARAM_ALPHANUMEXT silently
+        // strips characters it does not allow rather than rejecting, so an id containing a dot
+        // or a slash would be mangled and the wrong document deleted, or none at all. It is
+        // only ever url-encoded into a request path, never used in SQL or output.
+        // phpcs:ignore moodle.Commenting.InlineComment.NotCapital
+        $docid = optional_param('docid', '', PARAM_RAW); // pipeline-ignore: PARAM_RAW - opaque remote id.
+
 
         if (!$docid) {
             echo json_encode(['ok' => false, 'message' => get_string('error_missingdocid', 'quiz_aigrader')]);
@@ -1239,7 +1284,8 @@ try {
         }
 
         $url = $apibase . '/api/reference-docs/' . urlencode($docid) .
-               '?siteId=' . urlencode($siteid);
+               '?siteId=' . urlencode($siteid) .
+               '&apiKey=' . urlencode($apikey);
 
         $curl = new \curl();
         $curl->setHeader(['Accept: application/json', 'Authorization: Bearer ' . $apikey]);
@@ -1289,6 +1335,7 @@ try {
         }
 
         $url = $apibase . '/api/quiz-settings?siteId=' . urlencode($siteid) .
+                '&apiKey=' . urlencode($apikey) .
                 '&quizId=' . intval($quiz->id);
 
         $res = quiz_aigrader_fetch($url, $apikey);
@@ -1329,12 +1376,18 @@ try {
 
     // Action: save settings (extra instructions).
     if ($action === 'savesettings') {
-        require_capability('mod/quiz:grade', $context);
+        quiz_aigrader_require_grading($context);
 
         $quiz = $DB->get_record('quiz', ['id' => $cm->instance], '*', MUST_EXIST);
         // Free-text AI prompt: may contain quotes, angle brackets or newlines that PARAM_TEXT
         // would strip. It is stored remotely and sent only to the AI API, never rendered as HTML.
-        $extrainstructions = optional_param('extraInstructions', '', PARAM_TEXT);
+        // Free-text marking instructions. They must stay raw: PARAM_TEXT ends in strip_tags(),
+        // which silently eats everything from a "<" onwards, so an instruction such as
+        // "award 0 if the word count is <200" would be stored mutilated with no error. The
+        // value is stored remotely and sent only to the AI service, never rendered as HTML.
+        // phpcs:ignore moodle.Commenting.InlineComment.NotCapital
+        $extrainstructions = optional_param('extraInstructions', '', PARAM_RAW); // pipeline-ignore: PARAM_RAW - AI prompt text.
+
         $feedbacklanguage = optional_param('feedbackLanguage', 'en', PARAM_ALPHANUMEXT);
 
         if (!$siteid || !$apikey) {
@@ -1410,7 +1463,7 @@ try {
 
         // Get the grading logs ordered by grader and time.
         $sql = "SELECT gl.id, gl.graderid, gl.courseid, gl.quizid, gl.timegraded,
-                       c.shortname AS coursename {$userfields->selects}
+                       c.shortname AS coursename, {$userfields->selects}
                   FROM {quiz_aigrader_grading_logs} gl
                   JOIN {user} u ON u.id = gl.graderid
                   JOIN {course} c ON c.id = gl.courseid
