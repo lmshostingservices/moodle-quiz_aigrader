@@ -372,3 +372,19 @@ $string['privacy:preference:reportgraderid'] = 'The saved marker filter for the 
 // Capabilities.
 $string['aigrader:approve'] = 'Approve an AI suggested mark and save it to the gradebook';
 $string['error_noapprovepermission'] = 'You do not have permission to approve grades in this quiz. An administrator can grant the "Approve an AI suggested mark and save it to the gradebook" capability (quiz/aigrader:approve) to your role.';
+
+// Feedback card strings used by the AMD module.
+$string['feedback_strengths'] = 'What you did well';
+$string['feedback_improvements'] = 'What needs improvement';
+$string['feedback_suggestions'] = 'How to improve your answer';
+$string['feedback_other'] = 'Additional feedback';
+$string['feedback_none'] = 'No feedback available';
+$string['feedback_notrecorded'] = 'No feedback recorded';
+$string['feedback_suppressed_notice'] = 'At full marks the "{$a}" section is not shown to the student. Everything else you write here is shown.';
+$string['notgraded'] = 'Not graded';
+$string['previousattempt'] = 'Previous attempt';
+$string['attemptnumber'] = 'Attempt {$a}';
+$string['attemptnumberofmax'] = 'Attempt {$a->num} of {$a->total}';
+$string['edit_feedback'] = 'Edit feedback';
+$string['update_preview'] = 'Update preview';
+$string['review_countdown'] = 'Carefully consider student response and AI feedback';

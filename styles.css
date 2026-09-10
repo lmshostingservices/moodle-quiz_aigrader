@@ -3094,3 +3094,18 @@ body#page-mod-quiz-report .aigrader-container .aigrader-section-label::before {
     display: inline-block;
     margin-top: 12px;
 }
+
+/* ------------------------------------------------------------------
+ * Notice shown in the feedback editor when a section is withheld from
+ * the student (suggestions are not shown at full marks).
+ * ------------------------------------------------------------------ */
+.aigrader-container .aigrader-edit-notice {
+    margin: 0 0 8px 0;
+    padding: 8px 12px;
+    border-left: 3px solid #c4b5fd;
+    background: #f5f3ff;
+    border-radius: 6px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: #5b21b6;
+}

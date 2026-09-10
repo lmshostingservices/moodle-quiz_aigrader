@@ -82,6 +82,45 @@ logs, and scheduled report configurations. All are exported and deleted through
 the Privacy API, and all data sent to the external service is declared in the
 plugin's privacy metadata.
 
+## Large sites: optional database tuning
+
+The plugin does not modify Moodle's core tables, and it never will - a plugin that
+alters core schema cannot be distributed through the Moodle plugins directory.
+
+On sites with very large attempt histories, two indexes that Moodle core does not
+define can materially speed up the queries that find ungraded essays. They are a
+site administrator / DBA decision, applied outside the plugin, and they are safe to
+add and to drop:
+
+```sql
+-- Supports the state = 'needsgrading' filter on question_attempt_steps.
+-- Core defines only the unique (questionattemptid, sequencenumber) index.
+CREATE INDEX mdl_quesattestep_quesstasef_ix
+    ON mdl_question_attempt_steps (questionattemptid, state, sequencenumber);
+
+-- Supports the name = 'answer' filter on question_attempt_step_data.
+-- Core defines only the attemptstepid foreign key.
+CREATE INDEX mdl_quesattestepdata_attname_ix
+    ON mdl_question_attempt_step_data (attemptstepid, name);
+```
+
+Adding an index to a table with millions of rows takes time and disk. Apply it in a
+maintenance window, and check your prefix - the statements above assume `mdl_`.
+
+To remove them, `DROP INDEX` by the same names. Moodle's XMLDB schema check will
+report them as extra indexes; that is expected and harmless.
+
+## Backup and restore
+
+The plugin's tables are not included in course backups. Moodle's quiz backup only
+exposes an attach point for `quizaccess` subplugins, not for quiz report subplugins,
+so a report plugin has no supported way to add its data to a quiz backup.
+
+In practice this means a restored or duplicated course does not carry over the
+per-student grading context, the marker approval logs, or report schedules. Grades
+and feedback themselves are unaffected - those live in Moodle's own question and
+gradebook tables and restore normally.
+
 ## Development
 
 ```

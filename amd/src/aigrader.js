@@ -1,3 +1,18 @@
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
 /**
  * AI Grader  -  clean AMD JS module.
  *
@@ -8,11 +23,17 @@
  *  - Expand/collapse answers
  *
  * @module     quiz_aigrader/aigrader
+ * @copyright  2026 LMS Labs
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 define(['jquery', 'core/str', 'core/notification'], function($, Str, Notification) {
 
     let config = {};
     let strings = {};
+
+    // Title of the feedback section withheld from the student by the most recent render,
+    // or null when nothing was withheld. Read straight after formatFeedbackHtml().
+    let lastRenderSuppressed = null;
 
     /* ---------------------------------------------------------
      * Utility logging
@@ -139,11 +160,12 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
      * Three sections: success (green), warning (amber), info (blue)
      * --------------------------------------------------------- */
     function formatFeedbackHtml(text, grade100) {
+        lastRenderSuppressed = null;
         // Defensive: ensure text is a string
         if (typeof text !== 'string') {
             log('formatFeedbackHtml received non-string:', typeof text, text);
             if (text === null || text === undefined) {
-                return '<div style="color: #6b7280; font-style: italic;">No feedback available</div>';
+                return '<div style="color: #6b7280; font-style: italic;">' + escapeHtml(strings.feedback_none) + '</div>';
             }
             // Try to stringify objects
             try {
@@ -153,8 +175,12 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
             }
         }
 
-        // Parse text into sections
+        // Parse text into sections. Any line that appears before the first recognised
+        // heading is kept as preamble rather than discarded, so notices prepended by the
+        // server (auto-lock, human review) and anything a marker types above the first
+        // heading still reach the student.
         const sections = [];
+        const preamble = [];
         let currentSection = null;
 
         // Comprehensive regex to strip all bullet prefixes consistently
@@ -170,8 +196,6 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
             const line = lines[i].trim();
             if (!line) continue;
 
-            const lower = line.toLowerCase();
-
             // Detect section headers - by emoji first (works in any language), then by English text
             // v8.4.55: Lines longer than 80 chars are content, not headers - prevents
             // sentences like "There are no significant areas for improvement" from
@@ -180,17 +204,17 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
             if (isShortEnough && /\[thumbs-up\]|what you did well|strengths|good work|well done/i.test(line)) {
                 if (currentSection) sections.push(currentSection);
                 // Extract title after emoji or use default
-                const title = line.replace(/^(\[thumbs-up\]|\s)+/, '').trim() || 'What you did well';
+                const title = line.replace(/^(\[thumbs-up\]|\s)+/, '').trim() || strings.feedback_strengths;
                 currentSection = { type: 'success', title: title, icon: '[thumbs-up]', items: [] };
             } else if (isShortEnough && /\[chart-down\]|what needs improvement|areas for improvement|needs work|could improve/i.test(line)) {
                 if (currentSection) sections.push(currentSection);
-                const title = line.replace(/^(\[chart-down\]|\s)+/, '').trim() || 'What needs improvement';
+                const title = line.replace(/^(\[chart-down\]|\s)+/, '').trim() || strings.feedback_improvements;
                 currentSection = { type: 'warning', title: title, icon: '[chart-down]', items: [] };
             } else if (isShortEnough && /\[tip\]|\u2753|\\u{2753}|how to improve|suggestions|recommendations|next steps|tips|kaizen-houhou|kaizen-kaitou/iu.test(line)) {
                 if (currentSection) sections.push(currentSection);
-                const title = line.replace(/^(\[tip\]|\u2753|\s)+/u, '').trim() || 'How to improve your answer';
+                const title = line.replace(/^(\[tip\]|\u2753|\s)+/u, '').trim() || strings.feedback_suggestions;
                 currentSection = { type: 'info', title: title, icon: '[tip]', items: [] };
-            } else if (currentSection) {
+            } else {
                 // Add as bullet item - strip bullets/emoji repeatedly for double bullets like "* * text"
                 let cleanText = line;
                 let prevLen = 0;
@@ -199,7 +223,13 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                     cleanText = cleanText.replace(STRIP, '').trim();
                 }
                 if (cleanText) {
-                    currentSection.items.push(cleanText);
+                    if (currentSection) {
+                        currentSection.items.push(cleanText);
+                    } else {
+                        // No heading has been seen yet, so this is preamble. Keeping it means
+                        // nothing the marker wrote is silently dropped on its way to the student.
+                        preamble.push(cleanText);
+                    }
                 }
             }
         }
@@ -252,9 +282,20 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
         // Build HTML using CSS classes (premium on grading page) + inline fallbacks (review page)
         let html = '<div style="font-family: Inter, system-ui, sans-serif; line-height: 1.6;">';
 
+        // Preamble first, as plain paragraphs, so notices keep the emphasis they were written with.
+        for (const para of preamble) {
+            html += '<p class="feedback-preamble" style="margin:0 0 12px 0;color:#374151;">' +
+                escapeHtml(para) + '</p>';
+        }
+
         for (const section of sections) {
             // v8.4.5: Hide "suggestions/how to improve" box when student achieved full marks
-            if (section.type === 'info' && parseInt(grade100) >= 100) continue;
+            if (section.type === 'info' && parseInt(grade100, 10) >= 100) {
+                // Deliberate: suggestions are not shown to a student who scored full marks.
+                // Recorded so the marker can be told, rather than the section vanishing silently.
+                lastRenderSuppressed = section.title;
+                continue;
+            }
             const s = styles[section.type] || styles.info;
             const icon = icons[section.type] || icons.info;
             const bulletIcon = bulletIcons[section.type] || bulletIcons.info;
@@ -358,22 +399,34 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
             }
             const feedbackPreview = formatFeedbackHtml(feedbackRaw, resp.grade100);
 
-            // DEBUG: Previous Attempts Feature
-            console.log("[AI Grader] Attempt Context:", { attemptNum: resp.attemptnum, maxAttempts: resp.maxattempts, previousAttempt: resp.previousattempt });
+            // If a section was withheld from the student, say so in the editor. Without this
+            // the marker edits a section that is never delivered and has no way to know.
+            const suppressedNotice = lastRenderSuppressed
+                ? `<p class="aigrader-edit-notice">${escapeHtml(
+                    strings.feedback_suppressed_notice.replace('{$a}', lastRenderSuppressed))}</p>`
+                : '';
+
+            log('Attempt context:', {
+                attemptNum: resp.attemptnum,
+                maxAttempts: resp.maxattempts,
+                previousAttempt: resp.previousattempt
+            });
 
             // Build attempt context badge
             const attemptNum = resp.attemptnum || 1;
             const maxAttempts = resp.maxattempts || 0;
             const attemptBadge = maxAttempts > 0
-                ? `<span class="aigrader-attempt-badge ag-badge ag-badge-info">Attempt ${attemptNum} of ${maxAttempts}</span>`
-                : `<span class="aigrader-attempt-badge ag-badge ag-badge-info">Attempt ${attemptNum}</span>`;
+                ? `<span class="aigrader-attempt-badge ag-badge ag-badge-info">${escapeHtml(
+                    strings.attemptnumberofmax.replace('{$a->num}', attemptNum).replace('{$a->total}', maxAttempts))}</span>`
+                : `<span class="aigrader-attempt-badge ag-badge ag-badge-info">${escapeHtml(
+                    strings.attemptnumber.replace('{$a}', attemptNum))}</span>`;
 
             // Build previous attempt section if available
             let previousAttemptHtml = '';
             if (resp.previousattempt && (resp.previousattempt.feedback || resp.previousattempt.grade !== null)) {
                 const prevGrade = resp.previousattempt.grade;
-                const prevFeedback = resp.previousattempt.feedback || 'No feedback recorded';
-                const prevGradeDisplay = prevGrade !== null ? `${prevGrade}%` : 'Not graded';
+                const prevFeedback = resp.previousattempt.feedback || strings.feedback_notrecorded;
+                const prevGradeDisplay = prevGrade !== null ? `${prevGrade}%` : strings.notgraded;
                 const prevGradeBadgeClass = prevGrade >= 100 ? 'ag-badge-success' : (prevGrade >= 50 ? 'ag-badge-warning' : 'ag-badge-error');
                 previousAttemptHtml = `
                     <div class="aigrader-previous-attempt">
@@ -381,7 +434,7 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                             <svg class="aigrader-chevron ag-icon-xs" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <polyline points="9 18 15 12 9 6"/>
                             </svg>
-                            <span>Previous Attempt</span>
+                            <span>${escapeHtml(strings.previousattempt)}</span>
                             <span class="aigrader-previous-grade ag-badge ${prevGradeBadgeClass}">${prevGradeDisplay}</span>
                         </button>
                         <div class="aigrader-previous-content" style="display: none;">
@@ -426,13 +479,14 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                                     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                                 </svg>
-                                Edit feedback
+                                ${escapeHtml(strings.edit_feedback)}
                             </button>
                         </div>
                         <div class="aigrader-edit-section" id="edit-section-${id}" style="display: none;">
+                            ${suppressedNotice}
                             <textarea class="aigrader-feedback-edit" id="feedback-edit-${id}">${feedbackRaw}</textarea>
                             <button type="button" class="aigrader-btn aigrader-btn-sm aigrader-btn-secondary aigrader-update-preview-btn" data-id="${id}">
-                                Update Preview
+                                ${escapeHtml(strings.update_preview)}
                             </button>
                         </div>
                         <div class="aigrader-approval-actions">
@@ -508,7 +562,7 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                 '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>' +
                 '</svg>' +
                 '<span class="aigrader-countdown-num">' + remaining + 's</span>' +
-                '<span class="aigrader-countdown-msg">Carefully consider student response and AI feedback</span>' +
+                '<span class="aigrader-countdown-msg">' + escapeHtml(strings.review_countdown) + '</span>' +
                 '</span>'
             );
             remaining--;
@@ -743,22 +797,34 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
             }
             const feedbackPreview = formatFeedbackHtml(feedbackRaw, resp.grade100);
 
-            // DEBUG: Previous Attempts Feature
-            console.log("[AI Grader] Attempt Context:", { attemptNum: resp.attemptnum, maxAttempts: resp.maxattempts, previousAttempt: resp.previousattempt });
+            // If a section was withheld from the student, say so in the editor. Without this
+            // the marker edits a section that is never delivered and has no way to know.
+            const suppressedNotice = lastRenderSuppressed
+                ? `<p class="aigrader-edit-notice">${escapeHtml(
+                    strings.feedback_suppressed_notice.replace('{$a}', lastRenderSuppressed))}</p>`
+                : '';
+
+            log('Attempt context:', {
+                attemptNum: resp.attemptnum,
+                maxAttempts: resp.maxattempts,
+                previousAttempt: resp.previousattempt
+            });
 
             // Build attempt context badge (same as gradeOne)
             const attemptNum = resp.attemptnum || 1;
             const maxAttempts = resp.maxattempts || 0;
             const attemptBadge = maxAttempts > 0
-                ? `<span class="aigrader-attempt-badge ag-badge ag-badge-info">Attempt ${attemptNum} of ${maxAttempts}</span>`
-                : `<span class="aigrader-attempt-badge ag-badge ag-badge-info">Attempt ${attemptNum}</span>`;
+                ? `<span class="aigrader-attempt-badge ag-badge ag-badge-info">${escapeHtml(
+                    strings.attemptnumberofmax.replace('{$a->num}', attemptNum).replace('{$a->total}', maxAttempts))}</span>`
+                : `<span class="aigrader-attempt-badge ag-badge ag-badge-info">${escapeHtml(
+                    strings.attemptnumber.replace('{$a}', attemptNum))}</span>`;
 
             // Build previous attempt section if available
             let previousAttemptHtml = '';
             if (resp.previousattempt && (resp.previousattempt.feedback || resp.previousattempt.grade !== null)) {
                 const prevGrade = resp.previousattempt.grade;
-                const prevFeedback = resp.previousattempt.feedback || 'No feedback recorded';
-                const prevGradeDisplay = prevGrade !== null ? `${prevGrade}%` : 'Not graded';
+                const prevFeedback = resp.previousattempt.feedback || strings.feedback_notrecorded;
+                const prevGradeDisplay = prevGrade !== null ? `${prevGrade}%` : strings.notgraded;
                 const prevGradeBadgeClass = prevGrade >= 100 ? 'ag-badge-success' : (prevGrade >= 50 ? 'ag-badge-warning' : 'ag-badge-error');
                 previousAttemptHtml = `
                     <div class="aigrader-previous-attempt">
@@ -766,7 +832,7 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                             <svg class="aigrader-chevron ag-icon-xs" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <polyline points="9 18 15 12 9 6"/>
                             </svg>
-                            <span>Previous Attempt</span>
+                            <span>${escapeHtml(strings.previousattempt)}</span>
                             <span class="aigrader-previous-grade ag-badge ${prevGradeBadgeClass}">${prevGradeDisplay}</span>
                         </button>
                         <div class="aigrader-previous-content" style="display: none;">
@@ -811,13 +877,14 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                                     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                                 </svg>
-                                Edit feedback
+                                ${escapeHtml(strings.edit_feedback)}
                             </button>
                         </div>
                         <div class="aigrader-edit-section" id="edit-section-${id}" style="display: none;">
+                            ${suppressedNotice}
                             <textarea class="aigrader-feedback-edit" id="feedback-edit-${id}">${feedbackRaw}</textarea>
                             <button type="button" class="aigrader-btn aigrader-btn-sm aigrader-btn-secondary aigrader-update-preview-btn" data-id="${id}">
-                                Update Preview
+                                ${escapeHtml(strings.update_preview)}
                             </button>
                         </div>
                         <div class="aigrader-approval-actions">
@@ -885,8 +952,8 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                         <div class="aigrader-empty aigrader-all-graded">
                             <svg class="aigrader-empty-icon" xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="none"
                                     stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                            <h3 class="aigrader-empty-title">${strings.all_graded || 'All essays have been graded'}</h3>
-                            <p class="aigrader-empty-message">${strings.all_graded_message || 'There are no ungraded essay responses for this quiz.'}</p>
+                            <h3 class="aigrader-empty-title">${escapeHtml(strings.all_graded)}</h3>
+                            <p class="aigrader-empty-message">${escapeHtml(strings.all_graded_message)}</p>
                         </div>
                     `);
                 }
@@ -1138,7 +1205,24 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
             {key: 'regrading_complete', component: 'quiz_aigrader'},
             {key: 'no_graded_essays', component: 'quiz_aigrader'},
             {key: 'no_graded_essays_message', component: 'quiz_aigrader'},
-            {key: 'confirm_regrade', component: 'quiz_aigrader'}
+            {key: 'confirm_regrade', component: 'quiz_aigrader'},
+            {key: 'feedback_strengths', component: 'quiz_aigrader'},
+            {key: 'feedback_improvements', component: 'quiz_aigrader'},
+            {key: 'feedback_suggestions', component: 'quiz_aigrader'},
+            {key: 'feedback_other', component: 'quiz_aigrader'},
+            {key: 'feedback_none', component: 'quiz_aigrader'},
+            {key: 'feedback_notrecorded', component: 'quiz_aigrader'},
+            {key: 'notgraded', component: 'quiz_aigrader'},
+            {key: 'previousattempt', component: 'quiz_aigrader'},
+            {key: 'edit_feedback', component: 'quiz_aigrader'},
+            {key: 'update_preview', component: 'quiz_aigrader'},
+            {key: 'review_countdown', component: 'quiz_aigrader'},
+            {key: 'no_grading_data', component: 'quiz_aigrader'},
+            {key: 'attemptnumber', component: 'quiz_aigrader'},
+            {key: 'attemptnumberofmax', component: 'quiz_aigrader'},
+            {key: 'feedback_suppressed_notice', component: 'quiz_aigrader'},
+            {key: 'all_graded', component: 'quiz_aigrader'},
+            {key: 'all_graded_message', component: 'quiz_aigrader'}
         ]).then(result => {
             [
                 strings.processing,
@@ -1183,7 +1267,24 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                 strings.regrading_complete,
                 strings.no_graded_essays,
                 strings.no_graded_essays_message,
-                strings.confirm_regrade
+                strings.confirm_regrade,
+                strings.feedback_strengths,
+                strings.feedback_improvements,
+                strings.feedback_suggestions,
+                strings.feedback_other,
+                strings.feedback_none,
+                strings.feedback_notrecorded,
+                strings.notgraded,
+                strings.previousattempt,
+                strings.edit_feedback,
+                strings.update_preview,
+                strings.review_countdown,
+                strings.no_grading_data,
+                strings.attemptnumber,
+                strings.attemptnumberofmax,
+                strings.feedback_suppressed_notice,
+                strings.all_graded,
+                strings.all_graded_message
             ] = result;
 
             return true;
@@ -1298,7 +1399,7 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                 $btn.html(`<svg class="ag-icon-xs" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                </svg> Edit feedback`);
+                </svg> ${escapeHtml(strings.edit_feedback)}`);
             } else {
                 $editSection.slideDown(200);
                 $btn.html(`<svg class="ag-icon-xs" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1413,7 +1514,7 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                 var tbody = $('#aigrader-stats-tbody');
                 tbody.empty();
                 if (!resp.graders || resp.graders.length === 0) {
-                    tbody.append('<tr><td colspan="4" class="aigrader-stats-empty">No grading data</td></tr>');
+                    tbody.append('<tr><td colspan="4" class="aigrader-stats-empty">' + escapeHtml(strings.no_grading_data) + '</td></tr>');
                 } else {
                     resp.graders.forEach(function(g) {
                         tbody.append('<tr><td>' + g.name + '</td><td>' + g.essays + '</td><td>' + g.timeFormatted + '</td><td>' + g.avgSecondsPerEssay + 's</td></tr>');

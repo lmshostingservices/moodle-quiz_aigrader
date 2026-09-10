@@ -83,8 +83,8 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
         // Work out the submission date range the essay list must be restricted to.
         [$datefrom, $dateto] = $this->resolve_date_filter($cm);
 
-        // Load CSS.
-        $PAGE->requires->css('/mod/quiz/report/aigrader/styles.css');
+        // The plugin's root styles.css is aggregated into the page by Moodle automatically,
+        // so it must not be requested here as well.
 
         // Load JS. Note: config must be wrapped in an array to pass it as a single object.
         // Get the user's current Moodle language for multilingual AI feedback.
@@ -996,16 +996,19 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
                 JOIN {question_usages} qu ON qu.id = qza.uniqueid
                 JOIN {question_attempts} qat ON qat.questionusageid = qu.id
                 JOIN {question} q ON q.id = qat.questionid
-                JOIN {question_attempt_steps} qas ON qas.questionattemptid = qat.id
-                LEFT JOIN {question_attempt_steps} qas_later
-                    ON qas_later.questionattemptid = qat.id
-                   AND qas_later.sequencenumber > qas.sequencenumber
+                JOIN {question_attempt_steps} qas
+                    ON qas.questionattemptid = qat.id
+                   AND qas.state = 'needsgrading'
                 $groupjoin
                 WHERE qza.quiz = :quizid
                   AND qza.state IN ('finished','complete','gradedright','gradedwrong','gradedpartial')
                   AND q.qtype = 'essay'
-                  AND qas.state = 'needsgrading'
-                  AND qas_later.id IS NULL
+                  AND NOT EXISTS (
+                          SELECT 1
+                            FROM {question_attempt_steps} qas_later
+                           WHERE qas_later.questionattemptid = qat.id
+                             AND qas_later.sequencenumber > qas.sequencenumber
+                      )
                   $datewhere
                 ORDER BY qza.userid, qat.slot";
 
