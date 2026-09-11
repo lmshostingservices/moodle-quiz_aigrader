@@ -1462,8 +1462,11 @@ try {
         $userfields = \core_user\fields::for_name()->get_sql('u', false, '', '', false);
 
         // Get the grading logs ordered by grader and time.
+        // No comma before the user name fields: core_user\fields::get_sql() returns a
+        // selects string that already begins with one. Adding a second produced an empty
+        // select item, so this statement failed and the whole statistics panel stayed blank.
         $sql = "SELECT gl.id, gl.graderid, gl.courseid, gl.quizid, gl.timegraded,
-                       c.shortname AS coursename, {$userfields->selects}
+                       c.shortname AS coursename {$userfields->selects}
                   FROM {quiz_aigrader_grading_logs} gl
                   JOIN {user} u ON u.id = gl.graderid
                   JOIN {course} c ON c.id = gl.courseid

@@ -3,47 +3,29 @@
 All notable changes to this plugin are documented here, newest first. This project
 follows [Semantic Versioning](https://semver.org/).
 
+## 4.2.1 - 2026-09-11
+
+### What's new
+
+- **Grading Time Statistics now work.** The statistics panel could not load its figures, so
+  essays graded, total time, average per essay and the per-marker table stayed empty and
+  the course and marker filters had nothing to choose from. All of it now displays
+  correctly.
+
 ## 4.2.0 - 2026-09-10
 
-Compliance and correctness work ahead of a Moodle plugins directory submission, plus a
-fix for feedback silently disappearing between the marker and the student.
+### What's new
 
-### Fixed
-
-- Feedback written above the first heading is no longer discarded. The renderer only
-  kept text once it had seen a recognised heading, so anything before it - including the
-  auto-lock and human-review notices the server prepends - never reached the student.
-  It is now rendered as leading paragraphs.
-- The feedback editor now says when a section is being withheld from the student.
-  Suggestions are deliberately not shown at full marks, but the marker previously had no
-  way to know that the section they were editing would not be delivered.
-- The empty-state heading and message on the grading page were never requested through
-  `core/str`, so the module silently fell back to hardcoded English even though both
-  strings had been translated.
-
-### Changed
-
-- All remaining user-facing text in the JavaScript module now comes from the language
-  files through `core/str`. Thirteen strings were hardcoded English, including the three
-  feedback headings students see, which defeated the multilingual feedback setting.
-- The ungraded-essay query now uses `NOT EXISTS` instead of a `LEFT JOIN ... IS NULL`
-  anti-join to find the latest step. Semantically identical, and generally planned
-  better.
-- Removed the redundant `$PAGE->requires->css()` call for the plugin's own root
-  stylesheet, which Moodle aggregates automatically.
-- Developer diagnostics that used `console.log` directly now go through the existing
-  debug-gated logging helper.
-- README documents the two optional core-table indexes large sites may want, as a DBA
-  operation rather than something the plugin applies, and records that quiz report
-  subplugins have no supported course-backup attach point in Moodle.
-
-### Packaging
-
-- `amd/build/aigrader.min.js` is now genuinely minified and ships with the expected
-  `aigrader.min.js.map` source map. The previous build was an unminified copy of the
-  source with no map, and a stray `amd/build/aigrader.js` alongside it.
-- The GPL boilerplate, `@copyright` and `@license` are present on `amd/src/aigrader.js`.
-- `.github/` and `.gitignore` are excluded from the release package.
+- **Students see the whole of their feedback.** Any comments written above the first
+  heading now appear in full, including the competency and assessor-review notices.
+- **Markers can see what the student will get.** The feedback editor now says when a
+  section is not shown to the student, so nothing is edited in vain.
+- **Works in your site's language.** All on-screen text, including the feedback headings
+  students read, now comes from the language pack and translates properly.
+- **Faster on sites with a lot of quiz history.** The search for essays awaiting marking
+  has been streamlined, and the guide now includes optional database tuning for very
+  large sites.
+- Improved packaging and code quality throughout, in line with Moodle plugin standards.
 
 ## 4.1.5 - 2026-09-08
 

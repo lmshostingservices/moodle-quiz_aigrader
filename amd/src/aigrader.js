@@ -1494,6 +1494,12 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
             dateto: dateto ? Math.floor(new Date(dateto + 'T23:59:59').getTime() / 1000) : 0
         }, null, 'json')
         .done(function(resp) {
+            if (!resp.ok) {
+                // Previously this branch did nothing at all, so a server-side failure left
+                // every figure on its placeholder with no indication that anything was wrong.
+                log('Grading stats request returned an error:', resp.message || resp.error_code || resp);
+                return;
+            }
             if (resp.ok) {
                 $('#aigrader-stat-essays').text(resp.totalEssays);
                 $('#aigrader-stat-time').text(resp.totalTimeFormatted);
