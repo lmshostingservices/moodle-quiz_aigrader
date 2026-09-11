@@ -103,6 +103,34 @@ function quiz_aigrader_fetch($url, $apikey, $post = false, $payload = null) {
  * @param context $context The module context to check in.
  * @return void Exits with a JSON response when the user may not grade.
  */
+function quiz_aigrader_error_response(Throwable $e, string $errorcode): array {
+    global $CFG;
+
+    $response = [
+        'ok' => false,
+        'message' => get_string('error_servererror', 'quiz_aigrader'),
+        'error_code' => $errorcode,
+    ];
+
+    // On a site running developer debugging, return the real reason as well. Without this
+    // every server-side fault reaches the browser as the same generic sentence, which reads
+    // like a network problem and sends the investigation in the wrong direction. Guarded so
+    // nothing about the server is ever disclosed on a production site.
+    if (!empty($CFG->debugdeveloper)) {
+        $response['debuginfo'] = $e->getMessage();
+        if ($e instanceof moodle_exception && !empty($e->debuginfo)) {
+            $response['debuginfo'] .= ' | ' . $e->debuginfo;
+        }
+    }
+
+    return $response;
+}
+
+/**
+ * Refuse the request unless the user may approve AI suggested marks.
+ *
+ * @param context $context Module context the request is acting in.
+ */
 function quiz_aigrader_require_grading($context) {
     if (has_capability('quiz/aigrader:approve', $context)) {
         return;
@@ -1462,11 +1490,10 @@ try {
         $userfields = \core_user\fields::for_name()->get_sql('u', false, '', '', false);
 
         // Get the grading logs ordered by grader and time.
-        // No comma before the user name fields: core_user\fields::get_sql() returns a
-        // selects string that already begins with one. Adding a second produced an empty
-        // select item, so this statement failed and the whole statistics panel stayed blank.
+        // The comma is required: get_sql() is called with $leadingcomma = false, so the
+        // selects string does not carry one of its own.
         $sql = "SELECT gl.id, gl.graderid, gl.courseid, gl.quizid, gl.timegraded,
-                       c.shortname AS coursename {$userfields->selects}
+                       c.shortname AS coursename, {$userfields->selects}
                   FROM {quiz_aigrader_grading_logs} gl
                   JOIN {user} u ON u.id = gl.graderid
                   JOIN {course} c ON c.id = gl.courseid
@@ -1541,7 +1568,7 @@ try {
         $graderparams = ['courseid' => $filtercourseid];
         $graderwhere = 'WHERE gl.courseid = :courseid';
         $graders = $DB->get_records_sql(
-            "SELECT DISTINCT u.id {$userfields->selects}
+            "SELECT DISTINCT u.id, {$userfields->selects}
                FROM {quiz_aigrader_grading_logs} gl
                JOIN {user} u ON u.id = gl.graderid
              $graderwhere
@@ -1609,19 +1636,11 @@ try {
 } catch (moodle_exception $e) {
     // Catch Moodle-specific exceptions.
     debugging($e->getMessage(), DEBUG_DEVELOPER);
-    echo json_encode([
-        'ok' => false,
-        'message' => get_string('error_servererror', 'quiz_aigrader'),
-        'error_code' => 'moodle_exception',
-    ]);
+    echo json_encode(quiz_aigrader_error_response($e, 'moodle_exception'));
     exit;
 } catch (Throwable $e) {
     // Catch all other errors.
     debugging($e->getMessage(), DEBUG_DEVELOPER);
-    echo json_encode([
-        'ok' => false,
-        'message' => get_string('error_servererror', 'quiz_aigrader'),
-        'error_code' => 'server_error',
-    ]);
+    echo json_encode(quiz_aigrader_error_response($e, 'server_error'));
     exit;
 }

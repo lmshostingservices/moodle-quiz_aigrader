@@ -3,6 +3,14 @@
 All notable changes to this plugin are documented here, newest first. This project
 follows [Semantic Versioning](https://semver.org/).
 
+## 4.2.2 - 2026-09-11
+
+### What's new
+
+- **Grading Time Statistics now display correctly.** Essays graded, total time, average per
+  essay and the per-marker breakdown all populate, and the course and marker filters are
+  filled in. The panel had been unable to load its figures on any previous release.
+
 ## 4.2.1 - 2026-09-11
 
 ### What's new
