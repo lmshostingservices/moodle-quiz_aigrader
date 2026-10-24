@@ -3,6 +3,25 @@
 All notable changes to this plugin are documented here, newest first. This project
 follows [Semantic Versioning](https://semver.org/).
 
+## 4.3.0 - 2026-10-24
+
+### What's new
+
+- **A new look for student feedback.** The feedback students read under their answer has
+  been redesigned: calm flat colour instead of gradients, lighter borders, a neat icon for
+  each section and cleaner, more readable text.
+- **Notices now stand out properly.** Competency and assessor-review notices used to appear
+  as plain paragraphs above the feedback. They now sit in their own panel so students can
+  see they matter.
+- Suggestions are shown in blue rather than purple, so the colour matches the rest of the
+  AI Essay Grader and AI Grader Dashboard screens.
+
+### Notes
+
+- Feedback already approved keeps the appearance it was saved with. The new styling applies
+  to feedback approved from this release onwards.
+- Wording, marks, and which sections a student sees are all unchanged.
+
 ## 4.2.2 - 2026-09-11
 
 ### What's new

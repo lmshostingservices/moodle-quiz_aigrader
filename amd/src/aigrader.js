@@ -165,7 +165,8 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
         if (typeof text !== 'string') {
             log('formatFeedbackHtml received non-string:', typeof text, text);
             if (text === null || text === undefined) {
-                return '<div style="color: #6b7280; font-style: italic;">' + escapeHtml(strings.feedback_none) + '</div>';
+                return '<div style="font-family:Inter,system-ui,-apple-system,sans-serif;font-size:14px;' +
+                    'color:#626c7a;font-style:italic;">' + escapeHtml(strings.feedback_none) + '</div>';
             }
             // Try to stringify objects
             try {
@@ -239,53 +240,60 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
 
         // SVG icons for each section type (inline SVG so they work everywhere)
         const icons = {
-            success: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;min-width:18px;min-height:18px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
-            warning: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;min-width:18px;min-height:18px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
-            info: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;min-width:18px;min-height:18px;"><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/><circle cx="12" cy="12" r="10"/></svg>'
+            success: '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+            warning: '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+            info: '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/><circle cx="12" cy="12" r="10"/></svg>'
         };
 
         // Bullet icons - small checkmark for success, small dash for warning/info
-        const bulletIcons = {
-            success: '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;min-width:14px;min-height:14px;margin-top:3px;"><polyline points="20 6 9 17 4 12"/></svg>',
-            warning: '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;min-width:14px;min-height:14px;margin-top:3px;"><circle cx="12" cy="12" r="4" fill="currentColor" stroke="none"/></svg>',
-            info: '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;min-width:14px;min-height:14px;margin-top:3px;"><circle cx="12" cy="12" r="4" fill="currentColor" stroke="none"/></svg>'
-        };
-
-        // Style configs - used as inline fallback AND via CSS classes
+        // Palette from the LMS Labs design system. Values are precomputed rather than
+        // written with color-mix(), because this markup is saved to the database and
+        // rendered later on Moodle's review page, where the plugin's stylesheet is not
+        // guaranteed to load. Everything that matters has to survive as inline style.
         const styles = {
             success: {
                 cardClass: 'feedback-card feedback-card-success',
-                bg: 'linear-gradient(135deg, #dcfce7 0%, #f0fdf4 100%)',
-                border: '1px solid #86efac',
-                titleColor: '#166534',
-                bulletColor: '#166534',
-                textColor: '#1e293b'
+                bg: '#f0faf4',
+                border: '1px solid #b4e2c5',
+                chipBg: '#def2e6',
+                accent: '#16a34a',
+                titleColor: '#166534'
             },
             warning: {
                 cardClass: 'feedback-card feedback-card-warning',
-                bg: 'linear-gradient(135deg, #fef3c7 0%, #fffbeb 100%)',
-                border: '1px solid #fcd34d',
-                titleColor: '#92400e',
-                bulletColor: '#92400e',
-                textColor: '#1e293b'
+                bg: '#fdf7f0',
+                border: '1px solid #f3d4af',
+                chipBg: '#faecdc',
+                accent: '#d97706',
+                titleColor: '#92400e'
             },
             info: {
                 cardClass: 'feedback-card feedback-card-info',
-                bg: 'linear-gradient(135deg, #ede9fe 0%, #f5f3ff 100%)',
-                border: '1px solid #c4b5fd',
-                titleColor: '#5b21b6',
-                bulletColor: '#5b21b6',
-                textColor: '#1e293b'
+                bg: '#f2f6fe',
+                border: '1px solid #b9cdf9',
+                chipBg: '#e0e9fc',
+                accent: '#2563eb',
+                titleColor: '#1e40af'
             }
         };
 
-        // Build HTML using CSS classes (premium on grading page) + inline fallbacks (review page)
-        let html = '<div style="font-family: Inter, system-ui, sans-serif; line-height: 1.6;">';
+        const FONT = "Inter, system-ui, -apple-system, 'Segoe UI', sans-serif";
+        const TEXT = '#1d2129';
 
-        // Preamble first, as plain paragraphs, so notices keep the emphasis they were written with.
-        for (const para of preamble) {
-            html += '<p class="feedback-preamble" style="margin:0 0 12px 0;color:#374151;">' +
-                escapeHtml(para) + '</p>';
+        let html = '<div class="aigrader-feedback" style="font-family:' + FONT +
+            ';line-height:1.6;color:' + TEXT + ';">';
+
+        // Anything written above the first heading - including the competency and
+        // assessor-review notices the service prepends - is shown as a notice card rather
+        // than loose paragraphs, so it reads as deliberate instead of stray text.
+        if (preamble.length > 0) {
+            html += '<div class="feedback-notice" style="background:#f6f7f8;border:1px solid #dee2e8;' +
+                'border-left:3px solid #64748b;border-radius:10px;padding:12px 16px;margin:0 0 12px 0;">';
+            for (let i = 0; i < preamble.length; i++) {
+                html += '<p style="margin:' + (i === 0 ? '0' : '8px 0 0') + ';font-size:13px;' +
+                    'line-height:1.6;color:' + TEXT + ';">' + escapeHtml(preamble[i]) + '</p>';
+            }
+            html += '</div>';
         }
 
         for (const section of sections) {
@@ -298,19 +306,28 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
             }
             const s = styles[section.type] || styles.info;
             const icon = icons[section.type] || icons.info;
-            const bulletIcon = bulletIcons[section.type] || bulletIcons.info;
 
-            html += '<div class="' + s.cardClass + '" style="background:' + s.bg + ';border:' + s.border + ';border-radius:12px;padding:16px 20px;margin-bottom:16px;">';
-            html += '<div class="feedback-card-title" style="font-size:14px;font-weight:600;color:' + s.titleColor + ';margin-bottom:12px;display:flex;align-items:center;gap:8px;">';
-            html += '<span style="color:' + s.titleColor + ';">' + icon + '</span>';
-            html += escapeHtml(section.title);
+            html += '<div class="' + s.cardClass + '" style="background:' + s.bg + ';border:' + s.border +
+                ';border-radius:12px;padding:16px 18px;margin:0 0 12px 0;">';
+
+            // Title row: a tinted chip holding the icon, then the heading.
+            html += '<div class="feedback-card-title" style="display:flex;align-items:center;gap:10px;' +
+                'margin:0 0 10px 0;">';
+            html += '<span style="display:inline-flex;align-items:center;justify-content:center;' +
+                'width:24px;height:24px;border-radius:999px;background:' + s.chipBg + ';color:' +
+                s.accent + ';flex:0 0 auto;">' + icon + '</span>';
+            html += '<span style="font-size:14px;font-weight:700;letter-spacing:-0.01em;color:' +
+                s.titleColor + ';">' + escapeHtml(section.title) + '</span>';
             html += '</div>';
 
             if (section.items.length > 0) {
-                html += '<div class="feedback-card-list" style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px;">';
+                html += '<div class="feedback-card-list" style="margin:0;padding:0;list-style:none;">';
                 for (const item of section.items) {
-                    html += '<div class="feedback-card-item" style="display:flex;align-items:flex-start;gap:10px;font-size:13px;line-height:1.6;color:' + s.textColor + ';">';
-                    html += '<span class="feedback-bullet" style="color:' + s.bulletColor + ';">' + bulletIcon + '</span>';
+                    html += '<div class="feedback-card-item" style="display:flex;align-items:flex-start;' +
+                        'gap:10px;margin:0 0 6px 0;font-size:14px;line-height:1.65;color:' + TEXT + ';">';
+                    // A small solid dot reads more calmly than an outlined icon per bullet.
+                    html += '<span class="feedback-bullet" style="flex:0 0 auto;width:5px;height:5px;' +
+                        'margin-top:8px;border-radius:999px;background:' + s.accent + ';"></span>';
                     html += '<span>' + escapeHtml(item) + '</span>';
                     html += '</div>';
                 }
@@ -325,9 +342,10 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
         // If no sections found, show as formatted plain text with paragraph breaks
         if (sections.length === 0) {
             const paragraphs = text.split('\n').filter(p => p.trim());
-            html = '<div class="feedback-plain" style="font-family: Inter, system-ui, sans-serif; line-height: 1.7; color: #374151;">';
+            html = '<div class="feedback-plain" style="font-family:' + FONT +
+                ';font-size:14px;line-height:1.65;color:' + TEXT + ';">';
             for (const p of paragraphs) {
-                html += '<p style="margin: 0 0 12px 0;">' + escapeHtml(p.trim()) + '</p>';
+                html += '<p style="margin:0 0 10px 0;">' + escapeHtml(p.trim()) + '</p>';
             }
             html += '</div>';
         }
