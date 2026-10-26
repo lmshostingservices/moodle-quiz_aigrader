@@ -94,6 +94,13 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
 
         $minreviewtime = (int) get_config('quiz_aigrader', 'min_review_time');
 
+        // Which feedback sections a learner on full marks receives. Applied in the browser
+        // when the card is built, so the editor shows exactly what will be delivered.
+        $fullmarksfeedback = get_config('quiz_aigrader', 'fullmarks_feedback');
+        if (!in_array($fullmarksfeedback, ['strengths', 'nosuggestions', 'all'], true)) {
+            $fullmarksfeedback = 'strengths';
+        }
+
         $PAGE->requires->js_call_amd(
             'quiz_aigrader/aigrader',
             'init',
@@ -104,6 +111,12 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
                 'ajaxurl' => $CFG->wwwroot . '/mod/quiz/report/aigrader/ajax.php',
                 'language' => $userlang,
                 'minReviewTime' => $minreviewtime,
+                'fullMarksFeedback' => $fullmarksfeedback,
+                // Diagnostic logging is off unless the site is in developer debug mode.
+                // The module's log lines carry the graded response and the feedback with
+                // it, which is a learner's work and must not reach the browser console of
+                // every assessor on a production site.
+                'debug' => (bool)debugging('', DEBUG_DEVELOPER),
             ]]
         );
 
@@ -569,7 +582,6 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
             'aigclearfilter' => optional_param('aigclearfilter', 0, PARAM_INT),
             'datefrom' => optional_param('datefrom', '', PARAM_TEXT),
             'dateto' => optional_param('dateto', '', PARAM_TEXT),
-            // phpcs:ignore moodle.Commenting.InlineComment.NotCapital
             'sesskey' => optional_param('sesskey', '', PARAM_RAW), // pipeline-ignore: PARAM_RAW - sesskey token.
         ];
     }
@@ -1077,11 +1089,44 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
             }
         }
 
+        // Attachment-bearing responses.
+        //
+        // An essay set to "attachments only", or one where the learner wrote nothing and
+        // uploaded a document, has no 'answer' step data row at all. Until 4.4.0 those rows
+        // were dropped by the empty-answer test below, so the assessor was shown "All essays
+        // have been graded" while that learner's work sat unmarked and unnoticed - the exact
+        // failure the empty state was written to prevent. VET assessments routinely require
+        // an uploaded workplace document, so this was not an edge case.
+        $attachmentsbyqatid = [];
+        if (!empty($qatids)) {
+            [$attinsql, $attparams] = $DB->get_in_or_equal($qatids, SQL_PARAMS_NAMED);
+            $attachmentrows = $DB->get_records_sql(
+                "SELECT qasd.id, qas.questionattemptid, qasd.value AS attachmentvalue
+                   FROM {question_attempt_steps} qas
+                   JOIN {question_attempt_step_data} qasd
+                     ON qasd.attemptstepid = qas.id AND qasd.name = 'attachments'
+                  WHERE qas.questionattemptid $attinsql
+                  ORDER BY qas.sequencenumber DESC",
+                $attparams
+            );
+            foreach ($attachmentrows as $at) {
+                if (
+                    !isset($attachmentsbyqatid[$at->questionattemptid])
+                        && trim((string)$at->attachmentvalue) !== ''
+                ) {
+                    $attachmentsbyqatid[$at->questionattemptid] = true;
+                }
+            }
+        }
+
         $rows = [];
 
         foreach ($needsgrading as $record) {
             $rawanswer = $answersbyqatid[$record->questionattemptid] ?? '';
-            if (trim(strip_tags($rawanswer)) === '') {
+            $hasattachments = !empty($attachmentsbyqatid[$record->questionattemptid]);
+            // Skip only a response that is genuinely empty. One with attachments is listed
+            // so the assessor can see and mark it, even though the AI cannot read it.
+            if (trim(strip_tags($rawanswer)) === '' && !$hasattachments) {
                 continue;
             }
 
@@ -1113,6 +1158,10 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
                 'isgraded'     => false,
                 'gradelabel'   => '&mdash;',
                 'feedback'     => '',
+                // Marked so the row can say plainly that AI grading is unavailable and the
+                // response must be read and marked by hand.
+                'hasattachments'  => $hasattachments,
+                'attachmentonly'  => $hasattachments && $cleananswer === '',
             ];
         }
 
@@ -1126,10 +1175,36 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
             return strcasecmp($a['fullname'], $b['fullname']);
         });
 
-        echo html_writer::start_div('aigrader-table-wrapper');
+        // Queue layout: a compact table, one row per response, each expanding in place to
+        // the full marking card. The previous layout rendered every response as an open
+        // card, so a quiz with 150 attempts was 150 expanded cards deep and there was no
+        // way to scan the cohort. The expanded card is unchanged - it is simply behind a
+        // row now - so nothing about how an essay is marked has changed.
+        $egcolumn = $essayguardavailable;
+        $colcount = $egcolumn ? 6 : 5;
 
-        // Card-based layout - each essay gets its own card.
         echo '<div class="aigrader-cards">';
+        echo html_writer::start_div('aigrader-table-wrapper');
+        echo '<table class="aigrader-queue">';
+        echo '<thead><tr>';
+        // Moodle's own accesshide, not Bootstrap's sr-only. Both hide the label today, on
+        // 4.4 through 5.3, but sr-only is a Bootstrap 4 class that Moodle 5.1 moved into a
+        // deprecated compatibility layer: it is marked "Deprecated style in use" to anyone
+        // viewing in theme-designer mode and will be dropped when that layer goes.
+        // accesshide is Moodle's own and is current in every supported version. The
+        // plugin's own stylesheet also defines it, so it holds in a theme that does not.
+        echo '<th scope="col" class="aigrader-q-expand">'
+            . '<span class="accesshide aigrader-sr-only">'
+            . get_string('expandrow', 'quiz_aigrader') . '</span></th>';
+        echo '<th scope="col">' . get_string('student', 'quiz_aigrader') . '</th>';
+        echo '<th scope="col">' . get_string('responsepreview', 'quiz_aigrader') . '</th>';
+        echo '<th scope="col">' . get_string('grade', 'quiz_aigrader') . '</th>';
+        echo '<th scope="col">' . get_string('status', 'quiz_aigrader') . '</th>';
+        if ($egcolumn) {
+            echo '<th scope="col">' . get_string('essayguard_column', 'quiz_aigrader') . '</th>';
+        }
+        echo '</tr></thead>';
+        // No outer tbody: each response opens its own below, so one here would nest.
 
         foreach ($rows as $r) {
             // Look up the Essay Guard score for this student (null if not installed or no data).
@@ -1146,18 +1221,75 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
                 $eglevel = \plagiarism_essayguard\local\service\analyser::risk_level($egscore);
             }
 
-            echo '<div class="aigrader-card" data-rowid="' . s($r['rowid']) . '"'
+            // One tbody per response, holding the summary row and the detail row. The
+            // class and data attributes stay exactly as they were so the search filter,
+            // the bulk grade and the remove-on-approve all keep working untouched.
+            echo '<tbody class="aigrader-card" data-rowid="' . s($r['rowid']) . '"'
                 . ' data-qubaid="' . s($r['qubaid']) . '" data-slot="' . s($r['slot']) . '"'
                 . ' data-studentname="' . s(core_text::strtolower($r['fullname'])) . '"'
                 . ' data-questiontext="' . s(core_text::strtolower($r['questionfull'])) . '"'
                 . ' data-answer="' . s(core_text::strtolower($r['full'])) . '">';
 
+            // The summary row: one line per response, always visible.
+            echo '<tr class="aigrader-qrow">';
+            echo '<td class="aigrader-q-expand">';
+            echo '<button type="button" class="aigrader-expand-btn" aria-expanded="false"'
+                . ' aria-controls="detail-' . s($r['rowid']) . '"'
+                . ' data-rowid="' . s($r['rowid']) . '">'
+                . '<svg class="aigrader-chevron" width="15" height="15" viewBox="0 0 24 24"'
+                . ' fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"'
+                . ' stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>'
+                . '<span class="accesshide aigrader-sr-only">' . s($r['fullname']) . '</span>'
+                . '</button>';
+            echo '</td>';
+
+            echo '<td class="aigrader-q-student" title="' . s($r['email']) . '">'
+                . s($r['fullname']) . '</td>';
+
+            echo '<td class="aigrader-q-preview">' . s($r['truncated']) . '</td>';
+
+            echo '<td class="aigrader-q-grade">'
+                . '<span class="aigrader-grade aigrader-grade-pending" id="grade-'
+                . s($r['rowid']) . '">&mdash;</span></td>';
+
+            echo '<td class="aigrader-q-status">'
+                . '<span class="aigrader-status aigrader-status-pending" id="status-'
+                . s($r['rowid']) . '">' . get_string('status_pending', 'quiz_aigrader')
+                . '</span></td>';
+
+            if ($egcolumn) {
+                echo '<td class="aigrader-q-eg">';
+                if ($eglevel !== null) {
+                    $detailurl = new moodle_url('/plagiarism/essayguard/student.php', [
+                        'cmid'   => $r['cmid'],
+                        'userid' => $r['userid'],
+                    ]);
+                    echo '<a href="' . $detailurl->out(false) . '" target="_blank"'
+                        . ' class="ag-eg-badge ag-eg-badge-' . s($eglevel) . '"'
+                        . ' title="Essay Guard: ' . s(ucfirst($eglevel)) . ' (' . $egscore . '/100)">'
+                        . '<svg class="aigrader-eg-badge-icon" width="11" height="11" viewBox="0 0 24 24"'
+                        . ' fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"'
+                        . ' stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>'
+                        . s(ucfirst($eglevel)) . ' ' . $egscore
+                        . '</a>';
+                } else {
+                    echo '<span class="ag-eg-badge ag-eg-badge-nodata">'
+                        . get_string('essayguard_notassessed', 'quiz_aigrader') . '</span>';
+                }
+                echo '</td>';
+            }
+            echo '</tr>';
+
+            // The detail row: the marking card, revealed when the assessor expands.
+            echo '<tr class="aigrader-qdetail" id="detail-' . s($r['rowid']) . '" hidden>';
+            echo '<td colspan="' . $colcount . '">';
+
             // Student header.
             echo '<div class="aigrader-card-header ag-flex-between ag-flex-wrap ag-gap-sm">';
             echo '<div class="aigrader-student-inline ag-flex-center ag-gap-sm">';
-            echo '<div class="aigrader-avatar-sm ag-flex-center">' . s($r['initials']) . '</div>';
-            echo '<span class="aigrader-student-name">' . s($r['fullname']) . '</span>';
-            echo '<span class="aigrader-student-email ag-text-muted">' . s($r['email']) . '</span>';
+            echo '<span class="aigrader-card-title" title="' . s($r['email']) . '">'
+                . s($r['fullname']) . ' &middot; '
+                . get_string('essay_question_n', 'quiz_aigrader', $r['slot']) . '</span>';
 
             // Essay Guard inline badge - only if data exists.
             if ($eglevel !== null) {
@@ -1175,7 +1307,9 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
                     . '</a>';
             }
             echo '</div>';
-            echo '<span class="aigrader-qnum-badge">' . s($r['questionnum']) . '</span>';
+            // Filled by the grader module once a suggestion arrives; the reference shows the
+            // headline figure here, at the top right of the card.
+            echo '<span class="aigrader-suggested-slot" id="suggested-' . $r['rowid'] . '"></span>';
             echo '</div>';
 
             // Essay Guard advisory panel - medium and high get a visible warning.
@@ -1219,6 +1353,12 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
                     . '</div>';
             }
 
+            // Two-column body: the learner's work on the left, the assessment on the right,
+            // so the assessor reads the response and the criteria side by side instead of
+            // scrolling between them. Collapses to one column on a narrow screen.
+            echo '<div class="aigrader-card-body">';
+            echo '<div class="aigrader-card-col aigrader-col-response">';
+
             // Question section.
             echo '<div class="aigrader-card-section aigrader-question-section">';
             echo '<div class="aigrader-section-label">' . get_string('question', 'quiz_aigrader') . '</div>';
@@ -1228,39 +1368,58 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
 
             // Answer section.
             echo '<div class="aigrader-card-section aigrader-answer-section">';
-            echo '<div class="aigrader-section-label">' . get_string('answer', 'quiz_aigrader') . '</div>';
+            echo '<div class="aigrader-section-label">'
+                . get_string('learners_response', 'quiz_aigrader') . '</div>';
             $formattedanswer = $this->format_student_answer($r['rawanswer']);
             echo '<div class="aigrader-answer-text" data-raw="' . s($r['rawanswer']) . '">'
                 . $formattedanswer . '</div>';
             echo '</div>';
 
+            echo '</div>';
+
             // Feedback and actions section - all essays are ungraded.
+            echo '<div class="aigrader-card-col aigrader-col-feedback">';
             echo '<div class="aigrader-card-section aigrader-feedback-section">';
             echo '<div class="aigrader-initial-actions ag-flex-between ag-flex-wrap ag-gap-md"'
                 . ' id="initial-actions-' . $r['rowid'] . '">';
-            echo '<span class="ag-text-muted">' . get_string('not_yet_graded', 'quiz_aigrader') . '</span>';
+            if (!empty($r['attachmentonly'])) {
+                echo '<span class="aigrader-attachment-note">'
+                    . get_string('error_attachmentonly', 'quiz_aigrader') . '</span>';
+            } else {
+                echo '<span class="ag-text-muted">' . get_string('not_yet_graded', 'quiz_aigrader') . '</span>';
+            }
             echo '<div class="aigrader-card-actions ag-flex-center ag-gap-md">';
             echo '<span class="aigrader-grade aigrader-grade-pending" id="grade-' . $r['rowid'] . '">&mdash;</span>';
-            echo '<button class="aigrader-btn aigrader-btn-sm aigrader-btn-success aigrader-grade-btn'
-                . ' ag-btn-base ag-btn-success"
-                    data-qubaid="' . $r['qubaid'] . '"
-                    data-slot="' . $r['slot'] . '"
-                    data-cmid="' . $r['cmid'] . '"
-                    data-maxmark="' . $r['maxmark'] . '"
-                    data-questiontext="' . s($r['questionfull']) . '">'
-                . get_string('ai_grade', 'quiz_aigrader') . '</button>';
+            // An attachment-only response has no text for the AI to read, so the button is
+            // not offered at all rather than spending a credit to grade a filename.
+            if (empty($r['attachmentonly'])) {
+                echo '<button class="aigrader-btn aigrader-btn-sm aigrader-btn-success aigrader-grade-btn'
+                    . ' ag-btn-base ag-btn-success"
+                        data-qubaid="' . $r['qubaid'] . '"
+                        data-slot="' . $r['slot'] . '"
+                        data-cmid="' . $r['cmid'] . '"
+                        data-maxmark="' . $r['maxmark'] . '"
+                        data-questiontext="' . s($r['questionfull']) . '">'
+                    . get_string('ai_grade', 'quiz_aigrader') . '</button>';
+            }
             echo '</div>';
             echo '</div>';
             echo '<div class="aigrader-feedback aigrader-feedback-hidden" id="feedback-' . $r['rowid'] . '"></div>';
             echo '</div>';
-
-            // End card.
             echo '</div>';
+
+            // End card body.
+            echo '</div>';
+
+            // End detail row and this response's tbody.
+            echo '</td></tr>';
+            echo '</tbody>';
         }
 
+        echo '</table>';
+        echo html_writer::end_div();
         // End cards container.
         echo '</div>';
-        echo html_writer::end_div();
     }
 
     /**

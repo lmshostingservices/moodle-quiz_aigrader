@@ -181,5 +181,117 @@ function xmldb_quiz_aigrader_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026080300, 'quiz', 'aigrader');
     }
 
+    if ($oldversion < 2026102500) {
+        // Version 4.4.0: the assessment decision record.
+        //
+        // Until now the only evidence an assessment decision had been made was one row in
+        // quiz_aigrader_grading_logs saying who approved and when, and that row was
+        // overwritten on re-approval. Nothing recorded what the AI suggested, whether the
+        // assessor changed it, or what rules were in force. This table is append-only: one
+        // row per approval, never updated, so the history of a mark can be reconstructed.
+        $table = new xmldb_table('quiz_aigrader_decisions');
+
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('quizid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('courseid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('graderid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('qubaid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('slot', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('questionid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('attemptnum', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '1');
+        $table->add_field('maxmark', XMLDB_TYPE_NUMBER, '10, 5', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('aimark', XMLDB_TYPE_NUMBER, '10, 5', null, null, null, null);
+        $table->add_field('finalmark', XMLDB_TYPE_NUMBER, '10, 5', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('markchanged', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('feedbackchanged', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('aifeedback', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('finalfeedback', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('criteriamet', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('policymode', XMLDB_TYPE_CHAR, '20', null, null, null, null);
+        $table->add_field('graderinfohash', XMLDB_TYPE_CHAR, '40', null, null, null, null);
+        $table->add_field('instructionshash', XMLDB_TYPE_CHAR, '40', null, null, null, null);
+        $table->add_field('modelversion', XMLDB_TYPE_CHAR, '100', null, null, null, null);
+        $table->add_field('requestid', XMLDB_TYPE_CHAR, '100', null, null, null, null);
+        $table->add_field('reviewseconds', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+        $table->add_field('humanreview', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('autolocked', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('acknowledgement', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_key('quizid', XMLDB_KEY_FOREIGN, ['quizid'], 'quiz', ['id']);
+        $table->add_key('courseid', XMLDB_KEY_FOREIGN, ['courseid'], 'course', ['id']);
+        $table->add_key('userid', XMLDB_KEY_FOREIGN, ['userid'], 'user', ['id']);
+        $table->add_key('graderid', XMLDB_KEY_FOREIGN, ['graderid'], 'user', ['id']);
+
+        $table->add_index('qubaid_slot', XMLDB_INDEX_NOTUNIQUE, ['qubaid', 'slot']);
+        $table->add_index('graderid_timecreated', XMLDB_INDEX_NOTUNIQUE, ['graderid', 'timecreated']);
+        $table->add_index('quizid_timecreated', XMLDB_INDEX_NOTUNIQUE, ['quizid', 'timecreated']);
+        $table->add_index('userid_quizid', XMLDB_INDEX_NOTUNIQUE, ['userid', 'quizid']);
+
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Separate the AI's opinion from the assessor's decision on the attempt context.
+        //
+        // lastgrade and criteriamet were written when the suggestion was generated, before
+        // any human had seen it, and were never corrected when the assessor overrode the
+        // mark. They now hold the approved decision, and the AI's suggestion is kept
+        // alongside in its own columns so the two can never be confused again.
+        $ctx = new xmldb_table('quiz_aigrader_attempt_ctx');
+
+        $field = new xmldb_field('aigrade', XMLDB_TYPE_NUMBER, '10, 2', null, null, null, null, 'lastgrade');
+        if (!$dbman->field_exists($ctx, $field)) {
+            $dbman->add_field($ctx, $field);
+        }
+
+        $field = new xmldb_field('aicriteriamet', XMLDB_TYPE_TEXT, null, null, null, null, null, 'aigrade');
+        if (!$dbman->field_exists($ctx, $field)) {
+            $dbman->add_field($ctx, $field);
+        }
+
+        $field = new xmldb_field('aifeedback', XMLDB_TYPE_TEXT, null, null, null, null, null, 'aicriteriamet');
+        if (!$dbman->field_exists($ctx, $field)) {
+            $dbman->add_field($ctx, $field);
+        }
+
+        $field = new xmldb_field('suggestedtime', XMLDB_TYPE_INTEGER, '10', null, null, null, null, 'aifeedback');
+        if (!$dbman->field_exists($ctx, $field)) {
+            $dbman->add_field($ctx, $field);
+        }
+
+        upgrade_plugin_savepoint(true, 2026102500, 'quiz', 'aigrader');
+    }
+
+    if ($oldversion < 2026102501) {
+        // Version 4.4.1: the marking queue became a table, the criteria shown are now the
+        // assessor's own from the question's grader information rather than a fixed vendor
+        // list, and three settings were added. No DB schema changes.
+        upgrade_plugin_savepoint(true, 2026102501, 'quiz', 'aigrader');
+    }
+
+    if ($oldversion < 2026102502) {
+        // Version 4.5.0: feedback is organised by the question's own grading criteria
+        // instead of three generic headings, and the assessor scores each criterion with
+        // the mark following as their sum. No DB schema changes - the decision record's
+        // criteriamet column now holds the scored criteria as JSON rather than a list of
+        // met identifiers, which is a superset of what it held before.
+        upgrade_plugin_savepoint(true, 2026102502, 'quiz', 'aigrader');
+    }
+
+    if ($oldversion < 2026102503) {
+        // Version 5.0.0: a security and correctness release. The grading statistics panel
+        // built its rows by concatenating course and grader names into HTML, which made one
+        // assessor's own name executable in another assessor's browser; it is now built
+        // through the DOM. Diagnostic logging, which carried learner responses and the
+        // feedback written about them, no longer reaches the browser console unless the site
+        // is in developer debug mode. The accessible label on the expand control moved from
+        // Bootstrap's sr-only, absent from the Moodle 5 themes, to Moodle's accesshide. No
+        // DB schema changes.
+        upgrade_plugin_savepoint(true, 2026102503, 'quiz', 'aigrader');
+    }
+
     return true;
 }

@@ -113,10 +113,94 @@ if ($ADMIN->fulltree) {
         1
     ));
 
-    $settingspage->add(new admin_setting_configtext(
+    // What a learner who scored full marks is shown. In competency-based assessment the
+    // judgement is binary: a learner who met every criterion is competent, and telling
+    // them what to improve or what to try next time contradicts that. Sites that prefer
+    // the older behaviour, or that want everything delivered regardless, can say so here.
+    $settingspage->add(new admin_setting_configselect(
+        'quiz_aigrader/fullmarks_feedback',
+        get_string('fullmarks_feedback', 'quiz_aigrader'),
+        get_string('fullmarks_feedback_desc', 'quiz_aigrader'),
+        'strengths',
+        [
+            'strengths' => get_string('fullmarks_strengths', 'quiz_aigrader'),
+            'nosuggestions' => get_string('fullmarks_nosuggestions', 'quiz_aigrader'),
+            'all' => get_string('fullmarks_all', 'quiz_aigrader'),
+        ]
+    ));
+
+    // A picker, not a free-text field. The value gates every approval on the site, and a
+    // mistyped 3600 would lock an assessor out of their own marking for an hour.
+    $settingspage->add(new admin_setting_configselect(
         'quiz_aigrader/min_review_time',
         get_string('min_review_time', 'quiz_aigrader'),
         get_string('min_review_time_desc', 'quiz_aigrader'),
+        '0',
+        [
+            '0'  => get_string('min_review_off', 'quiz_aigrader'),
+            '5'  => get_string('min_review_seconds', 'quiz_aigrader', 5),
+            '10' => get_string('min_review_seconds', 'quiz_aigrader', 10),
+            '30' => get_string('min_review_seconds', 'quiz_aigrader', 30),
+            '60' => get_string('min_review_seconds', 'quiz_aigrader', 60),
+        ]
+    ));
+
+    // Site default for the language feedback is written in. Set per quiz as before; this
+    // is the value a quiz starts from.
+    $settingspage->add(new admin_setting_configselect(
+        'quiz_aigrader/default_feedback_language',
+        get_string('default_feedback_language', 'quiz_aigrader'),
+        get_string('default_feedback_language_desc', 'quiz_aigrader'),
+        'learner',
+        [
+            'learner' => get_string('language_learner', 'quiz_aigrader'),
+            'en'      => get_string('language_en', 'quiz_aigrader'),
+            'es'      => get_string('language_es', 'quiz_aigrader'),
+            'fr'      => get_string('language_fr', 'quiz_aigrader'),
+            'ar'      => get_string('language_ar', 'quiz_aigrader'),
+            'zh'      => get_string('language_zh', 'quiz_aigrader'),
+            'ja'      => get_string('language_ja', 'quiz_aigrader'),
+            'th'      => get_string('language_th', 'quiz_aigrader'),
+            'vi'      => get_string('language_vi', 'quiz_aigrader'),
+            'hi'      => get_string('language_hi', 'quiz_aigrader'),
+            'id'      => get_string('language_id', 'quiz_aigrader'),
+            'pt'      => get_string('language_pt', 'quiz_aigrader'),
+        ]
+    ));
+
+    // Whether assessors may upload marking guides at all. Some RTOs keep rubrics inside
+    // the question and do not want documents leaving the site.
+    $settingspage->add(new admin_setting_configcheckbox(
+        'quiz_aigrader/allow_reference_documents',
+        get_string('allow_reference_documents', 'quiz_aigrader'),
+        get_string('allow_reference_documents_desc', 'quiz_aigrader'),
+        1
+    ));
+
+    // Competency signals across repeated attempts.
+    //
+    // Both default to 0, meaning off. Releases up to 4.3.0 hard-coded these at three, four
+    // and five attempts, numbers chosen by the plugin rather than by the RTO's assessment
+    // strategy, and applied them whatever the quiz's own attempt limit was. An RTO that
+    // wants them sets them to match the strategy it can show an auditor.
+    $settingspage->add(new admin_setting_heading(
+        'quiz_aigrader/competency_heading',
+        get_string('competency_heading', 'quiz_aigrader'),
+        get_string('competency_heading_desc', 'quiz_aigrader')
+    ));
+
+    $settingspage->add(new admin_setting_configtext(
+        'quiz_aigrader/competency_attempt_threshold',
+        get_string('competency_attempt_threshold', 'quiz_aigrader'),
+        get_string('competency_attempt_threshold_desc', 'quiz_aigrader'),
+        '0',
+        PARAM_INT
+    ));
+
+    $settingspage->add(new admin_setting_configtext(
+        'quiz_aigrader/humanreview_attempt_threshold',
+        get_string('humanreview_attempt_threshold', 'quiz_aigrader'),
+        get_string('humanreview_attempt_threshold_desc', 'quiz_aigrader'),
         '0',
         PARAM_INT
     ));

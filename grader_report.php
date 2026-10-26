@@ -671,10 +671,15 @@ if (empty($data)) {
         $avgperqformatted = $avgperq > 0
             ? get_string('seconds_suffix', 'quiz_aigrader', $avgperq)
             : '-';
+        // The average is rendered as a pill, as the reference shows. It is also the figure
+        // an auditor reads first, so it is given visual weight rather than hidden in a
+        // column of plain numbers.
         echo html_writer::tag(
             'td',
-            $avgperqformatted,
-            ['class' => 'aigrader-report-td aigrader-report-td-right aigrader-num-amber']
+            $avgperq > 0
+                ? html_writer::tag('span', $avgperqformatted, ['class' => 'aigrader-time-pill'])
+                : $avgperqformatted,
+            ['class' => 'aigrader-report-td aigrader-report-td-right']
         );
         echo html_writer::end_tag('tr');
     }

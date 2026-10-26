@@ -74,6 +74,16 @@ class service {
                 JOIN {course} c ON c.id = q.course
                 JOIN {user} u ON u.id = qas.userid
                 WHERE qas.state IN ('mangrright', 'mangrpartial', 'mangrwrong')
+                  -- Only approvals made through this plugin. Without this the AI Essay
+                  -- Grader Activity Report counted every manual grade on the site, so
+                  -- essays marked on Moodle's own manual grading screen with no AI
+                  -- involvement were reported as this plugin's work, and a teacher who had
+                  -- never opened it appeared in the report as a grader. It also put the
+                  -- approval counts and the grading times on two different populations.
+                  AND EXISTS (SELECT 1
+                                FROM {quiz_aigrader_grading_logs} agl
+                               WHERE agl.qubaid = qa.questionusageid
+                                 AND agl.slot = qa.slot)
                   AND qas.timecreated >= :startdate
                   AND qas.timecreated <= :enddate
                   AND qas.userid != 0
@@ -200,8 +210,19 @@ class service {
                     u.email,
                     COUNT(qas.id) AS total_approved
                 FROM {question_attempt_steps} qas
+                JOIN {question_attempts} qa ON qa.id = qas.questionattemptid
                 JOIN {user} u ON u.id = qas.userid
                 WHERE qas.state IN ('mangrright', 'mangrpartial', 'mangrwrong')
+                  -- Only approvals made through this plugin. Without this the AI Essay
+                  -- Grader Activity Report counted every manual grade on the site, so
+                  -- essays marked on Moodle's own manual grading screen with no AI
+                  -- involvement were reported as this plugin's work, and a teacher who had
+                  -- never opened it appeared in the report as a grader. It also put the
+                  -- approval counts and the grading times on two different populations.
+                  AND EXISTS (SELECT 1
+                                FROM {quiz_aigrader_grading_logs} agl
+                               WHERE agl.qubaid = qa.questionusageid
+                                 AND agl.slot = qa.slot)
                   AND qas.timecreated >= :startdate
                   AND qas.timecreated <= :enddate
                   AND qas.userid != 0
@@ -258,6 +279,16 @@ class service {
                 JOIN {quiz} q ON q.id = qza.quiz
                 JOIN {course} c ON c.id = q.course
                 WHERE qas.state IN ('mangrright', 'mangrpartial', 'mangrwrong')
+                  -- Only approvals made through this plugin. Without this the AI Essay
+                  -- Grader Activity Report counted every manual grade on the site, so
+                  -- essays marked on Moodle's own manual grading screen with no AI
+                  -- involvement were reported as this plugin's work, and a teacher who had
+                  -- never opened it appeared in the report as a grader. It also put the
+                  -- approval counts and the grading times on two different populations.
+                  AND EXISTS (SELECT 1
+                                FROM {quiz_aigrader_grading_logs} agl
+                               WHERE agl.qubaid = qa.questionusageid
+                                 AND agl.slot = qa.slot)
                   AND qas.timecreated >= :startdate
                   AND qas.timecreated <= :enddate
                   AND qas.userid != 0
@@ -292,8 +323,19 @@ class service {
         $sql = "SELECT DISTINCT u.id, u.firstname, u.lastname, u.firstnamephonetic,
                                 u.lastnamephonetic, u.middlename, u.alternatename, u.email
                 FROM {question_attempt_steps} qas
+                JOIN {question_attempts} qa ON qa.id = qas.questionattemptid
                 JOIN {user} u ON u.id = qas.userid
                 WHERE qas.state IN ('mangrright', 'mangrpartial', 'mangrwrong')
+                  -- Only approvals made through this plugin. Without this the AI Essay
+                  -- Grader Activity Report counted every manual grade on the site, so
+                  -- essays marked on Moodle's own manual grading screen with no AI
+                  -- involvement were reported as this plugin's work, and a teacher who had
+                  -- never opened it appeared in the report as a grader. It also put the
+                  -- approval counts and the grading times on two different populations.
+                  AND EXISTS (SELECT 1
+                                FROM {quiz_aigrader_grading_logs} agl
+                               WHERE agl.qubaid = qa.questionusageid
+                                 AND agl.slot = qa.slot)
                   AND qas.userid != 0
                 ORDER BY u.lastname, u.firstname";
 

@@ -40,6 +40,7 @@ use quiz_aigrader\privacy\provider;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \quiz_aigrader\privacy\provider
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\quiz_aigrader\privacy\provider::class)]
 final class privacy_provider_test extends \core_privacy\tests\provider_testcase {
     /** @var \stdClass The course used by the fixture. */
     protected $course;
@@ -100,6 +101,30 @@ final class privacy_provider_test extends \core_privacy\tests\provider_testcase 
             'timegraded' => $now,
         ]);
 
+        // One assessment decision, naming both the learner assessed and the assessor who
+        // approved it. Both must be able to have it erased.
+        $DB->insert_record('quiz_aigrader_decisions', (object) [
+            'quizid' => $this->quiz->id,
+            'courseid' => $this->course->id,
+            'userid' => $this->student->id,
+            'graderid' => $this->teacher->id,
+            'qubaid' => 1,
+            'slot' => 1,
+            'questionid' => 1,
+            'attemptnum' => 1,
+            'maxmark' => 10,
+            'aimark' => 8,
+            'finalmark' => 7,
+            'markchanged' => 1,
+            'feedbackchanged' => 0,
+            'aifeedback' => 'Identified the hazard clearly.',
+            'finalfeedback' => 'Identified the hazard clearly.',
+            'criteriamet' => '[]',
+            'humanreview' => 0,
+            'autolocked' => 0,
+            'timecreated' => $now,
+        ]);
+
         $DB->insert_record('quiz_aigrader_schedules', (object) [
             'userid' => $this->teacher->id,
             'frequency' => 'weekly',
@@ -129,6 +154,7 @@ final class privacy_provider_test extends \core_privacy\tests\provider_testcase 
 
         $this->assertContains('quiz_aigrader_attempt_ctx', $names);
         $this->assertContains('quiz_aigrader_grading_logs', $names);
+        $this->assertContains('quiz_aigrader_decisions', $names);
         $this->assertContains('quiz_aigrader_schedules', $names);
         $this->assertContains('essaygraderai_api', $names);
     }
@@ -227,6 +253,7 @@ final class privacy_provider_test extends \core_privacy\tests\provider_testcase 
 
         $this->assertEquals(0, $DB->count_records('quiz_aigrader_attempt_ctx'));
         $this->assertEquals(0, $DB->count_records('quiz_aigrader_grading_logs'));
+        $this->assertEquals(0, $DB->count_records('quiz_aigrader_decisions'));
         $this->assertEquals(1, $DB->count_records('quiz_aigrader_schedules'));
     }
 
@@ -244,6 +271,8 @@ final class privacy_provider_test extends \core_privacy\tests\provider_testcase 
 
         $this->assertEquals(0, $DB->count_records('quiz_aigrader_attempt_ctx'));
         $this->assertEquals(1, $DB->count_records('quiz_aigrader_grading_logs'));
+        // The learner's own deletion removes the decision about them.
+        $this->assertEquals(0, $DB->count_records('quiz_aigrader_decisions'));
     }
 
     /**
@@ -260,6 +289,8 @@ final class privacy_provider_test extends \core_privacy\tests\provider_testcase 
 
         $this->assertEquals(1, $DB->count_records('quiz_aigrader_attempt_ctx'));
         $this->assertEquals(0, $DB->count_records('quiz_aigrader_grading_logs'));
+        // The assessor's deletion removes it too: the row names them as well.
+        $this->assertEquals(0, $DB->count_records('quiz_aigrader_decisions'));
     }
 
     /**

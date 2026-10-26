@@ -93,15 +93,15 @@ function quiz_aigrader_fetch($url, $apikey, $post = false, $payload = null) {
 }
 
 /**
- * Require the plugin's grading capability, answering in JSON rather than throwing.
+ * Build the JSON body for a server-side failure.
  *
- * require_capability() raises an exception, which the file-level handler turns into a
- * generic server error - the user is told nothing useful and the button looks broken.
- * Every write action routes through here instead, so a permissions problem always names
- * the capability an administrator needs to grant, and all the write actions share one rule.
+ * Returns the same generic message to the browser in every case, adding the underlying
+ * reason only where developer debugging is switched on, so nothing about the server is
+ * disclosed on a production site.
  *
- * @param context $context The module context to check in.
- * @return void Exits with a JSON response when the user may not grade.
+ * @param Throwable $e The failure being reported.
+ * @param string $errorcode Short machine-readable code identifying where it happened.
+ * @return array The response body, ready to json_encode().
  */
 function quiz_aigrader_error_response(Throwable $e, string $errorcode): array {
     global $CFG;
@@ -127,9 +127,15 @@ function quiz_aigrader_error_response(Throwable $e, string $errorcode): array {
 }
 
 /**
- * Refuse the request unless the user may approve AI suggested marks.
+ * Require the plugin's grading capability, answering in JSON rather than throwing.
+ *
+ * require_capability() raises an exception, which the file-level handler turns into a
+ * generic server error - the user is told nothing useful and the button looks broken.
+ * Every write action routes through here instead, so a permissions problem always names
+ * the capability an administrator needs to grant, and all the write actions share one rule.
  *
  * @param context $context Module context the request is acting in.
+ * @return void Exits with a JSON response when the user may not grade.
  */
 function quiz_aigrader_require_grading($context) {
     if (has_capability('quiz/aigrader:approve', $context)) {
@@ -389,11 +395,7 @@ try {
                 $qa = $usage->get_question_attempt($slot);
 
                 // Clean question text: strip HTML tags and decode entities, preserving line breaks.
-                $rawquestion = $qa->get_question()->questiontext;
-                $question = html_entity_decode(strip_tags($rawquestion), ENT_QUOTES | ENT_HTML5, 'UTF-8');
-                // Normalise spaces but keep newlines.
-                $question = preg_replace('/[^\S\n]+/', ' ', $question);
-                $question = trim($question);
+                $question = \quiz_aigrader\local\formatter::html_to_text($qa->get_question()->questiontext);
 
                 // Extract graderinfo (assessor instructions, rubric and sample answers).
                 // This is the "Information for graders" field in Moodle essay questions and
@@ -401,26 +403,48 @@ try {
                 $questionobj = $qa->get_question();
                 $graderinfo = '';
                 if (isset($questionobj->graderinfo) && !empty($questionobj->graderinfo)) {
-                    $rawgraderinfo = $questionobj->graderinfo;
-                    $graderinfo = html_entity_decode(strip_tags($rawgraderinfo), ENT_QUOTES | ENT_HTML5, 'UTF-8');
-                    $graderinfo = preg_replace('/[^\S\n]+/', ' ', $graderinfo);
-                    $graderinfo = trim($graderinfo);
+                    $graderinfo = \quiz_aigrader\local\formatter::html_to_text($questionobj->graderinfo);
                 }
                 // Also try generalfeedback as a fallback (some question types use this for rubrics).
                 $generalfeedback = '';
                 if (isset($questionobj->generalfeedback) && !empty($questionobj->generalfeedback)) {
-                    $rawgeneralfeedback = $questionobj->generalfeedback;
-                    $generalfeedback = html_entity_decode(strip_tags($rawgeneralfeedback), ENT_QUOTES | ENT_HTML5, 'UTF-8');
-                    $generalfeedback = preg_replace('/[^\S\n]+/', ' ', $generalfeedback);
-                    $generalfeedback = trim($generalfeedback);
+                    $generalfeedback = \quiz_aigrader\local\formatter::html_to_text($questionobj->generalfeedback);
                 }
 
                 // Clean answer text: preserve line breaks so the AI can analyse structure.
-                $rawanswer = $qa->get_response_summary();
-                $answer = html_entity_decode(strip_tags($rawanswer), ENT_QUOTES | ENT_HTML5, 'UTF-8');
-                // Normalise spaces but keep newlines.
-                $answer = preg_replace('/[^\S\n]+/', ' ', $answer);
-                $answer = trim($answer);
+                $rawanswer = (string)$qa->get_response_summary();
+                $answer = \quiz_aigrader\local\formatter::html_to_text($rawanswer);
+
+                // Refuse to grade an attachment-only response.
+                //
+                // get_response_summary() returns the FILE NAMES for an attachment response,
+                // not its contents, so until 4.4.0 the grading service was handed the string
+                // "evidence.pdf" and asked to assess it - and returned a mark and feedback
+                // for it. Marking a learner on a filename is an assessment validity failure,
+                // and a silent one. The assessor is told to read and mark it by hand.
+                $responsetext = '';
+                $attachmentcount = 0;
+                foreach ($qa->get_last_qt_data() as $responsekey => $responsevalue) {
+                    if ($responsekey === 'answer') {
+                        $responsetext = \quiz_aigrader\local\formatter::html_to_text((string)$responsevalue);
+                    } else if ($responsekey === 'attachments' && !empty($responsevalue)) {
+                        $attachmentcount = 1;
+                    }
+                }
+                if ($responsetext === '' && $attachmentcount > 0) {
+                    echo json_encode([
+                        'ok' => false,
+                        'message' => get_string('error_attachmentonly', 'quiz_aigrader'),
+                        'error_code' => 'ATTACHMENT_ONLY',
+                        'attachmentonly' => true,
+                    ]);
+                    exit;
+                }
+                // Prefer the question's own answer field over the rendered summary, which
+                // decorates the response for display.
+                if ($responsetext !== '') {
+                    $answer = $responsetext;
+                }
                 $maxmark = round((float)$qa->get_max_mark(), 2);
                 $questionid = $qa->get_question()->id;
             } catch (Exception $e) {
@@ -479,54 +503,28 @@ try {
                     $autolocked = (bool)$attemptcontext->autolocked;
                     $humanreview = (bool)$attemptcontext->humanreview;
 
-                    // Auto-lock rule: if the attempt is locked, return full marks immediately.
-                    if ($autolocked) {
-                        echo json_encode([
-                            'ok' => true,
-                            'grade' => 'Full Marks',
-                            'score' => intval($maxmark) . '/' . intval($maxmark),
-                            'feedback' => get_string('autolock_feedback', 'quiz_aigrader'),
-                            'rubric' => null,
-                            'grade100' => 100,
-                            'scaledmark' => $maxmark,
-                            'maxmark' => $maxmark,
-                            'credits' => null,
-                            'autolocked' => true,
-                            'attemptnum' => $attemptnum,
-                            'maxattempts' => $maxattempts,
-                            'previousattempt' => [
-                                'feedback' => $previousfeedbacksummary,
-                                'grade' => $previousgrade,
-                            ],
-                        ]);
-                        exit;
-                    }
-
-                    // Human review rule: the attempt has been flagged for assessor review.
-                    if ($humanreview) {
-                        $reviewmark = round($previousgrade / 100 * $maxmark, 2);
-                        echo json_encode([
-                            'ok' => true,
-                            'grade' => 'Pending Review',
-                            'score' => intval($reviewmark) . '/' . intval($maxmark),
-                            'feedback' => get_string('humanreview_feedback', 'quiz_aigrader'),
-                            'rubric' => null,
-                            'grade100' => $previousgrade,
-                            'scaledmark' => $reviewmark,
-                            'maxmark' => $maxmark,
-                            'credits' => null,
-                            'humanreview' => true,
-                            'attemptnum' => $attemptnum,
-                            'maxattempts' => $maxattempts,
-                            'previousattempt' => [
-                                'feedback' => $previousfeedbacksummary,
-                                'grade' => $previousgrade,
-                            ],
-                        ]);
-                        exit;
-                    }
+                    // Both flags are advisory from 4.4.0 and deliberately do NOT short-circuit
+                    // grading.
+                    //
+                    // Until 4.3.0 an attempt carrying either flag returned here without the
+                    // response ever being assessed: the auto-lock branch returned full marks
+                    // for an answer nobody had read, and the human-review branch returned a
+                    // mark derived from a DIFFERENT attempt's percentage, preselected in the
+                    // assessor's dropdown behind a one-click approve. A learner on attempt 4
+                    // could submit a single character and be presented as full marks. Neither
+                    // is defensible in a competency-based assessment, and neither survives an
+                    // audit that asks what evidence supports the mark.
+                    //
+                    // Every response is now assessed on its own merits. The flags travel to
+                    // the UI as context for the assessor - what was established on earlier
+                    // attempts, and whether this decision needs explicit acknowledgement -
+                    // and the human-review flag is enforced on approve, not here.
                 }
             }
+
+            // The assessor's own criteria, parsed from the question's grader information.
+            // These are what the card and the learner's feedback are built from.
+            $rubriccriteria = \quiz_aigrader\local\criteria::from_graderinfo($graderinfo);
 
             // Language: prefer the explicit parameter, fall back to the user's Moodle language.
             $language = optional_param('language', '', PARAM_ALPHANUMEXT);
@@ -536,8 +534,17 @@ try {
                 $language = str_replace('_', '-', current_language());
             }
 
-            // Check whether this is a re-grade (no credit charge).
-            $regrade = optional_param('regrade', 0, PARAM_INT);
+            // Whether this is a re-grade, and so free, is decided by the server.
+            //
+            // The browser used to send this flag and it was passed straight through to the
+            // billing call, so anyone holding the approve capability could request free
+            // grading indefinitely by sending regrade=1. A re-grade is a second or later
+            // suggestion for the same response: the attempt context already holds a
+            // suggestion recorded against this same attempt number. A new attempt is new
+            // work and is charged.
+            $regrade = ($attemptcontext
+                && $attemptcontext->aigrade !== null
+                && (int)$attemptcontext->attemptnum === $attemptnum);
 
             // API request - the server fetches extra instructions using quizId.
             // maxMark is included so the AI grades to the correct scale, language drives
@@ -554,6 +561,25 @@ try {
                 'regrade' => $regrade ? true : false,
                 'metadata' => ['qubaid' => $qubaid, 'slot' => $slot, 'quizId' => $quiz->id],
                 'graderInfo' => $graderinfo,
+                // The rubric split into discrete criteria. The assessor writes them as a
+                // list in "Information for graders"; until 4.4.0 strip_tags() ran that list
+                // into a single sentence before it was sent, so there was nothing for the
+                // service to score against line by line.
+                'rubricCriteria' => $rubriccriteria,
+                // What we want back per criterion. The service does not have to honour
+                // this yet - the plugin renders the assessor's criteria either way and
+                // the assessor scores them - but when it does, the numbers and the
+                // per-criterion feedback arrive together.
+                'criteriaResponseFormat' => [
+                    'awarded' => 'number, 0 to the criterion max',
+                    'comment' => 'what the learner did on this criterion',
+                    'improve' => 'what would earn the remaining marks, omitted at full marks',
+                ],
+                // The question's own constraints, so the service can mark to them.
+                'wordLimits' => [
+                    'min' => isset($questionobj->minwordlimit) ? (int)$questionobj->minwordlimit : null,
+                    'max' => isset($questionobj->maxwordlimit) ? (int)$questionobj->maxwordlimit : null,
+                ],
                 'generalFeedback' => $generalfeedback,
                 'attemptContext' => [
                     'attemptNumber' => $attemptnum,
@@ -611,7 +637,7 @@ try {
 
             // Build data for output. The grade is not saved until the teacher approves it.
             // Score format: "X/Y" where Y matches the question's max mark.
-            $score = isset($data['score']) ? $data['score'] : '0/' . intval($maxmark);
+            $score = isset($data['score']) ? $data['score'] : \quiz_aigrader\local\formatter::score_label(0, $maxmark);
             $parts = explode('/', $score);
             $num = isset($parts[0]) ? floatval($parts[0]) : 0;
             $den = isset($parts[1]) ? floatval($parts[1]) : $maxmark;
@@ -620,8 +646,37 @@ try {
             $scaled = round(($grade100 / 100) * $maxmark, 2);
 
             // Handle the case where the AI returns feedback as an object instead of a string.
+            //
+            // When it does, the structure is kept as well as flattened. The browser's section
+            // detection is a set of English phrase patterns, so on a site using any of the
+            // other feedback languages the plugin offers it recognises no headings at all:
+            // the full-marks policy then filters nothing and the whole card layout silently
+            // falls back to flat text. Structured sections are language-independent, so they
+            // are used whenever the service provides them and the patterns are the fallback.
+            $feedbacksections = [];
+            $sectiontypemap = [
+                'strengths' => 'success', 'what_you_did_well' => 'success', 'whatyoudidwell' => 'success',
+                'good' => 'success', 'positives' => 'success',
+                'improvements' => 'warning', 'areas_for_improvement' => 'warning',
+                'areasforimprovement' => 'warning', 'needs_improvement' => 'warning', 'gaps' => 'warning',
+                'suggestions' => 'info', 'next_steps' => 'info', 'nextsteps' => 'info',
+                'recommendations' => 'info', 'tips' => 'info',
+            ];
+
             $feedbacktext = isset($data['feedback']) ? $data['feedback'] : '';
             if (is_array($feedbacktext) || is_object($feedbacktext)) {
+                foreach ((array)$feedbacktext as $sectionkey => $sectionvalue) {
+                    $normalised = strtolower(str_replace([' ', '-'], '_', (string)$sectionkey));
+                    $feedbacksections[] = [
+                        'key' => $normalised,
+                        'type' => $sectiontypemap[$normalised] ?? 'info',
+                        'heading' => ucwords(str_replace('_', ' ', (string)$sectionkey)),
+                        'items' => is_array($sectionvalue)
+                            ? array_values(array_map('strval', $sectionvalue))
+                            : [(string)$sectionvalue],
+                    ];
+                }
+
                 // Convert structured feedback to a formatted string.
                 $parts = [];
                 foreach ((array)$feedbacktext as $key => $value) {
@@ -668,8 +723,12 @@ try {
             $rejectedcriteria = array_values(array_diff($rawcriteriamet, $questioncriteria));
 
             if (!empty($rejectedcriteria)) {
-                debugging('AI Grader: Rejected invalid criteria IDs: ' . implode(', ', $rejectedcriteria) .
-                          ' for question ' . $questionid . ' user ' . $studentid, DEBUG_DEVELOPER);
+                debugging(
+                    'AI Grader: Rejected invalid criteria IDs: '
+                        . implode(', ', $rejectedcriteria)
+                        . ' for question ' . $questionid . ' user ' . $studentid,
+                    DEBUG_DEVELOPER
+                );
             }
 
             // Filter down to only the valid criteria for this question.
@@ -678,45 +737,59 @@ try {
             // If the API did not return structured criteria, try to derive a summary from the feedback.
             if (empty($newcriteriamet) && !empty($feedbacktext)) {
                 if (empty($newfeedbacksummary)) {
-                    $newfeedbacksummary = substr(strip_tags($feedbacktext), 0, 300);
+                    $newfeedbacksummary = core_text::substr(\quiz_aigrader\local\formatter::html_to_text($feedbacktext), 0, 300);
                 }
             }
 
             // Clamp feedbackSummary to 300 characters to prevent prompt bloat.
-            $newfeedbacksummary = substr($newfeedbacksummary, 0, 300);
+            // core_text::substr, not substr: a byte-based cut lands mid-character on any
+            // multibyte script and sends a broken final character to the grading service.
+            $newfeedbacksummary = core_text::substr($newfeedbacksummary, 0, 300);
 
-            // Trust criteria over score: if all criteria are met, force grade100 to 100.
-            // This is how competency-based assessment works.
-            $allcriteriacount = count($validcriteria);
+            // Criteria met across all attempts so far, reported to the assessor as history.
+            //
+            // Releases up to 4.3.0 used this count to force the mark to 100% whenever three
+            // or more criteria had accumulated and the service's own total was no higher.
+            // That awarded full marks on THIS attempt's response for criteria demonstrated on
+            // earlier ones, so a thin answer could carry full marks with nothing in the record
+            // to explain it, and the threshold of three was a number with no basis in any
+            // RTO's assessment strategy. The cumulative record is kept, because carrying
+            // demonstrated competency forward is legitimate practice; silently converting it
+            // into a mark is not. The assessor decides, with the history in front of them.
             $mergedcriteriacount = count(array_unique(array_merge($previouscriteriamet, $newcriteriamet)));
+            $apireportedtotal = isset($data['totalCriteria']) ? (int)$data['totalCriteria'] : 0;
+            $allcriteriademonstrated = ($apireportedtotal > 0 && $mergedcriteriacount >= $apireportedtotal);
 
-            // If a meaningful number of criteria are met (at least three core ones), trust it.
-            // This handles cases where the AI returns a score below 100 but all relevant
-            // criteria for the question are met.
-            if (!empty($newcriteriamet) && $mergedcriteriacount >= 3) {
-                $apireportedtotal = isset($data['totalCriteria']) ? (int)$data['totalCriteria'] : 0;
-                if ($apireportedtotal > 0 && $mergedcriteriacount >= $apireportedtotal) {
-                    $grade100 = 100;
-                }
-            }
+            // Competency and review signals.
+            //
+            // The thresholds are site settings rather than the hard-coded 3, 4 and 5 of
+            // earlier releases, and both default to off. A threshold that the vendor picked
+            // is not a defensible basis for a competency decision; one the RTO sets to match
+            // its own assessment strategy is.
+            $competencythreshold = (int)get_config('quiz_aigrader', 'competency_attempt_threshold');
+            $reviewthreshold = (int)get_config('quiz_aigrader', 'humanreview_attempt_threshold');
 
-            // Store the attempt context so the next attempt is graded consistently.
             $newautolocked = false;
             $newhumanreview = false;
 
-            // Auto-lock rule: attempt >= 3 and grade = 100% (all criteria met).
-            if ($attemptnum >= 3 && $grade100 >= 100) {
+            // Competency established: every criterion the service recognises for this question
+            // has now been demonstrated across the attempt sequence. Advisory only - it shows
+            // the assessor what has been established, and never sets or forces a mark.
+            if ($competencythreshold > 0 && $attemptnum >= $competencythreshold && $allcriteriademonstrated) {
                 $newautolocked = true;
             }
 
-            // Human review rule: attempt >= 4 and no improvement on the previous attempt.
-            if ($attemptnum >= 4 && $previousgrade !== null && $grade100 <= $previousgrade) {
+            // Human review: the learner has reached the configured attempt threshold, or has
+            // made no measurable progress on an extended attempt sequence. Approving under
+            // this flag requires the assessor to acknowledge it and state a reason, which is
+            // stored on the decision record.
+            if ($reviewthreshold > 0 && $attemptnum >= $reviewthreshold) {
                 $newhumanreview = true;
             }
-
-            // Attempt >= 5 always triggers mandatory human review, which keeps extended
-            // attempt sequences under human oversight.
-            if ($attemptnum >= 5) {
+            if (
+                $reviewthreshold > 0 && $attemptnum >= max(1, $reviewthreshold - 1)
+                    && $previousgrade !== null && $grade100 <= $previousgrade
+            ) {
                 $newhumanreview = true;
             }
 
@@ -730,31 +803,70 @@ try {
                     // Merge newly met criteria with previously met criteria (criteria persist once met).
                     $mergedcriteria = array_unique(array_merge($previouscriteriamet, $newcriteriamet));
 
+                    // What the AI said, recorded as the AI's opinion.
+                    //
+                    // lastgrade, criteriamet and feedbacksummary are NOT written here. Until
+                    // 4.3.0 they were, which meant the consistency chain every later attempt
+                    // was graded against - and the "previous attempt" panel the next assessor
+                    // read - was built entirely from AI suggestions, with every human
+                    // correction discarded. A learner marked down by an assessor was told on
+                    // their next attempt that those criteria were already satisfied. Those
+                    // three columns are now written by the approve action, from the decision
+                    // the assessor actually made.
                     if ($attemptcontext) {
-                        // Update the existing record. The autolocked and humanreview flags are
-                        // deliberately not saved here - they are only written on approve.
                         $attemptcontext->attemptnum = $attemptnum;
-                        $attemptcontext->criteriamet = json_encode($mergedcriteria);
-                        $attemptcontext->feedbacksummary = $newfeedbacksummary;
-                        $attemptcontext->lastgrade = $grade100;
+                        $attemptcontext->aigrade = $grade100;
+                        $attemptcontext->aicriteriamet = json_encode(array_values($mergedcriteria));
+                        $attemptcontext->aifeedback = $feedbacktext;
+                        $attemptcontext->suggestedtime = $now;
+                        $attemptcontext->autolocked = $newautolocked ? 1 : 0;
+                        $attemptcontext->humanreview = $newhumanreview ? 1 : 0;
                         $attemptcontext->timemodified = $now;
                         $DB->update_record('quiz_aigrader_attempt_ctx', $attemptcontext);
                     } else {
-                        // Insert a new record, again without the autolocked or humanreview flags.
                         $newrecord = new stdClass();
                         $newrecord->quizid = $quiz->id;
                         $newrecord->userid = $studentid;
                         $newrecord->questionid = $questionid;
                         $newrecord->slot = $slot;
                         $newrecord->attemptnum = $attemptnum;
-                        $newrecord->criteriamet = json_encode($mergedcriteria);
-                        $newrecord->feedbacksummary = $newfeedbacksummary;
-                        $newrecord->lastgrade = $grade100;
-                        $newrecord->autolocked = 0;
-                        $newrecord->humanreview = 0;
+                        $newrecord->criteriamet = null;
+                        $newrecord->feedbacksummary = null;
+                        $newrecord->lastgrade = null;
+                        $newrecord->aigrade = $grade100;
+                        $newrecord->aicriteriamet = json_encode(array_values($mergedcriteria));
+                        $newrecord->aifeedback = $feedbacktext;
+                        $newrecord->suggestedtime = $now;
+                        $newrecord->autolocked = $newautolocked ? 1 : 0;
+                        $newrecord->humanreview = $newhumanreview ? 1 : 0;
                         $newrecord->timecreated = $now;
                         $newrecord->timemodified = $now;
                         $DB->insert_record('quiz_aigrader_attempt_ctx', $newrecord);
+                    }
+                } catch (dml_write_exception $e) {
+                    // Two concurrent suggests for the same slot both found no row and both
+                    // inserted; the unique index rejected this one. Retry as an update rather
+                    // than losing the context, which is what swallowing this did before.
+                    try {
+                        $existing = $DB->get_record('quiz_aigrader_attempt_ctx', [
+                            'quizid' => $quiz->id,
+                            'userid' => $studentid,
+                            'questionid' => $questionid,
+                            'slot' => $slot,
+                        ]);
+                        if ($existing) {
+                            $existing->attemptnum = $attemptnum;
+                            $existing->aigrade = $grade100;
+                            $existing->aicriteriamet = json_encode(array_values($mergedcriteria));
+                            $existing->aifeedback = $feedbacktext;
+                            $existing->suggestedtime = time();
+                            $existing->autolocked = $newautolocked ? 1 : 0;
+                            $existing->humanreview = $newhumanreview ? 1 : 0;
+                            $existing->timemodified = time();
+                            $DB->update_record('quiz_aigrader_attempt_ctx', $existing);
+                        }
+                    } catch (Exception $retryerror) {
+                        debugging('AI Grader: attempt_ctx retry failed: ' . $retryerror->getMessage(), DEBUG_DEVELOPER);
                     }
                 } catch (Exception $e) {
                     // Attempt context save failed - log it but do not abort grading. This happens
@@ -781,15 +893,46 @@ try {
                     'feedback' => $previousfeedbacksummary,
                     'grade' => $previousgrade,
                 ],
+                // Carried so the approve action can record what the AI suggested alongside
+                // what the assessor decided, and so the two can be compared in the record.
+                'aigrade100' => $grade100,
+                'aimark' => $scaled,
+                'criteriamet' => array_values($mergedcriteria),
+                'criteriatotal' => $apireportedtotal,
+                // Every criterion in force for this question, so the learner's breakdown can
+                // show what is still outstanding and not only what has been met.
+                'criteriaall' => array_values($questioncriteria),
+                // The assessor's own criteria. The card lists these whether or not the
+                // grading service scored them, so what a learner is marked against is always
+                // the rubric their assessor wrote.
+                'rubriccriteria' => !empty($rubriccriteria) ? $rubriccriteria : null,
+                // Per-criterion scores, when the grading service provides them, merged onto
+                // the assessor's labels so the two can never disagree about what was marked.
+                'criteria' => \quiz_aigrader\local\criteria::merge_scores(
+                    $rubriccriteria,
+                    isset($data['criteria']) && is_array($data['criteria']) ? $data['criteria'] : [],
+                    $newcriteriamet
+                ),
+                'suggestedtime' => time(),
+                'modelversion' => isset($data['modelVersion']) ? (string)$data['modelVersion'] : null,
+                'requestid' => isset($data['requestId']) ? (string)$data['requestId'] : null,
+                'graderinfohash' => sha1($graderinfo),
+                // Shown as a pill beside the feedback, so an assessor who does not read
+                // the language can see at a glance which one they are approving.
+                'languagelabel' => \quiz_aigrader\local\formatter::language_label($language),
+                // Present only when the grading service returned structured feedback. The
+                // browser prefers this over pattern-matching the prose.
+                'feedbacksections' => !empty($feedbacksections) ? $feedbacksections : null,
             ];
 
-            // Add the flags used for UI display.
+            // Advisory flags. Neither changes the mark.
+            //
+            // Until 4.3.0 the competency flag rewrote grade, grade100, scaledmark and score
+            // to full marks here, so the assessor was shown 100% preselected for a response
+            // the service had graded lower. The notices are prepended to the feedback for the
+            // assessor to read; the mark they are shown is the mark this response earned.
             if ($newautolocked) {
                 $response['autolocked'] = true;
-                $response['grade'] = 'Full Marks';
-                $response['grade100'] = 100;
-                $response['scaledmark'] = $maxmark;
-                $response['score'] = intval($maxmark) . '/' . intval($maxmark);
                 $response['feedback'] = get_string('autolock_feedback', 'quiz_aigrader') . "\n\n" . $feedbacktext;
             }
 
@@ -833,7 +976,18 @@ try {
             exit;
         }
 
-        $grade100 = optional_param('grade100', 0, PARAM_FLOAT);
+        // The assessor's chosen mark, as an absolute mark.
+        //
+        // Releases up to 4.3.0 sent an integer percentage and reconstructed the mark from it,
+        // which cannot represent 2/3 or 5/7: a selected 2/3 was stored as 2.01 and 5/7 as
+        // 4.97, so the gradebook did not hold the mark the assessor picked. grade100 is still
+        // accepted so that a browser holding a cached copy of the previous AMD build keeps
+        // working until its cache clears, but it is never the preferred source.
+        // PARAM_TEXT, not raw: the value is an absolute mark and is rejected below
+        // unless it is numeric. The empty default is what distinguishes "not supplied"
+        // from a deliberate zero, which a numeric param type could not express.
+        $marksupplied = optional_param('mark', '', PARAM_TEXT);
+        $legacygrade100 = optional_param('grade100', null, PARAM_FLOAT);
         // Rich HTML feedback produced by the grader UI. It must arrive raw because param
         // cleaning would strip the markup. It is NOT passed through clean_text() here:
         // clean_text() removes the inline SVG icons the feedback cards are built from, and
@@ -842,6 +996,16 @@ try {
         // phpcs:ignore moodle.Commenting.InlineComment.NotCapital
         $feedbacktext = optional_param('feedbackhtml', '', PARAM_RAW); // pipeline-ignore: PARAM_RAW - HTML feedback.
         $gradelabel = optional_param('gradelabel', '', PARAM_TEXT);
+        // The assessor's stated reason, required only when approving under a human-review
+        // flag. Its presence is never taken as proof the flag applied - the server decides
+        // that from its own stored context.
+        $acknowledgement = optional_param('acknowledgement', '', PARAM_TEXT);
+        // Which full-marks feedback policy the browser applied, recorded on the decision so
+        // the delivered feedback can be explained later.
+        $policymode = optional_param('policymode', '', PARAM_ALPHA);
+        // The assessor's per-criterion scores, as JSON. Recorded verbatim on the decision:
+        // this is the breakdown behind the mark and it is the thing an auditor asks to see.
+        $criteriajson = optional_param('criteria', '', PARAM_RAW_TRIMMED); // pipeline-ignore: PARAM_RAW - JSON blob.
 
         try {
             $usage = question_engine::load_questions_usage_by_activity($qubaid);
@@ -852,12 +1016,104 @@ try {
             $qa = $usage->get_question_attempt($slot);
 
             $maxmark = round((float)$qa->get_max_mark(), 2);
-            $mark = round(($maxmark * $grade100) / 100, 2);
+
+            if ($marksupplied !== '') {
+                if (!is_numeric($marksupplied)) {
+                    echo json_encode([
+                        'ok' => false,
+                        'message' => get_string('error_markinvalid', 'quiz_aigrader'),
+                    ]);
+                    exit;
+                }
+                $mark = round((float)$marksupplied, 2);
+            } else if ($legacygrade100 !== null) {
+                $mark = round(($maxmark * $legacygrade100) / 100, 2);
+            } else {
+                echo json_encode([
+                    'ok' => false,
+                    'message' => get_string('error_missingparams', 'quiz_aigrader'),
+                ]);
+                exit;
+            }
+
+            // Reject an out-of-range mark rather than clamping it. A mark outside the
+            // question's scale means the request did not come from the grading UI, and
+            // quietly storing a clamped value would hide that from the assessor and from
+            // the decision record.
+            if ($mark < 0 || $mark > $maxmark) {
+                echo json_encode([
+                    'ok' => false,
+                    'message' => get_string('error_markoutofrange', 'quiz_aigrader', (object)[
+                        'mark' => format_float($mark, -1),
+                        'maxmark' => format_float($maxmark, -1),
+                    ]),
+                ]);
+                exit;
+            }
+
+            // Derived for display and for the decision record only. Nothing is reconstructed
+            // from this value.
+            $grade100 = $maxmark > 0 ? round(($mark / $maxmark) * 100) : 0;
+
+            // The server's own record of the suggestion being approved. Read here rather
+            // than taken from the browser, so the decision record compares the assessor's
+            // mark against what the grading service actually returned.
+            $approvequiz = $DB->get_record('quiz', ['id' => $cm->instance], '*', MUST_EXIST);
+            $approveuserid = $attemptrec ? (int)$attemptrec->userid : 0;
+            $approvectx = null;
+            try {
+                $approvectx = $DB->get_record('quiz_aigrader_attempt_ctx', [
+                    'quizid' => $approvequiz->id,
+                    'userid' => $approveuserid,
+                    'questionid' => $qa->get_question_id(),
+                    'slot' => $slot,
+                ]);
+            } catch (Exception $ctxerror) {
+                debugging('AI Grader: attempt_ctx read failed: ' . $ctxerror->getMessage(), DEBUG_DEVELOPER);
+            }
+
+            // Minimum review time, enforced here and not only in the browser.
+            //
+            // Until 4.3.0 this was a client-side countdown that disabled one button. A POST
+            // was accepted the instant the suggestion returned, and after a bulk grade every
+            // countdown ran concurrently so all the buttons unlocked together. The setting
+            // promised assessors "will be required to wait" and nothing required it.
+            $minreviewtime = (int)get_config('quiz_aigrader', 'min_review_time');
+            $reviewseconds = null;
+            if ($approvectx && !empty($approvectx->suggestedtime)) {
+                $reviewseconds = max(0, time() - (int)$approvectx->suggestedtime);
+                if ($minreviewtime > 0 && $reviewseconds < $minreviewtime) {
+                    echo json_encode([
+                        'ok' => false,
+                        'message' => get_string('review_too_soon', 'quiz_aigrader', (object)[
+                            'required' => $minreviewtime,
+                            'actual' => $reviewseconds,
+                        ]),
+                        'error_code' => 'REVIEW_TOO_SOON',
+                        'retryafter' => $minreviewtime - $reviewseconds,
+                    ]);
+                    exit;
+                }
+            }
+
+            // Human review: refuse the approval until the assessor acknowledges it and says
+            // why. Previously this flag was written as a literal 0, never read, and surfaced
+            // only as a sentence in a textarea the assessor could delete.
+            $underhumanreview = $approvectx ? (bool)$approvectx->humanreview : false;
+            if ($underhumanreview && trim($acknowledgement) === '') {
+                echo json_encode([
+                    'ok' => false,
+                    'message' => get_string('humanreview_acknowledgement_required', 'quiz_aigrader'),
+                    'error_code' => 'ACKNOWLEDGEMENT_REQUIRED',
+                    'needsacknowledgement' => true,
+                ]);
+                exit;
+            }
 
             // Calculate the score label using the actual max mark.
             // number_format(), not format_float(): this string is parsed back with floatval()
             // elsewhere, and format_float() would use the site's decimal separator.
-            $scorelabel = number_format($mark, 2, '.', '') . '/' . number_format($maxmark, 2, '.', '');
+            $scorelabel = \quiz_aigrader\local\formatter::score_label($mark, $maxmark);
 
             // Save the grade and feedback into the question engine.
             $qa->manual_grade($feedbacktext, $mark, FORMAT_HTML);
@@ -870,17 +1126,40 @@ try {
                 require_once($CFG->dirroot . '/mod/quiz/locallib.php');
 
                 // Recalculate and save the attempt's sumgrades.
-                // The delegated transaction ensures the reload and update_record are atomic:
-                // if the server crashes mid-write the attempt row is left consistent
-                // (either fully updated or not at all) rather than partially written.
-                $sumtransaction = $DB->start_delegated_transaction();
-                $usagereloaded = question_engine::load_questions_usage_by_activity($qubaid);
-                $attempt->sumgrades = $usagereloaded->get_total_mark();
-                $DB->update_record('quiz_attempts', $attempt);
-                $sumtransaction->allow_commit();
+                //
+                // Two faults are fixed here. The reload and write are serialised on a lock
+                // keyed to the attempt: the delegated transaction that used to wrap them took
+                // no row lock, so two approvals on different slots of the same attempt each
+                // computed a total from their own reload and the later write won, losing one
+                // essay's contribution. And only the sumgrades column is written: $attempt was
+                // loaded before the question engine wrote, so update_record() on the whole row
+                // put stale values back over state, timemodified and timefinish if anything
+                // else had touched the attempt in the meantime.
+                $sumlock = null;
+                try {
+                    $lockfactory = \core\lock\lock_config::get_lock_factory('quiz_aigrader_sumgrades');
+                    $sumlock = $lockfactory->get_lock((string)$attempt->id, 10);
+                } catch (\Throwable $lockerror) {
+                    debugging(
+                        'AI Grader: could not acquire sumgrades lock: '
+                            . $lockerror->getMessage(),
+                        DEBUG_DEVELOPER
+                    );
+                }
+                try {
+                    $usagereloaded = question_engine::load_questions_usage_by_activity($qubaid);
+                    $attempttotal = $usagereloaded->get_total_mark();
+                    $DB->set_field('quiz_attempts', 'sumgrades', $attempttotal, ['id' => $attempt->id]);
+                    $attempt->sumgrades = $attempttotal;
+                } finally {
+                    if ($sumlock) {
+                        $sumlock->release();
+                    }
+                }
 
-                // Update the user's best grade in the gradebook.
-                $quiz = $DB->get_record('quiz', ['id' => $attempt->quiz], '*', MUST_EXIST);
+                // Update the user's best grade in the gradebook. The quiz record was already
+                // loaded for the approval gates above.
+                $quiz = $approvequiz;
 
                 // Notify the rest of Moodle that a question was graded by hand, using the
                 // same parameters core uses in mod/quiz/comment.php. Logging is a courtesy,
@@ -898,8 +1177,11 @@ try {
                         ],
                     ])->trigger();
                 } catch (\Throwable $eventerror) {
-                    debugging('AI Grader could not log the manual grading event: '
-                        . $eventerror->getMessage(), DEBUG_DEVELOPER);
+                    debugging(
+                        'AI Grader could not log the manual grading event: '
+                            . $eventerror->getMessage(),
+                        DEBUG_DEVELOPER
+                    );
                 }
 
                 // Prefer the Moodle 4.2+ grade_calculator API and fall back to the legacy call
@@ -1010,29 +1292,98 @@ try {
                     debugging('AI Grader: grading_logs table not found: ' . $e->getMessage(), DEBUG_DEVELOPER);
                 }
 
-                // The autolocked and humanreview flags are decided by the suggest action, which
-                // is the only place that knows the previous attempt's grade and can apply the
-                // "no improvement on the previous attempt" part of the rule. They are read from
-                // the stored attempt context here rather than recomputed, because recomputing
-                // without the previous grade would flag every attempt-4 grade below 100% for
-                // human review and lock a student who had in fact improved out of AI grading on
-                // their next attempt. They are deliberately not taken from the client either.
-                $autolocked = false;
-                $humanreview = false;
+                // The assessment decision record.
+                //
+                // This is the evidence that a human made this decision. Before 4.4.0 the only
+                // trace of an approval was one row saying who and when, overwritten whenever
+                // the mark was revisited, so the record could not show what the AI suggested,
+                // whether the assessor agreed with it, or who had approved it first. The table
+                // is append-only: a re-approval adds a row rather than replacing one, and the
+                // history of a mark can be reconstructed from it.
+                $autolocked = $approvectx ? (bool)$approvectx->autolocked : false;
+                $humanreview = $underhumanreview;
                 try {
-                    $attemptcontext = $DB->get_record('quiz_aigrader_attempt_ctx', [
-                        'quizid' => $quiz->id,
-                        'userid' => $attempt->userid,
-                        'questionid' => $qa->get_question_id(),
-                        'slot' => $slot,
-                    ]);
-                    if ($attemptcontext) {
-                        $autolocked = (bool)$attemptcontext->autolocked;
-                        $humanreview = (bool)$attemptcontext->humanreview;
+                    $aigrade100 = ($approvectx && $approvectx->aigrade !== null)
+                        ? (float)$approvectx->aigrade : null;
+                    $aimark = $aigrade100 === null ? null : round(($maxmark * $aigrade100) / 100, 5);
+                    $aifeedback = $approvectx ? (string)$approvectx->aifeedback : '';
+
+                    // Compare on the text, not the markup: the assessor edits plain text in
+                    // the textarea and the browser re-renders it to HTML on save, so comparing
+                    // HTML would report every approval as edited.
+                    $aiplain = trim(html_to_text($aifeedback, 0, false));
+                    $finalplain = trim(html_to_text($feedbacktext, 0, false));
+
+                    $decision = new stdClass();
+                    $decision->quizid = $quiz->id;
+                    $decision->courseid = $quiz->course;
+                    $decision->userid = $attempt->userid;
+                    $decision->graderid = $USER->id;
+                    $decision->qubaid = $qubaid;
+                    $decision->slot = $slot;
+                    $decision->questionid = $qa->get_question_id();
+                    $decision->attemptnum = (int)$attempt->attempt;
+                    $decision->maxmark = $maxmark;
+                    $decision->aimark = $aimark;
+                    $decision->finalmark = $mark;
+                    $decision->markchanged = ($aimark === null || abs($aimark - $mark) > 0.0001) ? 1 : 0;
+                    $decision->feedbackchanged = ($aiplain !== '' && $aiplain !== $finalplain) ? 1 : 0;
+                    $decision->aifeedback = $aifeedback;
+                    $decision->finalfeedback = $feedbacktext;
+                    // Prefer the assessor's scored criteria over the AI's met/not-met list.
+                    // Validated as JSON before storing so a malformed post cannot put
+                    // unparseable text into the record.
+                    $decision->criteriamet = $approvectx ? $approvectx->aicriteriamet : null;
+                    if ($criteriajson !== '') {
+                        $decoded = json_decode($criteriajson, true);
+                        if (is_array($decoded)) {
+                            $decision->criteriamet = json_encode($decoded);
+                        }
                     }
-                } catch (Exception $e) {
-                    // Table might not exist yet - continue.
-                    debugging('AI Grader: attempt_ctx read failed: ' . $e->getMessage(), DEBUG_DEVELOPER);
+                    $decision->policymode = $policymode !== '' ? $policymode : null;
+                    $decision->graderinfohash = null;
+                    $decision->instructionshash = null;
+                    $decision->modelversion = null;
+                    $decision->requestid = null;
+                    $decision->reviewseconds = $reviewseconds;
+                    $decision->humanreview = $humanreview ? 1 : 0;
+                    $decision->autolocked = $autolocked ? 1 : 0;
+                    $decision->acknowledgement = trim($acknowledgement) !== '' ? trim($acknowledgement) : null;
+                    $decision->timecreated = time();
+                    $DB->insert_record('quiz_aigrader_decisions', $decision);
+                } catch (Exception $decisionerror) {
+                    // The mark is already committed, so a failure to write the record must not
+                    // abort the response. It is logged loudly because the record is the point.
+                    debugging(
+                        'AI Grader: decision record write failed: '
+                            . $decisionerror->getMessage(),
+                        DEBUG_DEVELOPER
+                    );
+                }
+
+                // Update the attempt context from the APPROVED decision, so the next attempt
+                // is graded against what the assessor decided rather than what the AI
+                // suggested, and the "previous attempt" panel shows a mark that was awarded.
+                try {
+                    if ($approvectx) {
+                        $approvectx->lastgrade = $grade100;
+                        $approvectx->criteriamet = $approvectx->aicriteriamet;
+                        $approvectx->feedbacksummary = core_text::substr(
+                            trim(html_to_text($feedbacktext, 0, false)),
+                            0,
+                            300
+                        );
+                        $approvectx->humanreview = 0;
+                        $approvectx->suggestedtime = null;
+                        $approvectx->timemodified = time();
+                        $DB->update_record('quiz_aigrader_attempt_ctx', $approvectx);
+                    }
+                } catch (Exception $ctxwriteerror) {
+                    debugging(
+                        'AI Grader: attempt_ctx approve write failed: '
+                            . $ctxwriteerror->getMessage(),
+                        DEBUG_DEVELOPER
+                    );
                 }
             }
 
@@ -1054,22 +1405,34 @@ try {
             $notificationsent = false;
             if (isset($usagereloaded) && isset($attempt)) {
                 try {
-                    // Count manually gradeable slots (question types where is_manual_graded()
-                    // returns true, e.g. essay). MCQ, truefalse and matching are excluded.
+                    // Count only the slots this report can actually approve.
+                    //
+                    // Counting every manually graded slot meant the notification could never
+                    // fire for a learner who left one essay blank, or for a quiz that mixed
+                    // essay with any other manually graded question type: those slots are not
+                    // listed in this report, so they never gain a log row and the approved
+                    // count could never catch up. The learner was simply never told their work
+                    // had been marked.
                     $manualslotcount = 0;
                     foreach ($usagereloaded->get_slots() as $checkslot) {
                         $checkqa = $usagereloaded->get_question_attempt($checkslot);
-                        if ($checkqa->get_question()->qtype->is_manual_graded()) {
-                            $manualslotcount++;
+                        if ($checkqa->get_question()->qtype->name() !== 'essay') {
+                            continue;
                         }
+                        if (trim((string)$checkqa->get_response_summary()) === '') {
+                            continue;
+                        }
+                        $manualslotcount++;
                     }
 
                     if ($manualslotcount > 0) {
-                        // Count teacher-approved slots for this attempt. The upsert above means
-                        // there are no duplicates - one row per slot per attempt.
-                        $approvedcount = (int) $DB->count_records(
-                            'quiz_aigrader_grading_logs',
-                            ['qubaid' => $qubaid]
+                        // DISTINCT slot, so a re-approval of the same question cannot push the
+                        // count past the number of slots and fire the notification early.
+                        $approvedcount = (int) $DB->count_records_sql(
+                            "SELECT COUNT(DISTINCT slot)
+                               FROM {quiz_aigrader_grading_logs}
+                              WHERE qubaid = ?",
+                            [$qubaid]
                         );
                         $allquestionsgraded = ($approvedcount >= $manualslotcount);
                     }
@@ -1202,6 +1565,17 @@ try {
 
     // Action: upload document.
     if ($action === 'uploaddoc') {
+        // A setting that only hides the button is not a setting. An administrator who
+        // turns reference documents off means documents must not leave the site, so the
+        // upload is refused here as well.
+        if (!get_config('quiz_aigrader', 'allow_reference_documents')) {
+            echo json_encode([
+                'ok' => false,
+                'message' => get_string('error_documentsdisabled', 'quiz_aigrader'),
+            ]);
+            exit;
+        }
+
         quiz_aigrader_require_grading($context);
 
         $quiz = $DB->get_record('quiz', ['id' => $cm->instance], '*', MUST_EXIST);
@@ -1540,7 +1914,12 @@ try {
                 'essays' => $count,
                 'timeSeconds' => $sessiontime,
                 'timeFormatted' => quiz_aigrader_format_duration($sessiontime),
-                'avgSecondsPerEssay' => $count > 1 ? round($sessiontime / ($count - 1)) : 0,
+                // Divided by the number of essays, not by the number of gaps between them.
+                // Dividing by count-1 reported a two-essay session at double the true
+                // average. The first essay's time is not measurable by this method - there is
+                // no earlier approval to measure from - so this figure understates slightly
+                // on short sessions rather than overstating on all of them.
+                'avgSecondsPerEssay' => $count > 0 ? round($sessiontime / $count) : 0,
             ];
         }
 
@@ -1618,7 +1997,7 @@ try {
             'totalEssays' => $totalessays,
             'totalTimeSeconds' => $totaltimeseconds,
             'totalTimeFormatted' => quiz_aigrader_format_duration($totaltimeseconds),
-            'avgSecondsPerEssay' => $totalessays > 1 ? round($totaltimeseconds / ($totalessays - 1)) : 0,
+            'avgSecondsPerEssay' => $totalessays > 0 ? round($totaltimeseconds / $totalessays) : 0,
             'totalStudentTimeSeconds' => $totalstudenttimeseconds,
             'totalStudentTimeFormatted' => quiz_aigrader_format_duration($totalstudenttimeseconds),
             'graders' => $graderstats,

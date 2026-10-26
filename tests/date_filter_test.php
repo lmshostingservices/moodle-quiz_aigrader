@@ -34,6 +34,7 @@ use ReflectionMethod;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \quiz_aigrader_report
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\quiz_aigrader_report::class)]
 final class date_filter_test extends \advanced_testcase {
     /** @var \quiz_aigrader_report The report under test. */
     protected $report;
@@ -94,6 +95,7 @@ final class date_filter_test extends \advanced_testcase {
      * @param bool $expected Whether it should be accepted.
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('filter_date_provider')]
     public function test_is_filter_date(string $value, bool $expected): void {
         $this->assertSame($expected, $this->call('is_filter_date', [$value]));
     }
@@ -124,6 +126,7 @@ final class date_filter_test extends \advanced_testcase {
      * @param string $timezone The timezone to test in.
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('timezone_provider')]
     public function test_date_round_trip(string $timezone): void {
         global $USER;
 

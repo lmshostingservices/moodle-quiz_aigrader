@@ -1,5 +1,193 @@
 # Changelog
 
+## 5.0.0 - 2026-10-26
+
+**A security and correctness release.** Version: `2026102503`. No database changes; the
+upgrade records the new version and does nothing else.
+
+Every item below was found by running the Moodle coding standard, Moodle's eslint config and
+the full PHPUnit suite against a real Moodle 4.5 install, rather than by reading the code.
+
+### Security
+
+- **The grading statistics panel no longer builds its markup by concatenating names into
+  HTML.** The course filter, the grader filter and the statistics table each inserted course
+  short names and grader names directly into an HTML string. The panel shows one assessor's
+  own name to every other assessor, so a name containing markup would have run in their
+  browsers. Those rows are now built through the DOM, which escapes for the position it
+  writes into.
+- **`escapeHtml()` is now safe inside an attribute.** It escaped the angle brackets and the
+  ampersand but left both quote characters, and it was being used in attribute values as
+  well as between tags, so a value carrying a quote could close the attribute it sat in.
+- **Diagnostic logging no longer reaches a production browser console.** Thirty-one log
+  lines, carrying the graded response and the feedback written about it, were written to the
+  console on every site. They now go through Moodle's `core/log` and only when the site is in
+  developer debug mode.
+
+### Fixed
+
+- **Grading a response now opens its marking card, as it was meant to.** The function that
+  expands a row was defined inside the handler registration and called from outside it, so
+  the call threw a `ReferenceError` — which also abandoned the rest of that success handler,
+  leaving the status pill and the grade label behind.
+- **The "grading complete" message appears once.** Every request still in flight scheduled
+  the next pass, so the last few all reached the finished branch and the assessor saw the
+  same alert two or three times.
+- **The accessible label on the expand control no longer depends on a deprecated class.**
+  It used Bootstrap's `sr-only`. That still hides the label on 4.4 through 5.3, so nothing
+  was visibly wrong, but Moodle 5.1 moved it into a deprecated Bootstrap 4 compatibility
+  layer where it is flagged "Deprecated style in use" to anyone viewing in theme-designer
+  mode, and it will go when that layer does. The label now uses Moodle's own `accesshide`,
+  which is current in every supported version, and the plugin's stylesheet defines the rule
+  as well so it holds in a theme that does not.
+- **The count in the "all graded" message is translatable.** It was an English sentence built
+  in JavaScript; it is now the `grading_complete_message` string with a count placeholder.
+
+### Changed
+
+- **Single grading and Grade All are one implementation.** They were two near-identical
+  208-line copies, which is why the expand-on-grade fix above had only ever reached one of
+  the two screens. The only difference the callers need — whether a failure is announced, or
+  left quiet so a bulk run keeps moving — is now a parameter. The JavaScript bundle is 46 KB,
+  down from 53 KB.
+- **The language file is in the order Moodle requires**: all 343 strings alphabetical, with
+  the section comments removed, because the standard allows neither. No string was added,
+  removed or altered.
+
+### Changed
+
+- **Declared support now reaches Moodle 5.3** (`supported = [404, 503]`, was `[404, 502]`),
+  on the strength of the run below rather than on inspection.
+- The JavaScript bundle is built with Moodle's own grunt AMD pipeline, so it is a named
+  module and is left unmangled, exactly as core builds its own.
+
+### Verified
+
+Installed and tested from scratch on **five** Moodle versions - 4.4.12+, 4.5.15+, 5.1.8+,
+5.2.4+ and 5.3 - each with its own database, its own PHPUnit and its own eslint config.
+
+- 60 tests, 242 assertions, no skips, on every one of the five.
+- No errors from the Moodle coding standard or from Moodle's eslint configuration on any of
+  them.
+- The grading flow driven end to end in a headless browser against the shipping bundle:
+  grade a response, render the card, score a criterion, edit the feedback, expand and
+  collapse a row, and Grade All. Hostile content in a grader name, a criterion label and the
+  feedback rendered as text and never executed.
+- 5.3 required PostgreSQL 17, so that run used 17.10.
+- No errors from the Moodle coding standard or from Moodle's eslint configuration.
+- The rendered marking queue parsed in Chromium: one `tbody` per response holding a summary
+  row and a hidden detail row, no nesting, `colspan` matching the header, no JavaScript
+  errors.
+
+## 4.5.0
+
+Marking is now built from the question's own grading criteria.
+
+### Feedback is organised by criterion
+- Each criterion from the question's *Information for graders* heads its own feedback,
+  replacing the three generic headings. A learner reading "Clarity and structure 7 / 10"
+  sees immediately what cost them the three marks.
+- "How to improve" is shown only where there are marks still to win. At full marks on a
+  criterion it is withheld, because it contradicts the score.
+- However many criteria the question has, that many bars appear.
+
+### The assessor scores each criterion
+- Every criterion carries an editable score. The bar moves as it is typed, the total
+  updates, and the question's mark follows as the criteria total scaled onto its own
+  scale. The mark is now the sum of the criteria rather than a separate number beside them.
+- Scores the grading service supplies arrive pre-filled and are confirmed rather than
+  accepted. Where it supplies none, which is the case today, the assessor fills them in
+  and the breakdown still works.
+- A criteria total that lands exactly halfway between two awardable marks rounds down,
+  never into the learner's favour by default. The assessor raises it if they judge it
+  should be raised, and that judgement is recorded as theirs.
+- The per-criterion breakdown is stored on the assessment decision record.
+
+### Other
+- The grading request now asks the service for a per-criterion `awarded`, `comment` and
+  `improve`, so that when it answers, the numbers and the feedback arrive together.
+
+## 4.4.0
+
+Correctness, the assessment record, criteria-level marking, and the interface restyle.
+
+### Interface
+- The marking screen is rebuilt to the product reference: the learner's work and the
+  assessment sit side by side, the criteria breakdown carries a bar per criterion, and the
+  headline figure sits at the top right of the card.
+- The feedback box is always visible and read-only until you press Edit, which gives you
+  Save changes and Cancel. Previously the text was hidden behind a toggle.
+- Approving keeps the card and turns the button green, instead of replacing the card and
+  discarding the criteria breakdown at the moment the decision is recorded.
+- While the minimum review time runs, the button shows a padlock and the remaining time and
+  the card says "Read the answer first".
+- The stylesheet is rewritten from scratch against the reference screens and no longer
+  forces any rule past the site's theme. It previously carried 1,062 forced overrides,
+  which was one of three issues holding the plugin out of the Moodle plugins directory.
+
+### Marks are stored exactly as the assessor selects them
+- Marks were routed through an integer percentage, which cannot represent 2/3 or 5/7.
+  A selected 2/3 was stored as 2.01 and 5/7 as 4.97, so the gradebook did not hold the
+  mark that was chosen. Marks are now sent and stored as absolute values.
+- A question whose maximum is not a whole number could never be awarded full marks: a
+  2.5-mark essay offered 0, 1 and 2, and a 0.5-mark question offered only 0. The grade
+  dropdown is now built from the question's own mark scale and always reaches the maximum.
+- An out-of-range mark is rejected rather than written. Nothing clamps silently.
+- Score labels no longer truncate a 2.5-mark question to "2/2".
+
+### Criteria-level marking
+- The assessment is shown broken down by criterion, with a bar for each, on the assessor's
+  card and in the feedback the learner receives.
+- The assessor's rubric is sent as discrete criteria instead of one block of prose.
+- Rubrics, questions and answers keep their paragraphs and lists on the way to the grading
+  service. They were previously flattened into a single line, so a numbered list of
+  performance criteria arrived as one sentence.
+- An essay answered with an attachment and no text is listed for marking instead of being
+  dropped, and is never sent for AI grading - the service would have received the file name
+  and graded that.
+
+### The assessment decision record
+- Every approval writes an append-only record: what the AI suggested, what the assessor
+  approved, whether the mark or the feedback was changed, the full AI feedback as issued,
+  how long the suggestion was open, and which rules were in force.
+- The minimum review time is enforced on the server. It was a browser countdown that
+  disabled one button, and after a bulk grade every countdown ran at once.
+- The attempt context now records the approved decision. It recorded the AI's suggestion,
+  so an assessor's correction was discarded and the next attempt was graded as though the
+  criteria had been met.
+- Student notifications are no longer blocked for ever by a blank or non-essay slot.
+- Concurrent approvals on one attempt no longer lose an essay's contribution to the total.
+
+### Competency rules
+- An attempt flagged for review no longer returns a mark derived from a different attempt,
+  and an auto-locked attempt no longer returns full marks for a response nobody read.
+  Every response is assessed on its own merits.
+- The attempt thresholds are site settings and default to off. They were hard-coded at
+  three, four and five.
+- Approving a flagged attempt requires an assessor acknowledgement and a reason, stored on
+  the decision record. The flags were previously written as zero and never read.
+- The rule that forced a mark to 100% once three criteria had accumulated is removed.
+
+### Feedback at full marks
+- The policy is re-applied whenever the assessor changes the mark. Lowering a suggested
+  full mark previously delivered a reduced mark with the gap analysis already deleted.
+- Feedback the policy withholds stays visible to the assessor instead of being discarded.
+- When no sections can be identified the assessor is told, instead of the policy silently
+  doing nothing.
+- A sentence such as "Your answer has real strengths." is no longer treated as a heading.
+- Structured feedback from the grading service is used when available, so the card renders
+  correctly on sites using a feedback language other than English.
+
+### Other
+- The activity report counts only approvals made through this plugin. It counted every
+  manual grade on the site, so teachers who had never used it appeared as graders.
+- Average time per essay is divided by the number of essays, not the gaps between them.
+- Data from the grading service is escaped before it is rendered.
+- The re-grade billing flag is decided by the server, not the browser.
+- The privacy declaration covers the decision record and everything sent to the service.
+- The preview follows the editor as the assessor types.
+
+
 All notable changes to this plugin are documented here, newest first. This project
 follows [Semantic Versioning](https://semver.org/).
 
@@ -15,6 +203,20 @@ follows [Semantic Versioning](https://semver.org/).
   see they matter.
 - Suggestions are shown in blue rather than purple, so the colour matches the rest of the
   AI Essay Grader and AI Grader Dashboard screens.
+
+### Feedback at full marks
+
+- **New setting: Feedback at full marks.** Competency-based assessment is a binary
+  judgement, so by default a learner who scored full marks now sees only what they did
+  well. Telling a competent learner what to improve, or what to try next time, implies a
+  gap their grade says is not there.
+- Choose instead to include areas for improvement, or to deliver everything, in
+  *Site administration → Plugins → Activity modules → Quiz → AI Essay Grader*.
+- **The grading screen now shows exactly what the learner will receive.** Previously the
+  editor displayed sections that were removed on the way to the learner, so a marker could
+  edit — and approve — text that was never delivered. The sections are now removed before
+  the feedback reaches the grading screen, so what a marker reads, edits and approves is
+  what the learner reads.
 
 ### Notes
 

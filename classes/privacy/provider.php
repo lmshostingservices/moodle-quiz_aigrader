@@ -91,6 +91,27 @@ class provider implements
         );
 
         $collection->add_database_table(
+            'quiz_aigrader_decisions',
+            [
+                'quizid' => 'privacy:metadata:quiz_aigrader_decisions:quizid',
+                'courseid' => 'privacy:metadata:quiz_aigrader_decisions:courseid',
+                'userid' => 'privacy:metadata:quiz_aigrader_decisions:userid',
+                'graderid' => 'privacy:metadata:quiz_aigrader_decisions:graderid',
+                'slot' => 'privacy:metadata:quiz_aigrader_decisions:slot',
+                'attemptnum' => 'privacy:metadata:quiz_aigrader_decisions:attemptnum',
+                'aimark' => 'privacy:metadata:quiz_aigrader_decisions:aimark',
+                'finalmark' => 'privacy:metadata:quiz_aigrader_decisions:finalmark',
+                'aifeedback' => 'privacy:metadata:quiz_aigrader_decisions:aifeedback',
+                'finalfeedback' => 'privacy:metadata:quiz_aigrader_decisions:finalfeedback',
+                'criteriamet' => 'privacy:metadata:quiz_aigrader_decisions:criteriamet',
+                'acknowledgement' => 'privacy:metadata:quiz_aigrader_decisions:acknowledgement',
+                'reviewseconds' => 'privacy:metadata:quiz_aigrader_decisions:reviewseconds',
+                'timecreated' => 'privacy:metadata:quiz_aigrader_decisions:timecreated',
+            ],
+            'privacy:metadata:quiz_aigrader_decisions'
+        );
+
+        $collection->add_database_table(
             'quiz_aigrader_schedules',
             [
                 'userid' => 'privacy:metadata:quiz_aigrader_schedules:userid',
@@ -127,11 +148,20 @@ class provider implements
             'privacy:metadata:preference:reportgraderid'
         );
 
+        // Everything sent to the grading service is declared, not only the question and the
+        // answer. The previous feedback summary is up to 300 characters of assessment
+        // feedback about an identified learner, and the criteria and attempt number describe
+        // their progress through the assessment; omitting them understated what leaves the
+        // site.
         $collection->add_external_location_link(
             'essaygraderai_api',
             [
                 'questiontext' => 'privacy:metadata:essaygraderai_api:questiontext',
                 'answer' => 'privacy:metadata:essaygraderai_api:answer',
+                'previousfeedbacksummary' => 'privacy:metadata:essaygraderai_api:previousfeedbacksummary',
+                'previouslymetcriteria' => 'privacy:metadata:essaygraderai_api:previouslymetcriteria',
+                'attemptnumber' => 'privacy:metadata:essaygraderai_api:attemptnumber',
+                'referencedocuments' => 'privacy:metadata:essaygraderai_api:referencedocuments',
             ],
             'privacy:metadata:essaygraderai_api'
         );
@@ -317,6 +347,7 @@ class provider implements
             }
             $DB->delete_records('quiz_aigrader_attempt_ctx', ['quizid' => $cm->instance]);
             $DB->delete_records('quiz_aigrader_grading_logs', ['quizid' => $cm->instance]);
+            $DB->delete_records('quiz_aigrader_decisions', ['quizid' => $cm->instance]);
         } else if ($context instanceof context_system) {
             $DB->delete_records('quiz_aigrader_schedules');
         }
@@ -345,6 +376,16 @@ class provider implements
                 );
                 $DB->delete_records(
                     'quiz_aigrader_grading_logs',
+                    ['quizid' => $cm->instance, 'graderid' => $userid]
+                );
+                // A decision row names both the learner assessed and the assessor who
+                // approved it, so a deletion request from either removes it.
+                $DB->delete_records(
+                    'quiz_aigrader_decisions',
+                    ['quizid' => $cm->instance, 'userid' => $userid]
+                );
+                $DB->delete_records(
+                    'quiz_aigrader_decisions',
                     ['quizid' => $cm->instance, 'graderid' => $userid]
                 );
             } else if ($context instanceof context_system) {
@@ -384,6 +425,16 @@ class provider implements
             );
             $DB->delete_records_select(
                 'quiz_aigrader_grading_logs',
+                "quizid = :quizid AND graderid {$insql}",
+                $params
+            );
+            $DB->delete_records_select(
+                'quiz_aigrader_decisions',
+                "quizid = :quizid AND userid {$insql}",
+                $params
+            );
+            $DB->delete_records_select(
+                'quiz_aigrader_decisions',
                 "quizid = :quizid AND graderid {$insql}",
                 $params
             );
