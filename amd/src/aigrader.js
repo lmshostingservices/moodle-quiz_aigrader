@@ -234,6 +234,94 @@ define(['jquery', 'core/str', 'core/notification', 'core/log'], function($, Str,
         return null;
     }
 
+    // Bullet markers the grading service may put in front of an item: list markers, round
+    // bullets and the coloured circle emoji it uses to colour-code each section.
+    const BULLET_LEAD = /^(?:[\s*\-•●○◦⚪⚫⬤]|[\u{1F534}\u{1F535}]|[\u{1F7E0}-\u{1F7EB}]|️)+/u;
+
+    /**
+     * Turn the grading service's feedback into clean text for the assessor to edit.
+     *
+     * The service writes headings with an emoji and colour-codes every item with a coloured
+     * circle. The card already shows the sections in colour, so the text box carries plain
+     * headings and plain bullets: easier to read and edit, and nothing decorative reaches
+     * the learner. A blank line separates the sections.
+     *
+     * @param {String} text Feedback as the service returned it.
+     * @return {String} The same feedback with plain headings and bullets.
+     */
+    function cleanFeedbackText(text) {
+        if (typeof text !== 'string' || text === '') {
+            return text;
+        }
+        const out = [];
+        for (const raw of text.split('\n')) {
+            const line = raw.trim();
+            if (line === '') {
+                if (out.length && out[out.length - 1] !== '') {
+                    out.push('');
+                }
+                continue;
+            }
+            if (detectSectionType(line) !== null) {
+                if (out.length && out[out.length - 1] !== '') {
+                    out.push('');
+                }
+                out.push(line.replace(HEADING_LEAD, '').replace(/[:：]\s*$/, '').trim());
+                continue;
+            }
+            const bare = line.replace(BULLET_LEAD, '').trim();
+            out.push(bare !== line && bare !== '' ? '• ' + bare : line);
+        }
+        return out.join('\n').trim();
+    }
+
+    /**
+     * Lay out the saved summary of a previous attempt.
+     *
+     * The summary is plain text taken from the approved feedback: a criterion line such as
+     * "Defines active listening 0 / 2" followed by its comment. Shown as raw text it read as
+     * a wall of lines; here each criterion becomes a row with its score in a pill, its comment
+     * underneath, and the repeated "marked against your grading criteria" heading is dropped.
+     *
+     * @param {String} text The saved summary.
+     * @return {String} HTML.
+     */
+    function renderPreviousSummary(text) {
+        const SCORE = /^(.+?)\s+(\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)$/;
+        let html = '';
+        let open = false;
+        const close = () => {
+            if (open) {
+                html += '</div>';
+                open = false;
+            }
+        };
+        for (const raw of String(text || '').split('\n')) {
+            const line = raw.trim();
+            if (line === '' || /marked against your grading criteria/i.test(line)) {
+                continue;
+            }
+            const m = line.match(SCORE);
+            if (m) {
+                close();
+                const full = parseFloat(m[2]) >= parseFloat(m[3]);
+                html += '<div class="aigrader-prev-crit"><div class="aigrader-prev-crit-head">'
+                    + '<span>' + escapeHtml(m[1]) + '</span>'
+                    + '<span class="aigrader-prev-score ' + (full ? 'is-full' : 'is-short') + '">'
+                    + escapeHtml(m[2] + ' / ' + m[3]) + '</span></div>';
+                open = true;
+            } else if (detectSectionType(line) !== null) {
+                close();
+                html += '<div class="aigrader-prev-heading">' + escapeHtml(line.replace(HEADING_LEAD, '')) + '</div>';
+            } else {
+                html += '<div class="aigrader-prev-line">'
+                    + escapeHtml(line.replace(BULLET_LEAD, '').trim()) + '</div>';
+            }
+        }
+        close();
+        return html;
+    }
+
     /* ---------------------------------------------------------
      * Marks
      *
@@ -734,7 +822,7 @@ define(['jquery', 'core/str', 'core/notification', 'core/log'], function($, Str,
             return;
         }
 
-        const source = $source.val() || '';
+        const source = cleanFeedbackText($source.val() || '');
         const maxMark = parseFloat($('#maxmark-' + id).val());
         const mark = parseFloat($('#grade-select-' + id).val());
         const mode = config.fullMarksFeedback || 'strengths';
@@ -898,7 +986,17 @@ define(['jquery', 'core/str', 'core/notification', 'core/log'], function($, Str,
                 + '<circle cx="12" cy="12" r="10"/></svg>'
         };
 
-        // Bullet icons - small checkmark for success, small dash for warning/info
+        // Item icons, one per section type, drawn in the section's accent colour.
+        const svg = (path) => '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"'
+            + ' fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"'
+            + ' stroke-linejoin="round">' + path + '</svg>';
+        const bullets = {
+            success: svg('<polyline points="20 6 9 17 4 12"/>'),
+            warning: svg('<line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/>'),
+            info: svg('<line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>')
+        };
+
+        // Palette for the section cards.
         // Palette from the LMS Labs design system. Values are precomputed rather than
         // written with color-mix(), because this markup is saved to the database and
         // rendered later on Moodle's review page, where the plugin's stylesheet is not
@@ -971,9 +1069,11 @@ define(['jquery', 'core/str', 'core/notification', 'core/log'], function($, Str,
                 for (const item of section.items) {
                     html += '<div class="feedback-card-item" style="display:flex;align-items:flex-start;' +
                         'gap:10px;margin:0 0 6px 0;font-size:14px;line-height:1.65;color:' + TEXT + ';">';
-                    // A small solid dot reads more calmly than an outlined icon per bullet.
-                    html += '<span class="feedback-bullet" style="flex:0 0 auto;width:5px;height:5px;' +
-                        'margin-top:8px;border-radius:999px;background:' + s.accent + ';"></span>';
+                    // Each item carries a small line icon in the section's colour: a tick for
+                    // what went well, an upward arrow for what to improve, a forward arrow for
+                    // next time. It reads as one designed system rather than emoji bullets.
+                    html += '<span class="feedback-bullet" style="flex:0 0 auto;display:inline-flex;' +
+                        'margin-top:4px;color:' + s.accent + ';">' + (bullets[section.type] || bullets.info) + '</span>';
                     html += '<span>' + escapeHtml(item) + '</span>';
                     html += '</div>';
                 }
@@ -1159,7 +1259,7 @@ define(['jquery', 'core/str', 'core/notification', 'core/log'], function($, Str,
                             <span class="aigrader-previous-grade ag-badge ${prevGradeBadgeClass}">${prevGradeDisplay}</span>
                         </button>
                         <div class="aigrader-previous-content" style="display: none;">
-                            <div class="aigrader-previous-feedback">${escapeHtml(prevFeedback)}</div>
+                            <div class="aigrader-previous-feedback">${renderPreviousSummary(prevFeedback)}</div>
                         </div>
                     </div>`;
             }

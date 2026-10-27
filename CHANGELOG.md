@@ -1,5 +1,23 @@
 # Changelog
 
+## 5.0.3 - 2026-10-27
+
+Version: `2026102702`. A cleaner look for feedback, the previous attempt and the activity
+report. No database changes.
+
+- **Cleaner feedback.** The feedback box shows plain headings and bullets instead of the
+  service's emoji and coloured circles, and each item in the learner's feedback has a small
+  line icon in its section's colour: a tick for strengths, an arrow for improvements and
+  next steps.
+- **The Previous attempt panel shows every criterion.** The saved summary keeps each
+  criterion's mark, with its comment where it fits whole, instead of the first 300
+  characters of the feedback, which held two criteria and ended mid-word. The panel lays the
+  criteria out as rows with the mark in an amber or green pill.
+- **The activity report page is styled.** Its rules were scoped to the quiz report page,
+  so on its own page the filters, totals and tables showed as plain stacked text, and the
+  table header wrapped onto two lines. The page now has the same tiles, filter bar and
+  table card as the quiz report.
+
 ## 5.0.2 - 2026-10-27
 
 Version: `2026102701`. Interface fixes found while filming the tutorial on Moodle 5.3. No

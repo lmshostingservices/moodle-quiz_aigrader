@@ -148,4 +148,31 @@ final class formatter_test extends \advanced_testcase {
         $this->assertSame('', formatter::language_label(''));
         $this->assertSame('', formatter::language_label('   '));
     }
+
+    /**
+     * A long summary is cut at a word boundary and marked with an ellipsis.
+     */
+    public function test_summarise_cuts_at_word_boundary(): void {
+        $this->assertSame('Short text', formatter::summarise('Short text', 300));
+        $long = str_repeat('word ', 80);
+        $out = formatter::summarise($long, 50);
+        $this->assertLessThanOrEqual(50, \core_text::strlen($out));
+        $this->assertStringEndsWith("word\u{2026}", $out);
+    }
+
+    /**
+     * Every criterion's mark survives the 300-character limit.
+     */
+    public function test_previous_summary_keeps_every_criterion(): void {
+        $text = '';
+        $labels = ['Defines active listening', 'Non-verbal skills', 'Verbal skills', 'Responds to the client',
+            'Closes the conversation'];
+        foreach ($labels as $label) {
+            $text .= "$label 0 / 2\n" . str_repeat('A long comment about this criterion. ', 6) . "\n\n";
+        }
+        $out = formatter::previous_summary($text);
+        $this->assertLessThanOrEqual(300, \core_text::strlen($out));
+        $this->assertStringContainsString('Defines active listening 0 / 2', $out);
+        $this->assertStringContainsString('Closes the conversation 0 / 2', $out);
+    }
 }

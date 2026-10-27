@@ -737,7 +737,9 @@ try {
             // If the API did not return structured criteria, try to derive a summary from the feedback.
             if (empty($newcriteriamet) && !empty($feedbacktext)) {
                 if (empty($newfeedbacksummary)) {
-                    $newfeedbacksummary = core_text::substr(\quiz_aigrader\local\formatter::html_to_text($feedbacktext), 0, 300);
+                    $newfeedbacksummary = \quiz_aigrader\local\formatter::summarise(
+                        \quiz_aigrader\local\formatter::html_to_text($feedbacktext)
+                    );
                 }
             }
 
@@ -1368,10 +1370,8 @@ try {
                     if ($approvectx) {
                         $approvectx->lastgrade = $grade100;
                         $approvectx->criteriamet = $approvectx->aicriteriamet;
-                        $approvectx->feedbacksummary = core_text::substr(
-                            \quiz_aigrader\local\formatter::html_to_text($feedbacktext),
-                            0,
-                            300
+                        $approvectx->feedbacksummary = \quiz_aigrader\local\formatter::previous_summary(
+                            \quiz_aigrader\local\formatter::html_to_text($feedbacktext)
                         );
                         $approvectx->humanreview = 0;
                         $approvectx->suggestedtime = null;

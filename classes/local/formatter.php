@@ -88,6 +88,80 @@ class formatter {
     }
 
     /**
+     * Shorten text to a limit without cutting a word in half.
+     *
+     * The summary saved after approval is shown in the next attempt's "Previous attempt"
+     * panel and sent to the grading service. A hard character cut left a fragment such as
+     * "Name the n" at the end of the panel; this cuts at the last space and marks the cut.
+     *
+     * @param string $text Plain text.
+     * @param int $limit Maximum length in characters, including the ellipsis.
+     * @return string The text, or a shortened copy ending in an ellipsis.
+     */
+    public static function summarise(string $text, int $limit = 300): string {
+        $text = trim($text);
+        if (\core_text::strlen($text) <= $limit) {
+            return $text;
+        }
+        $cut = \core_text::substr($text, 0, $limit - 1);
+        $space = \core_text::strrpos($cut, ' ');
+        if ($space !== false && $space > $limit / 2) {
+            $cut = \core_text::substr($cut, 0, $space);
+        }
+        return rtrim($cut, " \n,;:-") . "\u{2026}";
+    }
+
+    /**
+     * Summarise approved feedback for the next attempt's "Previous attempt" panel.
+     *
+     * The panel and the grading service both get at most 300 characters. Cutting the full
+     * feedback at that length kept the first two criteria and lost the rest, so the panel
+     * showed two of five marks. This keeps every criterion's mark line first, each with a
+     * short version of its comment while that still fits, and only then any other text.
+     *
+     * @param string $text Approved feedback as plain text, from html_to_text().
+     * @param int $limit Maximum length in characters.
+     * @return string The summary.
+     */
+    public static function previous_summary(string $text, int $limit = 300): string {
+        $criteria = [];
+        $current = null;
+        foreach (preg_split('/\n+/', $text) as $line) {
+            $line = trim($line);
+            if ($line === '' || stripos($line, 'marked against your grading criteria') !== false) {
+                continue;
+            }
+            if (preg_match('~^(.+?)\s+(\d+(?:\.\d+)?)\s*/\s*(\d+(?:\.\d+)?)$~u', $line)) {
+                $criteria[] = ['score' => $line, 'comment' => ''];
+                $current = count($criteria) - 1;
+            } else if ($current !== null && $criteria[$current]['comment'] === '') {
+                $criteria[$current]['comment'] = $line;
+            } else {
+                $current = null;
+            }
+        }
+        if (!$criteria) {
+            return self::summarise($text, $limit);
+        }
+        $scores = implode("\n", array_column($criteria, 'score'));
+        if (\core_text::strlen($scores) >= $limit) {
+            return self::summarise($scores, $limit);
+        }
+        // Share what is left between the comments.
+        $room = intdiv($limit - \core_text::strlen($scores) - 2 * count($criteria), count($criteria));
+        $lines = [];
+        foreach ($criteria as $c) {
+            $lines[] = $c['score'];
+            // A comment is kept only whole: a clipped "This is not shown in the…" says less
+            // than the mark beside it.
+            if ($c['comment'] !== '' && \core_text::strlen($c['comment']) <= $room) {
+                $lines[] = $c['comment'];
+            }
+        }
+        return self::summarise(implode("\n", $lines), $limit);
+    }
+
+    /**
      * Human-readable name for a feedback language code.
      *
      * Falls back to the code itself rather than guessing, so an unexpected value shows as

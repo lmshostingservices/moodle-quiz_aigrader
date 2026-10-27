@@ -1523,36 +1523,39 @@
     color: var(--ag-amber);
 }
 
-/* Previous attempt context. */
+/* Previous attempt context: a neutral panel, so the colour stays with the marks. */
 .aigrader-container .aigrader-previous-attempt {
-    margin: 0 0 12px;
-    background: var(--ag-blue-soft);
-    border: 1px solid var(--ag-blue-border);
-    border-radius: var(--ag-radius);
+    margin: 0 0 14px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
 }
 
 .aigrader-container .aigrader-previous-toggle {
     display: flex;
     align-items: center;
-    justify-content: space-between;
     gap: 8px;
     width: 100%;
-    padding: 9px 13px;
+    padding: 10px 14px;
     font: inherit;
     font-size: 0.8125rem;
     font-weight: 600;
     text-align: left;
-    color: #174ea6;
+    color: #0f172a;
     cursor: pointer;
     background: none;
     border: 0;
 }
 
+.aigrader-container .aigrader-previous-toggle .aigrader-previous-grade {
+    margin-left: auto;
+}
+
 .aigrader-container .aigrader-previous-content {
-    padding: 0 13px 11px;
+    padding: 0 14px 12px;
     font-size: 0.8125rem;
     line-height: 1.55;
-    color: #174ea6;
+    color: #475569;
 }
 
 .aigrader-container .aigrader-previous-content[hidden] {
@@ -1565,8 +1568,54 @@
 }
 
 .aigrader-container .aigrader-previous-feedback {
-    margin: 5px 0 0;
-    white-space: pre-line;
+    display: grid;
+    gap: 8px;
+}
+
+.aigrader-container .aigrader-prev-crit {
+    padding: 9px 12px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+}
+
+.aigrader-container .aigrader-prev-crit-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 2px;
+    font-weight: 600;
+    color: #0f172a;
+}
+
+.aigrader-container .aigrader-prev-score {
+    flex: 0 0 auto;
+    padding: 1px 9px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    border-radius: 999px;
+}
+
+.aigrader-container .aigrader-prev-score.is-full {
+    color: #166534;
+    background: #dcfce7;
+}
+
+.aigrader-container .aigrader-prev-score.is-short {
+    color: #92400e;
+    background: #fef3c7;
+}
+
+.aigrader-container .aigrader-prev-heading {
+    margin-top: 4px;
+    font-weight: 600;
+    color: #0f172a;
+}
+
+.aigrader-container .aigrader-prev-line {
+    color: #475569;
 }
 
 /* The assessor's own button reset, so the theme's default button background and border do
@@ -1942,7 +1991,9 @@
     max-width: 1180px;
 }
 
-.aigrader-report-container .aigrader-report-headrow {
+/* A page-level header row only; the table's own header row shares the class name and
+   must stay a table row, or its cells wrap into two lines above the data. */
+.aigrader-report-container div.aigrader-report-headrow {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -1975,6 +2026,196 @@
     display: flex;
     align-items: center;
     gap: 9px;
+}
+
+/* The activity report is a page of its own, outside the quiz report's .aigrader-container,
+   so the shared statistics, filter and table styles are applied to it here. */
+.aigrader-report-container .aigrader-report-title {
+    margin: 0 0 4px;
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--ag-ink);
+}
+
+.aigrader-report-container .aigrader-report-desc {
+    margin: 0 0 20px;
+    color: var(--ag-ink-2);
+}
+
+.aigrader-report-container .aigrader-filter-form {
+    margin: 0 0 14px;
+    padding: 16px 18px;
+    background: var(--ag-surface);
+    border: 1px solid var(--ag-line);
+    border-radius: var(--ag-radius-lg);
+}
+
+.aigrader-report-container .aigrader-filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 14px;
+}
+
+.aigrader-report-container .aigrader-filter-field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.aigrader-report-container .aigrader-filter-label {
+    margin: 0;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--ag-ink-2);
+}
+
+.aigrader-report-container .aigrader-filter-control {
+    min-height: 38px;
+    padding: 6px 10px;
+    font-size: 0.875rem;
+    color: var(--ag-ink);
+    background: var(--ag-surface);
+    border: 1px solid var(--ag-line-strong);
+    border-radius: 8px;
+}
+
+.aigrader-report-container .aigrader-btn-submit {
+    min-height: 38px;
+    padding: 0 18px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #fff;
+    background: var(--ag-blue);
+    border: 0;
+    border-radius: 8px;
+}
+
+.aigrader-report-container .aigrader-btn-submit:hover {
+    background: var(--ag-blue-dark) !important;
+}
+
+.aigrader-report-container .aigrader-download-row {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin: 0 0 18px;
+}
+
+.aigrader-report-container .aigrader-btn-download {
+    padding: 7px 14px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--ag-ink);
+    background: var(--ag-surface);
+    border: 1px solid var(--ag-line-strong);
+    border-radius: 8px;
+}
+
+.aigrader-report-container .aigrader-btn-download-primary {
+    color: #fff;
+    background: var(--ag-blue);
+    border-color: var(--ag-blue);
+}
+
+.aigrader-report-container .aigrader-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 12px;
+    margin: 0 0 24px;
+}
+
+.aigrader-report-container .aigrader-stat-tile {
+    padding: 15px 17px;
+    background: var(--ag-surface);
+    border: 1px solid var(--ag-line);
+    border-radius: var(--ag-radius-lg);
+}
+
+.aigrader-report-container .aigrader-stat-tile-label {
+    margin: 0 0 6px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--ag-ink-2);
+}
+
+.aigrader-report-container .aigrader-stat-tile-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+}
+
+.aigrader-report-container .aigrader-num-blue {
+    color: var(--ag-blue);
+}
+
+.aigrader-report-container .aigrader-num-green {
+    color: var(--ag-green);
+}
+
+.aigrader-report-container .aigrader-num-amber {
+    color: var(--ag-amber);
+}
+
+.aigrader-report-container .aigrader-num-purple {
+    color: var(--ag-purple);
+}
+
+.aigrader-report-container .aigrader-num-dark {
+    color: var(--ag-ink);
+}
+
+.aigrader-report-container .aigrader-section-heading {
+    margin: 0 0 10px;
+    font-size: 1.0625rem;
+    font-weight: 700;
+    color: var(--ag-ink);
+}
+
+.aigrader-report-container .aigrader-table-card {
+    margin: 0 0 24px;
+    overflow: hidden;
+    background: var(--ag-surface);
+    border: 1px solid var(--ag-line);
+    border-radius: var(--ag-radius-lg);
+}
+
+.aigrader-report-container .aigrader-report-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.aigrader-report-container .aigrader-panel {
+    padding: 18px;
+    background: var(--ag-surface);
+    border: 1px solid var(--ag-line);
+    border-radius: var(--ag-radius-lg);
+}
+
+.aigrader-report-container .aigrader-form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 14px;
+    margin: 0 0 14px;
+}
+
+.aigrader-report-container .aigrader-form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.aigrader-report-container .aigrader-help-text,
+.aigrader-report-container .aigrader-next-run {
+    font-size: 0.75rem;
+    color: var(--ag-ink-3);
+}
+
+.aigrader-report-container .aigrader-checkbox-label {
+    margin: 0 0 0 6px;
+    font-size: 0.875rem;
+    color: var(--ag-ink);
 }
 
 /* ---------------------------------------------------------------------------
