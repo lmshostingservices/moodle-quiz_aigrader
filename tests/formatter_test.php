@@ -80,6 +80,21 @@ final class formatter_test extends \advanced_testcase {
     }
 
     /**
+     * Block-level divs separate too. The criteria breakdown written into the learner's
+     * feedback is built from divs; flattened without breaks it became one run-on line in the
+     * next attempt's "Previous attempt" panel.
+     */
+    public function test_html_to_text_separates_divs(): void {
+        $html = '<div><div><span>Understanding of the concept</span><span>0 / 4</span></div></div>'
+            . '<div>This criterion is not yet shown in the answer.</div>';
+        $text = formatter::html_to_text($html);
+
+        $this->assertStringNotContainsString('concept0 / 4', $text);
+        $this->assertStringNotContainsString('4This', $text);
+        $this->assertStringContainsString('Understanding of the concept 0 / 4', $text);
+    }
+
+    /**
      * Runs of spaces collapse, runs of blank lines are capped, and the result is trimmed.
      */
     public function test_html_to_text_tidies_whitespace(): void {

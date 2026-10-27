@@ -1,5 +1,38 @@
 # Changelog
 
+## 5.0.2 - 2026-10-27
+
+Version: `2026102701`. Interface fixes found while filming the tutorial on Moodle 5.3. No
+database changes.
+
+- **Grading Time Statistics shows its four figures side by side.** The summary had no grid
+  rule, so Essays Graded, Total Time, Avg per Essay and Total Time Spent each took a full-width
+  row.
+- **The "Previous attempt" panel keeps its line breaks.** The approved feedback was flattened
+  with Moodle's `html_to_text()`, which neither breaks after a closing `div` nor separates
+  adjacent inline elements, so the criteria breakdown arrived as "Understanding of the
+  concept0 / 4 This criterion...". It now goes through the plugin's own formatter, which does
+  both, and the panel keeps the breaks.
+- **Grade all no longer opens every card.** Each row turns to Graded as its result comes
+  back and stays closed until the assessor opens it. Opening every card filled the page
+  with the whole batch at once and pushed the progress out of view. Grading a single
+  response still opens its card.
+- **Feedback sections are recognised when the grading service writes its headings with
+  an emoji**, as it does ("👍 What you did well", "📉 Areas for improvement", "💡 Suggestions
+  for next time"). Heading detection only allowed list and quote markers before the words, so
+  none of the three was recognised: the card showed the feedback as flat text instead of the
+  green, amber and blue sections, and the full-marks feedback policy had no sections to act
+  on, so a learner on full marks could be sent the improvement and next-time sections the
+  site had chosen to withhold.
+- **A previous mark below full is shown in amber, never red,** and as a whole percentage
+  ("0%", not "0.00%").
+- **The learner preview on the marking card is labelled "What the learner will see".** It
+  carried the same heading as the assessor's scoring block above it, so the card appeared to
+  show the criteria twice.
+- **The Reference Documents collapse button no longer picks up the theme's grey button
+  style.**
+- JavaScript rebuilt with Moodle's grunt AMD pipeline from the 5.3 tree.
+
 ## 5.0.1 - 2026-10-27
 
 Version: `2026102700`.

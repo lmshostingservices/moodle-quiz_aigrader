@@ -211,6 +211,7 @@ $string['language_pt'] = 'Portuguese';
 $string['language_th'] = 'Thai';
 $string['language_vi'] = 'Vietnamese';
 $string['language_zh'] = 'Chinese';
+$string['learner_preview'] = 'What the learner will see';
 $string['learners_response'] = 'Learner\'s response';
 $string['loading'] = 'Loading...';
 $string['messageprovider:grading_complete'] = 'Notification when essay has been graded';

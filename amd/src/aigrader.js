@@ -193,6 +193,13 @@ define(['jquery', 'core/str', 'core/notification', 'core/log'], function($, Str,
     // "There are no significant areas for improvement" opens a second improvements section.
     const HEADING_MAX_LENGTH = 80;
 
+    // What may precede a heading's words: whitespace, list and quote markers, and emoji. The
+    // grading service writes its headings with a leading emoji ("\u{1F44D} What you did well",
+    // "\u{1F4C9} Areas for improvement", "\u{1F4A1} Suggestions for next time"); without
+    // emoji here no heading was recognised, the card fell back to flat text and the
+    // full-marks policy had no sections to filter.
+    const HEADING_LEAD = /^(?:[\s*#>\-\u2022]|\p{Extended_Pictographic}|[\u{1F3FB}-\u{1F3FF}]|\uFE0E|\uFE0F|\u200D)+/u;
+
     /**
      * Classify one line.
      *
@@ -209,7 +216,7 @@ define(['jquery', 'core/str', 'core/notification', 'core/log'], function($, Str,
         // 'strengths' mode was actively harmful, because a spurious success heading
         // appearing after an improvements heading reset the filter and let the remaining
         // improvement text through to a learner on full marks.
-        const bare = line.replace(/^[\s*#>\-\u2022]+/, '').replace(/[:\uff1a]\s*$/, '').trim();
+        const bare = line.replace(HEADING_LEAD, '').replace(/[:\uff1a]\s*$/, '').trim();
         if (bare === '' || /[.!?\u3002\uff01\uff1f]$/.test(bare)) {
             return null;
         }
@@ -828,19 +835,22 @@ define(['jquery', 'core/str', 'core/notification', 'core/log'], function($, Str,
                 if (currentSection) {
                     sections.push(currentSection);
                 }
-                const title = line.replace(/^(\[thumbs-up\]|\s)+/, '').trim() || strings.feedback_strengths;
+                const title = line.replace(/^(\[thumbs-up\]|\s)+/, '').replace(HEADING_LEAD, '').trim()
+                    || strings.feedback_strengths;
                 currentSection = { type: 'success', title: title, icon: '[thumbs-up]', items: [] };
             } else if (headingType === 'warning') {
                 if (currentSection) {
                     sections.push(currentSection);
                 }
-                const title = line.replace(/^(\[chart-down\]|\s)+/, '').trim() || strings.feedback_improvements;
+                const title = line.replace(/^(\[chart-down\]|\s)+/, '').replace(HEADING_LEAD, '').trim()
+                    || strings.feedback_improvements;
                 currentSection = { type: 'warning', title: title, icon: '[chart-down]', items: [] };
             } else if (headingType === 'info') {
                 if (currentSection) {
                     sections.push(currentSection);
                 }
-                const title = line.replace(/^(\[tip\]|\u2753|\s)+/u, '').trim() || strings.feedback_suggestions;
+                const title = line.replace(/^(\[tip\]|\u2753|\s)+/u, '').replace(HEADING_LEAD, '').trim()
+                    || strings.feedback_suggestions;
                 currentSection = { type: 'info', title: title, icon: '[tip]', items: [] };
             } else {
                 // Add as bullet item - strip bullets/emoji repeatedly for double bullets like "* * text"
@@ -1131,13 +1141,13 @@ define(['jquery', 'core/str', 'core/notification', 'core/log'], function($, Str,
             if (resp.previousattempt && (resp.previousattempt.feedback || resp.previousattempt.grade !== null)) {
                 const prevGrade = resp.previousattempt.grade;
                 const prevFeedback = resp.previousattempt.feedback || strings.feedback_notrecorded;
-                const prevGradeDisplay = prevGrade !== null ? `${prevGrade}%` : strings.notgraded;
-                let prevGradeBadgeClass = 'ag-badge-error';
-                if (prevGrade >= 100) {
-                    prevGradeBadgeClass = 'ag-badge-success';
-                } else if (prevGrade >= 50) {
-                    prevGradeBadgeClass = 'ag-badge-warning';
-                }
+                const prevGradeDisplay = prevGrade !== null && !isNaN(parseFloat(prevGrade))
+                    ? `${Math.round(parseFloat(prevGrade))}%` : strings.notgraded;
+                // Learner work is never marked in red: a mark below full is shown in amber,
+                // because it says what is still to come, not that the learner failed.
+                const prevGradeNum = prevGrade === null ? null : parseFloat(prevGrade);
+                const prevGradeBadgeClass = prevGradeNum !== null && prevGradeNum >= 100
+                    ? 'ag-badge-success' : 'ag-badge-warning';
                 previousAttemptHtml = `
                     <div class="aigrader-previous-attempt">
                         <button type="button" class="aigrader-previous-toggle" data-expanded="false">
@@ -1170,6 +1180,7 @@ define(['jquery', 'core/str', 'core/notification', 'core/log'], function($, Str,
                         <input type="hidden" id="criteriadata-${id}" value="${escapeHtml(JSON.stringify(criteriaData))}">
                         <input type="hidden" id="maxmark-${id}" value="${maxMark}">
                         <div id="criteria-editor-${id}">${criteriaEditor}</div>
+                        <div class="aigrader-preview-label">${escapeHtml(strings.learner_preview)}</div>
                         <div class="aigrader-feedback-preview" id="feedback-preview-${id}">${feedbackPreview}</div>
                         <div id="policy-note-${id}"></div>
                         <div class="aigrader-feedback-barline">
@@ -1240,7 +1251,12 @@ define(['jquery', 'core/str', 'core/notification', 'core/log'], function($, Str,
             // One path fills the textarea and the preview, so they cannot disagree.
             refreshFeedbackForCard(id);
             setRowStatus(id, 'graded');
-            setRowExpanded(id, true);
+            // Grading one response opens its card. Grade all leaves the queue closed, so
+            // the assessor sees each row turn to Graded instead of the page filling with
+            // every card at once.
+            if (!callback) {
+                setRowExpanded(id, true);
+            }
 
             // The headline figure belongs in the card header, top right, per the reference.
             $('#suggested-' + id)
@@ -2065,7 +2081,8 @@ define(['jquery', 'core/str', 'core/notification', 'core/log'], function($, Str,
             {key: 'status_graded', component: 'quiz_aigrader'},
             {key: 'status_approved', component: 'quiz_aigrader'},
             {key: 'criteria_total', component: 'quiz_aigrader'},
-            {key: 'grading_complete_message', component: 'quiz_aigrader'}
+            {key: 'grading_complete_message', component: 'quiz_aigrader'},
+            {key: 'learner_preview', component: 'quiz_aigrader'}
         ]).then(result => {
             [
                 strings.processing,
@@ -2145,7 +2162,8 @@ define(['jquery', 'core/str', 'core/notification', 'core/log'], function($, Str,
                 strings.status_graded,
                 strings.status_approved,
                 strings.criteria_total,
-                strings.grading_complete_message
+                strings.grading_complete_message,
+                strings.learner_preview
             ] = result;
 
             return true;

@@ -1369,7 +1369,7 @@ try {
                         $approvectx->lastgrade = $grade100;
                         $approvectx->criteriamet = $approvectx->aicriteriamet;
                         $approvectx->feedbacksummary = core_text::substr(
-                            trim(html_to_text($feedbacktext, 0, false)),
+                            \quiz_aigrader\local\formatter::html_to_text($feedbacktext),
                             0,
                             300
                         );

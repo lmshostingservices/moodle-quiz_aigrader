@@ -931,8 +931,10 @@
 }
 
 .aigrader-container .aigrader-stats-summary {
-    margin: 14px 0 0;
-    font-size: 0.8125rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 12px;
+    margin: 14px 0;
     color: var(--ag-ink-2);
 }
 
@@ -1564,6 +1566,34 @@
 
 .aigrader-container .aigrader-previous-feedback {
     margin: 5px 0 0;
+    white-space: pre-line;
+}
+
+/* The assessor's own button reset, so the theme's default button background and border do
+   not turn the collapse chevron into a grey box. */
+.aigrader-container button.aigrader-documents-toggle {
+    padding: 6px;
+    background: transparent;
+    border: 0;
+    border-radius: var(--ag-radius);
+    color: var(--ag-ink-3);
+    line-height: 0;
+}
+
+.aigrader-container button.aigrader-documents-toggle:hover,
+.aigrader-container button.aigrader-documents-toggle:focus-visible {
+    background: var(--ag-surface-2);
+    color: var(--ag-ink);
+}
+
+/* Separates the assessor's scoring from the copy of the feedback the learner receives. */
+.aigrader-container .aigrader-preview-label {
+    margin: 18px 0 8px;
+    padding-top: 14px;
+    border-top: 1px dashed var(--ag-line);
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--ag-ink-2);
 }
 
 /* Feedback withheld from the learner by the site's full-marks policy. Not delivered, but

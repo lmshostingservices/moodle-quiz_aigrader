@@ -65,8 +65,18 @@ class formatter {
             return '';
         }
 
-        // Moodle's html_to_text() keeps block structure as newlines. The width argument is 0 so it does
-        // not hard-wrap, and links are not footnoted because a URL list is noise to the grader.
+        // Moodle's html_to_text() keeps paragraphs and list items as newlines, but not a closing
+        // div. The criteria breakdown the plugin writes into the learner's feedback is built from
+        // divs, so without this a saved summary read "Understanding of the concept0 / 4 This
+        // criterion..." as one run-on line in the next attempt's "Previous attempt" panel.
+        $html = preg_replace('~</div\s*>~i', "</div>\n", $html);
+
+        // Adjacent inline elements, such as a criterion's name and its score, would otherwise
+        // run together ("concept0 / 4"). A space is safe: runs of spaces are collapsed below.
+        $html = preg_replace('~</span\s*>~i', '</span> ', $html);
+
+        // The width argument is 0 so it does not hard-wrap, and links are not footnoted because a
+        // URL list is noise to the grader.
         $text = html_to_text($html, 0, false);
 
         // Collapse runs of spaces and tabs but never newlines, then collapse runs of more than
