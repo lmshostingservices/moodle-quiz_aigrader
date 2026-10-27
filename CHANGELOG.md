@@ -1,5 +1,14 @@
 # Changelog
 
+## 5.0.1 - 2026-10-27
+
+Version: `2026102700`.
+
+- Restore a missing attempt-context table from the complete `install.xml` definition
+  before the older upgrade checks its fields.
+- Repair the same missing table for sites already running version 5.0.0.
+- Leave existing attempt-context tables and grading records untouched.
+
 ## 5.0.0 - 2026-10-26
 
 **A security and correctness release.** Version: `2026102503`. No database changes; the

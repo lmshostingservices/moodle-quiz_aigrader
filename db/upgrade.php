@@ -241,6 +241,12 @@ function xmldb_quiz_aigrader_upgrade($oldversion) {
         // mark. They now hold the approved decision, and the AI's suggestion is kept
         // alongside in its own columns so the two can never be confused again.
         $ctx = new xmldb_table('quiz_aigrader_attempt_ctx');
+        if (!$dbman->table_exists($ctx)) {
+            $dbman->install_one_table_from_xmldb_file(
+                __DIR__ . '/install.xml',
+                'quiz_aigrader_attempt_ctx'
+            );
+        }
 
         $field = new xmldb_field('aigrade', XMLDB_TYPE_NUMBER, '10, 2', null, null, null, null, 'lastgrade');
         if (!$dbman->field_exists($ctx, $field)) {
@@ -291,6 +297,18 @@ function xmldb_quiz_aigrader_upgrade($oldversion) {
         // Bootstrap's sr-only, absent from the Moodle 5 themes, to Moodle's accesshide. No
         // DB schema changes.
         upgrade_plugin_savepoint(true, 2026102503, 'quiz', 'aigrader');
+    }
+
+    if ($oldversion < 2026102700) {
+        // Recover the table on sites that already passed the earlier creation step.
+        $ctx = new xmldb_table('quiz_aigrader_attempt_ctx');
+        if (!$dbman->table_exists($ctx)) {
+            $dbman->install_one_table_from_xmldb_file(
+                __DIR__ . '/install.xml',
+                'quiz_aigrader_attempt_ctx'
+            );
+        }
+        upgrade_plugin_savepoint(true, 2026102700, 'quiz', 'aigrader');
     }
 
     return true;
