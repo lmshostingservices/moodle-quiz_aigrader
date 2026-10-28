@@ -311,5 +311,58 @@ function xmldb_quiz_aigrader_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026102700, 'quiz', 'aigrader');
     }
 
+    if ($oldversion < 2026102703) {
+        // Version 5.0.4: criteria are read from Information for graders, the question text or
+        // General feedback, and the decision record says which. Records written before this
+        // version have no source.
+        $table = new xmldb_table('quiz_aigrader_decisions');
+        $field = new xmldb_field('criteriasource', XMLDB_TYPE_CHAR, '20', null, null, null, null, 'graderinfohash');
+        if ($dbman->table_exists($table) && !$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // What each suggestion was measured against, kept with it so the decision record can
+        // show the criteria the assessor was shown.
+        $ctx = new xmldb_table('quiz_aigrader_attempt_ctx');
+        $field = new xmldb_field('aicriteria', XMLDB_TYPE_TEXT, null, null, null, null, null, 'aifeedback');
+        if ($dbman->table_exists($ctx) && !$dbman->field_exists($ctx, $field)) {
+            $dbman->add_field($ctx, $field);
+        }
+        upgrade_plugin_savepoint(true, 2026102703, 'quiz', 'aigrader');
+    }
+
+    if ($oldversion < 2026102704) {
+        // Version 5.0.4: criteria an assessor confirmed per question. Only confirmed criteria
+        // drive the per-criterion breakdown; until they are confirmed a question is given one
+        // overall mark.
+        $table = new xmldb_table('quiz_aigrader_criteria');
+        if (!$dbman->table_exists($table)) {
+            $dbman->install_one_table_from_xmldb_file(__DIR__ . '/install.xml', 'quiz_aigrader_criteria');
+        }
+        upgrade_plugin_savepoint(true, 2026102704, 'quiz', 'aigrader');
+    }
+
+    if ($oldversion < 2026102705) {
+        // Version 5.0.4: a question drawn into random slots at different marks has a confirmation
+        // for each mark, and a confirmation records whether it was made in the editor or with
+        // others in one action. Only sites that installed a pre-release of 5.0.4 need this.
+        $table = new xmldb_table('quiz_aigrader_criteria');
+        if ($dbman->table_exists($table)) {
+            $field = new xmldb_field('method', XMLDB_TYPE_CHAR, '10', null, XMLDB_NOTNULL, null, 'reviewed', 'confirmedby');
+            if (!$dbman->field_exists($table, $field)) {
+                $dbman->add_field($table, $field);
+            }
+            $old = new xmldb_index('quiz_question', XMLDB_INDEX_UNIQUE, ['quizid', 'questionid']);
+            if ($dbman->index_exists($table, $old)) {
+                $dbman->drop_index($table, $old);
+            }
+            $new = new xmldb_index('quiz_question_mark', XMLDB_INDEX_UNIQUE, ['quizid', 'questionid', 'maxmark']);
+            if (!$dbman->index_exists($table, $new)) {
+                $dbman->add_index($table, $new);
+            }
+        }
+        upgrade_plugin_savepoint(true, 2026102705, 'quiz', 'aigrader');
+    }
+
     return true;
 }

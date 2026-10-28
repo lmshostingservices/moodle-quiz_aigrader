@@ -224,7 +224,8 @@ define(['jquery', 'core/str', 'core/notification', 'core/log'], function($, Str,
         if (/^(\[thumbs-up\]|what you did well|strengths|good work|well done)/i.test(bare)) {
             return 'success';
         }
-        if (/^(\[chart-down\]|what needs improvement|areas for improvement|needs work|could improve)/i.test(bare)) {
+        if (/^(\[chart-down\]|what needs improvement|areas? (for|of|to) improve(ment)?|improvements?|needs work|could improve)/i
+                .test(bare)) {
             return 'warning';
         }
         if (/^(\[tip\]|\u2753|how to improve|suggestions|recommendations|next steps|tips|kaizen-houhou|kaizen-kaitou)/iu
@@ -359,6 +360,68 @@ define(['jquery', 'core/str', 'core/notification', 'core/log'], function($, Str,
         return String(roundMark(value));
     }
 
+    // The steps a mark may move in, coarsest first.
+    const MARK_STEPS = [1, 0.5, 0.25, 0.1, 0.05, 0.01];
+
+    /**
+     * Whether a value is a whole number of steps.
+     *
+     * @param {Number} value
+     * @param {Number} step
+     * @return {Boolean}
+     */
+    function isMultiple(value, step) {
+        const n = value / step;
+        return Math.abs(n - Math.round(n)) < 1e-6;
+    }
+
+    /**
+     * The step a criterion is scored in: the coarsest that divides its maximum and still
+     * leaves room for part marks, so a criterion worth 0.5 can be given 0.25.
+     *
+     * @param {Number} max The criterion's maximum.
+     * @return {Number}
+     */
+    function criterionStep(max) {
+        for (const step of MARK_STEPS) {
+            if (step <= max / 2 + MARK_EPSILON && isMultiple(max, step)) {
+                return step;
+            }
+        }
+        return 0.01;
+    }
+
+    /**
+     * The step the question's mark moves in. Whole marks for a whole-number maximum and
+     * halves otherwise, made finer when the question's criteria need it: criteria worth 0.5
+     * each on a 1-mark question must be able to add up to 0.5 or 0.75, not be rounded to 0 or 1.
+     *
+     * @param {Number} max The question's maximum mark.
+     * @param {Array} criteria Normalised criteria, or nothing.
+     * @return {Number}
+     */
+    function scaleStep(max, criteria) {
+        let step = Number.isInteger(max) ? 1 : 0.5;
+        if (Array.isArray(criteria) && criteria.length) {
+            criteria.forEach(function(c) {
+                if (c.max > 0) {
+                    step = Math.min(step, criterionStep(c.max));
+                }
+            });
+            // The step must also fit the question's maximum.
+            const fits = MARK_STEPS.filter(s => s <= step && isMultiple(max, s));
+            step = fits.length ? fits[0] : 0.01;
+            // Never so fine that the list would be cut short: criteria of 3.33, 3.33 and 3.34 on
+            // a 10-mark question would otherwise step in hundredths and stop at 1.99. The
+            // coarsest step that still fits the maximum and keeps the list whole is used.
+            if (max / step > MARK_SCALE_MAX_OPTIONS - 1) {
+                const whole = MARK_STEPS.filter(s => s > step && isMultiple(max, s) && max / s <= MARK_SCALE_MAX_OPTIONS - 1);
+                step = whole.length ? whole[whole.length - 1] : (Number.isInteger(max) ? 1 : 0.5);
+            }
+        }
+        return step;
+    }
+
     /**
      * Build the list of marks a question can be awarded.
      *
@@ -368,14 +431,15 @@ define(['jquery', 'core/str', 'core/notification', 'core/log'], function($, Str,
      * impossible, and offered only 0 on a 0.5-mark question.
      *
      * @param {Number} maxMark The question's maximum mark.
+     * @param {Array} criteria The question's criteria, when there is a breakdown.
      * @return {Array} Ascending list of awardable marks, always including 0 and maxMark.
      */
-    function buildMarkScale(maxMark) {
+    function buildMarkScale(maxMark, criteria) {
         const max = roundMark(maxMark);
         if (!(max > 0)) {
             return [];
         }
-        const step = Number.isInteger(max) ? 1 : 0.5;
+        const step = scaleStep(max, criteria);
         const marks = [];
         for (let v = 0; v <= max + MARK_EPSILON && marks.length < MARK_SCALE_MAX_OPTIONS; v = roundMark(v + step)) {
             marks.push(v);
@@ -395,10 +459,11 @@ define(['jquery', 'core/str', 'core/notification', 'core/log'], function($, Str,
      *
      * @param {Number} maxMark The question's maximum mark.
      * @param {Number} suggestedMark The mark the grading service suggested.
+     * @param {Array} criteria The criteria on the card, if any: they set how finely marks step.
      * @return {String} HTML option elements.
      */
-    function buildMarkOptions(maxMark, suggestedMark) {
-        const marks = buildMarkScale(maxMark);
+    function buildMarkOptions(maxMark, suggestedMark, criteria) {
+        const marks = buildMarkScale(maxMark, criteria);
         if (marks.length === 0) {
             return '';
         }
@@ -488,40 +553,80 @@ define(['jquery', 'core/str', 'core/notification', 'core/log'], function($, Str,
                     // criterion is fully met - telling a learner how to improve something
                     // they scored full marks on contradicts the mark.
                     comment: String(c.comment || ''),
-                    improve: String(c.improve || '')
+                    improve: String(c.improve || ''),
+                    // Criteria the AI derived for a question that had none. Carried through
+                    // to the decision record so it shows what the mark was measured against.
+                    inferred: c.inferred === true,
+                    // Condensed by the AI from the assessor's own guidance and checked against it.
+                    extracted: c.extracted === true
                 };
             }).filter(c => c.label !== '');
         }
 
-        // Fallback: the flat met/not-met list. Every criterion the service recognises for
-        // this question is listed, so the learner can see what is outstanding as well as
-        // what is met - a list of only the met ones would not show the gap.
-        const met = Array.isArray(resp.criteriamet) ? resp.criteriamet : [];
-        const all = Array.isArray(resp.criteriaall) && resp.criteriaall.length > 0 ? resp.criteriaall : met;
-        if (all.length === 0) {
-            return [];
-        }
-        return all.map(function(key) {
-            return {
-                key: key,
-                label: criterionLabel(key),
-                awarded: met.indexOf(key) !== -1 ? 1 : 0,
-                max: 1,
-                comment: '',
-                improve: ''
-            };
-        });
+        // No criteria: one overall mark and no breakdown. Until 5.0.4 this fell back to the
+        // service's flat met/not-met identifiers, which on a question without criteria were
+        // a fixed vendor list of fifteen, most shown at zero. The server now sends the
+        // question's own criteria or none, and a breakdown is never invented here.
+        return [];
     }
 
     /**
-     * Turn a criterion identifier into something a learner can read.
+     * Say where the criteria came from, and anything the assessor should check.
      *
-     * @param {String} key e.g. 'hazard_identified'.
-     * @return {String} e.g. 'Hazard identified'.
+     * Shown above the criteria on the assessor's card only, never to the learner. A mark is
+     * only as good as what it was measured against, so the assessor sees at a glance whether
+     * that was the question's own criteria, criteria the AI derived, or none.
+     *
+     * @param {Object} resp Grading response.
+     * @return {String} HTML, or an empty string when there is nothing to say.
      */
-    function criterionLabel(key) {
-        const words = String(key).replace(/[_-]+/g, ' ').trim();
-        return words.charAt(0).toUpperCase() + words.slice(1);
+    function renderCriteriaContext(resp) {
+        if (!resp || !resp.criteriacontext) {
+            return '';
+        }
+        const source = String(resp.criteriasource || '');
+        // Drop "none found" when the line above already says so.
+        const warnings = (Array.isArray(resp.criteriawarnings) ? resp.criteriawarnings : [])
+            .filter(w => w && w.message && !(w.code === 'none_found'));
+        const items = warnings.map(w => `<li>${escapeHtml(w.message)}</li>`).join('');
+        // Amber whenever there is something to check: derived criteria, none at all, or a
+        // warning about the question's own criteria.
+        const attention = source === 'inferred' || source === 'extracted' || source === 'none' || warnings.length > 0;
+        const icon = attention
+            ? '<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>'
+                + '<line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>'
+            : '<path d="M9 11l3 3L22 4"/>'
+                + '<path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>';
+
+        return `<div class="aigrader-critctx ${attention ? 'aigrader-critctx-attention' : ''}" role="note">
+            <svg class="aigrader-critctx-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                 stroke-linejoin="round" aria-hidden="true">${icon}</svg>
+            <div class="aigrader-critctx-body">
+                <div class="aigrader-critctx-source">${escapeHtml(resp.criteriacontext)}</div>
+                ${items ? `<ul class="aigrader-critctx-warnings">${items}</ul>` : ''}
+            </div>
+        </div>`;
+    }
+
+    /**
+     * The heading over a criteria breakdown.
+     *
+     * "Your grading criteria" is true only of criteria the assessor wrote. Criteria the AI
+     * derived for a question that had none are described as what they are.
+     *
+     * @param {Array} criteria Normalised criteria.
+     * @return {String}
+     */
+    function criteriaHeading(criteria) {
+        const all = flag => Array.isArray(criteria) && criteria.length > 0 && criteria.every(c => c[flag] === true);
+        if (all('inferred')) {
+            return strings.criteria_heading_inferred || strings.criteria_heading;
+        }
+        if (all('extracted')) {
+            return strings.criteria_heading_extracted || strings.criteria_heading;
+        }
+        return strings.criteria_heading || 'AI feedback · marked against your grading criteria';
     }
 
     /**
@@ -584,7 +689,7 @@ define(['jquery', 'core/str', 'core/notification', 'core/log'], function($, Str,
 
         return `<div style="margin:0 0 18px;">`
             + `<div style="margin:0 0 12px;font-size:15px;font-weight:600;color:#1a73e8;">`
-            + escapeHtml(strings.criteria_heading || 'AI feedback · marked against your grading criteria')
+            + escapeHtml(criteriaHeading(criteria))
             + `</div>`
             + cards
             + `</div>`;
@@ -636,7 +741,7 @@ define(['jquery', 'core/str', 'core/notification', 'core/log'], function($, Str,
             const max = c.max > 0 ? c.max : 1;
             const awarded = Math.min(Math.max(c.awarded, 0), max);
             const pct = Math.round((awarded / max) * 100);
-            const step = Number.isInteger(max) ? 1 : 0.5;
+            const step = criterionStep(max);
 
             return `<div class="aigrader-crit">
                 <div class="aigrader-crit-head">
@@ -664,7 +769,7 @@ define(['jquery', 'core/str', 'core/notification', 'core/log'], function($, Str,
 
         const t = criteriaTotal(criteria);
         return `<div class="aigrader-crit-block">
-            <div class="aigrader-crit-heading">${escapeHtml(strings.criteria_heading)}</div>
+            <div class="aigrader-crit-heading">${escapeHtml(criteriaHeading(criteria))}</div>
             ${rows}
             <div class="aigrader-crit-total">
                 <span class="aigrader-crit-total-label">${escapeHtml(strings.criteria_total)}</span>
@@ -729,7 +834,7 @@ define(['jquery', 'core/str', 'core/notification', 'core/log'], function($, Str,
         // Scale between them rather than assuming they agree.
         if (isFinite(maxMark) && maxMark > 0 && total.max > 0) {
             const wanted = (total.awarded / total.max) * maxMark;
-            const scale = buildMarkScale(maxMark);
+            const scale = buildMarkScale(maxMark, criteria);
             // Nearest awardable mark, and on an exact tie the LOWER one. A criteria total
             // that lands halfway between two awardable marks should not quietly round in
             // the learner's favour; the assessor raises it if they judge it should be
@@ -1160,7 +1265,9 @@ define(['jquery', 'core/str', 'core/notification', 'core/log'], function($, Str,
 
             if (!resp.ok) {
                 $btn.prop('disabled', false).text(strings.ai_grade);
-                setRowStatus(id, 'pending');
+                // A question with no criteria on a site that marks only against written
+                // criteria: the row says so, so it is not mistaken for one still waiting.
+                setRowStatus(id, resp.error_code === 'NO_CRITERIA' ? 'manual' : 'pending');
                 if (callback) {
                     // Grading the whole queue: stay quiet and move to the next response,
                     // rather than stacking one alert per failure on top of the assessor.
@@ -1183,7 +1290,7 @@ define(['jquery', 'core/str', 'core/notification', 'core/log'], function($, Str,
                 return;
             }
             const suggestedMark = responseSuggestedMark(resp, maxMark);
-            const gradeOptions = buildMarkOptions(maxMark, suggestedMark);
+            const gradeOptions = buildMarkOptions(maxMark, suggestedMark, normaliseCriteria(resp));
             // The headline figure on the card, reported out of 100 the way the reference
             // screens show it, independently of the question's own mark scale.
             const suggestedLabel = strings.suggested_grade
@@ -1279,6 +1386,7 @@ define(['jquery', 'core/str', 'core/notification', 'core/log'], function($, Str,
                         <input type="hidden" id="criteria-${id}" value="${escapeHtml(criteriaHtml)}">
                         <input type="hidden" id="criteriadata-${id}" value="${escapeHtml(JSON.stringify(criteriaData))}">
                         <input type="hidden" id="maxmark-${id}" value="${maxMark}">
+                        ${renderCriteriaContext(resp)}
                         <div id="criteria-editor-${id}">${criteriaEditor}</div>
                         <div class="aigrader-preview-label">${escapeHtml(strings.learner_preview)}</div>
                         <div class="aigrader-feedback-preview" id="feedback-preview-${id}">${feedbackPreview}</div>
@@ -1565,11 +1673,12 @@ define(['jquery', 'core/str', 'core/notification', 'core/log'], function($, Str,
             pending: strings.status_pending,
             grading: strings.status_grading,
             graded: strings.status_graded,
-            approved: strings.status_approved
+            approved: strings.status_approved,
+            manual: strings.status_manual
         };
         $('#status-' + id)
             .removeClass('aigrader-status-pending aigrader-status-grading '
-                + 'aigrader-status-graded aigrader-status-approved')
+                + 'aigrader-status-graded aigrader-status-approved aigrader-status-manual')
             .addClass('aigrader-status-' + state)
             .text(labels[state] || labels.pending);
     }
@@ -2166,6 +2275,8 @@ define(['jquery', 'core/str', 'core/notification', 'core/log'], function($, Str,
             {key: 'error_nomaxmark', component: 'quiz_aigrader'},
             {key: 'error_nomarkselected', component: 'quiz_aigrader'},
             {key: 'criteria_heading', component: 'quiz_aigrader'},
+            {key: 'criteria_heading_inferred', component: 'quiz_aigrader'},
+            {key: 'criteria_heading_extracted', component: 'quiz_aigrader'},
             {key: 'policy_withheld', component: 'quiz_aigrader'},
             {key: 'policy_not_applied', component: 'quiz_aigrader'},
             {key: 'suggested_grade', component: 'quiz_aigrader'},
@@ -2180,6 +2291,7 @@ define(['jquery', 'core/str', 'core/notification', 'core/log'], function($, Str,
             {key: 'status_grading', component: 'quiz_aigrader'},
             {key: 'status_graded', component: 'quiz_aigrader'},
             {key: 'status_approved', component: 'quiz_aigrader'},
+            {key: 'status_manual', component: 'quiz_aigrader'},
             {key: 'criteria_total', component: 'quiz_aigrader'},
             {key: 'grading_complete_message', component: 'quiz_aigrader'},
             {key: 'learner_preview', component: 'quiz_aigrader'}
@@ -2247,6 +2359,8 @@ define(['jquery', 'core/str', 'core/notification', 'core/log'], function($, Str,
                 strings.error_nomaxmark,
                 strings.error_nomarkselected,
                 strings.criteria_heading,
+                strings.criteria_heading_inferred,
+                strings.criteria_heading_extracted,
                 strings.policy_withheld,
                 strings.policy_not_applied,
                 strings.suggested_grade,
@@ -2261,6 +2375,7 @@ define(['jquery', 'core/str', 'core/notification', 'core/log'], function($, Str,
                 strings.status_grading,
                 strings.status_graded,
                 strings.status_approved,
+                strings.status_manual,
                 strings.criteria_total,
                 strings.grading_complete_message,
                 strings.learner_preview

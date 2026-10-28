@@ -177,6 +177,54 @@ if ($ADMIN->fulltree) {
         1
     ));
 
+    // Marking criteria.
+    //
+    // How many criteria a question should have, and what happens to a question that has
+    // none. The range drives the advice shown to assessors and bounds any criteria the
+    // grading service derives; it never trims or merges criteria an assessor wrote.
+    $settingspage->add(new admin_setting_heading(
+        'quiz_aigrader/criteria_heading_settings',
+        get_string('criteria_settings_heading', 'quiz_aigrader'),
+        get_string('criteria_settings_heading_desc', 'quiz_aigrader')
+    ));
+
+    // Only criteria a person confirmed drive the per-criterion breakdown. On by default:
+    // reading criteria out of free text can never be certain for every way they are written.
+    $settingspage->add(new admin_setting_configcheckbox(
+        'quiz_aigrader/criteria_confirmation',
+        get_string('criteria_confirmation', 'quiz_aigrader'),
+        get_string('criteria_confirmation_desc', 'quiz_aigrader'),
+        1
+    ));
+
+    $settingspage->add(new admin_setting_configselect(
+        'quiz_aigrader/nocriteria_policy',
+        get_string('nocriteria_policy', 'quiz_aigrader'),
+        get_string('nocriteria_policy_desc', 'quiz_aigrader'),
+        'infer',
+        [
+            'infer' => get_string('nocriteria_infer', 'quiz_aigrader'),
+            'holistic' => get_string('nocriteria_holistic', 'quiz_aigrader'),
+            'manual' => get_string('nocriteria_manual', 'quiz_aigrader'),
+        ]
+    ));
+
+    $criteriacounts = array_combine(range(1, 10), range(1, 10));
+    $settingspage->add(new admin_setting_configselect(
+        'quiz_aigrader/criteria_min',
+        get_string('criteria_min', 'quiz_aigrader'),
+        get_string('criteria_min_desc', 'quiz_aigrader'),
+        3,
+        $criteriacounts
+    ));
+    $settingspage->add(new admin_setting_configselect(
+        'quiz_aigrader/criteria_max',
+        get_string('criteria_max', 'quiz_aigrader'),
+        get_string('criteria_max_desc', 'quiz_aigrader'),
+        5,
+        $criteriacounts
+    ));
+
     // Competency signals across repeated attempts.
     //
     // Both default to 0, meaning off. Releases up to 4.3.0 hard-coded these at three, four

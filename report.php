@@ -120,6 +120,19 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
             ]]
         );
 
+        // The editor in the Marking criteria check, where an assessor confirms each question's
+        // criteria before they drive the breakdown.
+        if (\quiz_aigrader\local\confirmed::required() && has_capability('quiz/aigrader:confirmcriteria', $context)) {
+            $limits = \quiz_aigrader\local\criteria::limits();
+            $PAGE->requires->js_call_amd('quiz_aigrader/criteria_editor', 'init', [[
+                'cmid' => $cm->id,
+                'sesskey' => sesskey(),
+                'ajaxurl' => $CFG->wwwroot . '/mod/quiz/report/aigrader/ajax.php',
+                'min' => $limits['min'],
+                'max' => $limits['max'],
+            ]]);
+        }
+
         // Use Moodle's standard quiz report header (includes tabs/navigation).
         $this->print_header_and_tabs($cm, $course, $quiz, 'aigrader');
 
@@ -304,7 +317,7 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
             ['class' => 'aigrader-section-help']
         );
 
-        // Feedback language dropdown with country flags.
+        // Feedback language dropdown.
         echo html_writer::start_div('aigrader-language-form');
         echo html_writer::tag(
             'label',
@@ -376,7 +389,8 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
             ['id' => 'aigrader-feedback-language', 'class' => 'aigrader-language-select']
         );
         foreach ($languages as $code => $lang) {
-            echo html_writer::tag('option', $lang['flag'] . '  ' . $lang['name'], ['value' => $code]);
+            // The language name only: flag emoji read as dated and render inconsistently across systems.
+            echo html_writer::tag('option', $lang['name'], ['value' => $code]);
         }
         echo html_writer::end_tag('select');
         echo html_writer::end_div();
@@ -1002,6 +1016,7 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
                     qat.slot,
                     qza.userid,
                     qat.id as questionattemptid,
+                    q.id AS questionid,
                     q.questiontext,
                     qat.maxmark
                 FROM {quiz_attempts} qza
@@ -1120,6 +1135,8 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
         }
 
         $rows = [];
+        // One entry per question in the queue, for the marking criteria check.
+        $criteriaquestions = [];
 
         foreach ($needsgrading as $record) {
             $rawanswer = $answersbyqatid[$record->questionattemptid] ?? '';
@@ -1137,6 +1154,16 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
 
             $cleananswer = trim(strip_tags($rawanswer));
             $questiontext = $record->questiontext;
+
+            // One entry per question and mark; the question's fields are fetched once below.
+            $checkkey = $record->questionid . '-' . format_float((float)$record->maxmark, 2);
+            if (!isset($criteriaquestions[$checkkey])) {
+                $criteriaquestions[$checkkey] = [
+                    'questionid' => (int)$record->questionid,
+                    'slot' => (int)$record->slot,
+                    'maxmark' => (float)$record->maxmark,
+                ];
+            }
             $initials = core_text::substr($user->firstname, 0, 1) . core_text::substr($user->lastname, 0, 1);
 
             $rows[] = [
@@ -1148,6 +1175,15 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
                 'questionnum'  => 'Q' . $record->slot,
                 'questiontext' => $this->truncate($questiontext),
                 'questionfull' => strip_tags($questiontext),
+                // The question with its line breaks, for the marking card. Criteria are often
+                // written into the question text, and with the tags stripped they ran
+                // together: "safety.Marking Criteria (2 marks total)1 mark: ...".
+                'questiondisplay' => format_text(
+                    strip_tags($questiontext, '<p><br><div><ul><ol><li><strong><b><em><i><u><sup><sub><span>'
+                        . '<table><thead><tbody><tr><td><th>'),
+                    FORMAT_HTML,
+                    ['context' => $context]
+                ),
                 'truncated'    => $this->truncate($rawanswer),
                 'full'         => $cleananswer,
                 'rawanswer'    => $rawanswer,
@@ -1182,6 +1218,33 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
         // row now - so nothing about how an essay is marked has changed.
         $egcolumn = $essayguardavailable;
         $colcount = $egcolumn ? 6 : 5;
+
+        // The fields the criteria are read from, once per question rather than once per response.
+        if ($criteriaquestions) {
+            $qids = array_unique(array_column($criteriaquestions, 'questionid'));
+            [$qinsql, $qparams] = $DB->get_in_or_equal($qids, SQL_PARAMS_NAMED);
+            $fields = $DB->get_records_sql(
+                "SELECT q.id, q.questiontext, q.generalfeedback, q.defaultmark, eo.graderinfo,
+                        qv.version, qv.questionbankentryid
+                   FROM {question} q
+              LEFT JOIN {qtype_essay_options} eo ON eo.questionid = q.id
+              LEFT JOIN {question_versions} qv ON qv.questionid = q.id
+                  WHERE q.id $qinsql",
+                $qparams
+            );
+            foreach ($criteriaquestions as $k => $q) {
+                $f = $fields[$q['questionid']] ?? null;
+                $criteriaquestions[$k] += [
+                    'questiontext' => (string)($f->questiontext ?? ''),
+                    'generalfeedback' => (string)($f->generalfeedback ?? ''),
+                    'graderinfo' => (string)($f->graderinfo ?? ''),
+                    'defaultmark' => (float)($f->defaultmark ?? 0),
+                    'version' => (int)($f->version ?? 0),
+                    'entryid' => (int)($f->questionbankentryid ?? 0),
+                ];
+            }
+        }
+        $this->render_criteria_check($criteriaquestions, $cm, $context);
 
         echo '<div class="aigrader-cards">';
         echo html_writer::start_div('aigrader-table-wrapper');
@@ -1362,7 +1425,7 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
             // Question section.
             echo '<div class="aigrader-card-section aigrader-question-section">';
             echo '<div class="aigrader-section-label">' . get_string('question', 'quiz_aigrader') . '</div>';
-            $formattedquestion = $this->format_question_text($r['questionfull']);
+            $formattedquestion = $r['questiondisplay'];
             echo '<div class="aigrader-question-text">' . $formattedquestion . '</div>';
             echo '</div>';
 
@@ -1420,16 +1483,6 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
         echo html_writer::end_div();
         // End cards container.
         echo '</div>';
-    }
-
-    /**
-     * Format question text - just use Moodle's format_text, no other processing.
-     *
-     * @param string $questionhtml The raw question HTML.
-     * @return string The formatted HTML.
-     */
-    private function format_question_text($questionhtml) {
-        return format_text($questionhtml, FORMAT_HTML);
     }
 
     /**
@@ -1513,6 +1566,337 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
             ['class' => 'aigrader-date-filter-clear']
         );
         echo html_writer::end_div();
+    }
+
+    /**
+     * Show which questions in the queue have marking criteria, before any marking starts.
+     *
+     * Grading reads each question's criteria from Information for graders, the question text
+     * or General feedback. This shows the result of that for every question in the queue, so
+     * a question with no criteria, too many, or criteria that do not add up to its mark is
+     * found and fixed before any learner is marked against it, not discovered card by card.
+     * Collapsed when every question is in order; open when any needs attention.
+     *
+     * @param array $questions One entry per question: questionid, slot, questiontext,
+     *     generalfeedback, graderinfo, maxmark.
+     * @param \stdClass $cm The quiz course module.
+     * @param \context $context The quiz context.
+     * @return void
+     */
+    private function render_criteria_check(array $questions, $cm, $context) {
+        global $PAGE;
+
+        if (empty($questions)) {
+            return;
+        }
+        usort($questions, function ($a, $b) {
+            return $a['slot'] <=> $b['slot'];
+        });
+
+        $policy = \quiz_aigrader\local\criteria::policy();
+        $attention = ['too_many', 'too_few', 'total_mismatch', 'declared_mismatch'];
+        $confirming = \quiz_aigrader\local\confirmed::required();
+        $canconfirm = $confirming && has_capability('quiz/aigrader:confirmcriteria', $context);
+
+        // Responses can span versions of a question (each edit is a new version, and attempts
+        // keep the version they were started on), and a question in random slots can carry
+        // different marks. Each is its own row and its own confirmation, labelled so the
+        // assessor can tell them apart.
+        $versions = [];
+        $marks = [];
+        foreach ($questions as $q) {
+            $entry = $q['entryid'] ?? 0;
+            $versions[$entry][$q['version'] ?? 0] = true;
+            $marks[$q['questionid']][\quiz_aigrader\local\criteria::fmt($q['maxmark'])] = true;
+        }
+
+        $rowshtml = '';
+        $issues = 0;
+        $shown = 0;
+        $exact = 0;
+        foreach ($questions as $q) {
+            try {
+                $resolved = \quiz_aigrader\local\criteria::for_fields(
+                    $q['graderinfo'],
+                    $q['questiontext'],
+                    $q['generalfeedback'],
+                    $q['maxmark'],
+                    $q['defaultmark']
+                );
+                $state = \quiz_aigrader\local\confirmed::state(
+                    (int)$cm->instance,
+                    (int)$q['questionid'],
+                    \quiz_aigrader\local\confirmed::fields_hash(
+                        $q['graderinfo'],
+                        $q['questiontext'],
+                        $q['generalfeedback'],
+                        $q['defaultmark']
+                    ),
+                    $q['maxmark']
+                );
+            } catch (\Throwable $e) {
+                debugging('AI Grader: criteria check failed for question ' . $q['questionid'] . ': '
+                    . $e->getMessage(), DEBUG_DEVELOPER);
+                continue;
+            }
+
+            $none = $resolved['confidence'] === \quiz_aigrader\local\criteria::NONE;
+            $uncertain = $resolved['confidence'] === \quiz_aigrader\local\criteria::UNCERTAIN;
+            $isconfirmed = $state['state'] === \quiz_aigrader\local\confirmed::STATE_CONFIRMED;
+            $isstale = $state['state'] === \quiz_aigrader\local\confirmed::STATE_STALE;
+            $notes = [];
+            if (!$isconfirmed) {
+                foreach (\quiz_aigrader\local\criteria::warning_messages($resolved['warnings']) as $w) {
+                    // With confirmation on, why the guidance cannot be used as written does not
+                    // matter: nothing is used until the assessor confirms it.
+                    if ($w['code'] !== 'none_found' && !($confirming && $w['code'] === 'uncertain')) {
+                        $notes[] = $w['message'];
+                    }
+                }
+            }
+
+            if ($confirming) {
+                $flagged = !$isconfirmed;
+                if ($isstale) {
+                    $notes[] = get_string('criteriacheck_stale_note', 'quiz_aigrader');
+                } else if (!$isconfirmed && $none) {
+                    $notes[] = get_string('criteriacheck_none_confirm', 'quiz_aigrader');
+                } else if (!$isconfirmed && $uncertain) {
+                    $notes[] = \quiz_aigrader\local\confirmed::proposal($resolved, null)
+                        ? get_string('criteriacheck_uncertain_confirm_note', 'quiz_aigrader')
+                        : get_string('criteriacheck_noproposal', 'quiz_aigrader');
+                }
+            } else {
+                if ($none) {
+                    $notes[] = get_string('criteriacheck_policy_' . $policy, 'quiz_aigrader');
+                }
+                if ($uncertain) {
+                    $notes[] = get_string('criteriacheck_uncertain_note', 'quiz_aigrader');
+                }
+                $flagged = $none || $uncertain || array_intersect(array_column($resolved['warnings'], 'code'), $attention);
+            }
+            if ($flagged) {
+                $issues++;
+            }
+
+            $shown++;
+            // Lines joined with spaces and list markers dropped: one readable sentence.
+            $plain = trim(preg_replace(
+                '/\s*\n\s*(?:[*\-\x{2022}]\s+)?/u',
+                ' ',
+                \quiz_aigrader\local\formatter::rubric_text($q['questiontext'])
+            ));
+            $label = html_writer::span('Q' . $q['slot'], 'aigrader-critcheck-q')
+                . ' ' . html_writer::span(s(shorten_text($plain, 90)), 'aigrader-critcheck-qtext');
+            $tags = [];
+            if (!empty($q['entryid']) && count($versions[$q['entryid']] ?? []) > 1) {
+                $tags[] = get_string('criteriacheck_version', 'quiz_aigrader', (int)$q['version']);
+            }
+            if (count($marks[$q['questionid']] ?? []) > 1) {
+                $tags[] = get_string('criteriacheck_atmark', 'quiz_aigrader', \quiz_aigrader\local\criteria::fmt($q['maxmark']));
+            }
+            if ($tags) {
+                $label .= ' ' . html_writer::span(s(implode(' · ', $tags)), 'aigrader-critcheck-tag');
+            }
+
+            // Checked per question: in Moodle 5 a question can live in a shared question bank,
+            // where the quiz's own permissions say nothing about who may edit it.
+            $canedit = false;
+            try {
+                $canedit = question_has_capability_on($q['questionid'], 'edit');
+            } catch (\Throwable $e) {
+                $canedit = false;
+            }
+            if ($canedit) {
+                $editurl = new moodle_url('/question/bank/editquestion/question.php', [
+                    'id' => $q['questionid'],
+                    'cmid' => $cm->id,
+                    'returnurl' => $PAGE->url->out_as_local_url(false),
+                ]);
+                $label .= ' ' . html_writer::link(
+                    $editurl,
+                    get_string('criteriacheck_edit', 'quiz_aigrader'),
+                    ['class' => 'aigrader-critcheck-edit']
+                );
+            }
+
+            $source = '&mdash;';
+            if (!$none) {
+                $source = s(get_string('criteriasource_' . $resolved['source'], 'quiz_aigrader'));
+                $source = core_text::strtoupper(core_text::substr($source, 0, 1)) . core_text::substr($source, 1);
+            }
+
+            // What the breakdown would use, or what is proposed for confirmation.
+            $listed = [];
+            if ($confirming) {
+                $listed = $isconfirmed
+                    ? $state['criteria']
+                    : array_map(function ($c) {
+                        return ['label' => $c['label'], 'max' => $c['max']];
+                    }, \quiz_aigrader\local\confirmed::proposal($resolved, null));
+            } else if (!$none && !$uncertain) {
+                $listed = $resolved['criteria'];
+            }
+
+            if ($confirming) {
+                if ($isconfirmed) {
+                    $count = html_writer::span(
+                        get_string('criteriacheck_confirmed', 'quiz_aigrader', count($state['criteria'])),
+                        'aigrader-critcheck-pill'
+                    );
+                } else {
+                    $count = html_writer::span(
+                        get_string($isstale ? 'criteriacheck_reconfirm' : 'criteriacheck_toconfirm', 'quiz_aigrader'),
+                        'aigrader-critcheck-pill aigrader-critcheck-pill-attention'
+                    );
+                }
+            } else if ($none) {
+                $count = html_writer::span(
+                    get_string('criteriacheck_none', 'quiz_aigrader'),
+                    'aigrader-critcheck-pill aigrader-critcheck-pill-attention'
+                );
+            } else if ($uncertain) {
+                $count = html_writer::span(
+                    get_string('criteriacheck_uncertain', 'quiz_aigrader'),
+                    'aigrader-critcheck-pill aigrader-critcheck-pill-attention'
+                );
+            } else {
+                $count = html_writer::span(
+                    (string)count($resolved['criteria']),
+                    'aigrader-critcheck-pill' . ($flagged ? ' aigrader-critcheck-pill-attention' : '')
+                );
+            }
+
+            $noteshtml = '';
+            if ($listed) {
+                $labels = array_map(function ($c) {
+                    $weight = isset($c['max']) && $c['max'] !== null
+                        ? ' <span class="aigrader-critcheck-weight">'
+                            . s(\quiz_aigrader\local\criteria::fmt((float)$c['max'])) . '</span>'
+                        : '';
+                    return s($c['label']) . $weight;
+                }, $listed);
+                $lead = $confirming && !$isconfirmed
+                    ? '<span class="aigrader-critcheck-lead">' . get_string('criteriacheck_proposed', 'quiz_aigrader')
+                        . '</span> '
+                    : '';
+                $noteshtml .= '<span class="aigrader-critcheck-labels">' . $lead . implode(' &middot; ', $labels) . '</span>';
+            }
+            if ($isconfirmed && $state['record']) {
+                $confirmer = core_user::get_user((int)$state['record']->confirmedby);
+                $confirmedby = get_string(
+                    ($state['record']->method ?? '') === 'bulk' ? 'criteriacheck_bulkby' : 'criteriacheck_confirmedby',
+                    'quiz_aigrader',
+                    (object)[
+                    'name' => $confirmer ? fullname($confirmer) : get_string('unknownuser'),
+                    'date' => userdate((int)$state['record']->timeconfirmed, get_string('strftimedatefullshort', 'langconfig')),
+                    ]
+                );
+                $noteshtml .= '<span class="aigrader-critcheck-by">' . s($confirmedby) . '</span>';
+            }
+            if ($notes) {
+                $noteshtml .= '<ul class="aigrader-critcheck-notes">';
+                foreach ($notes as $note) {
+                    $noteshtml .= '<li>' . s($note) . '</li>';
+                }
+                $noteshtml .= '</ul>';
+            }
+
+            $attrs = ['class' => 'aigrader-critcheck-row' . ($flagged ? ' aigrader-critcheck-flagged' : '')];
+            if ($canconfirm) {
+                $readexact = !$isconfirmed && $resolved['confidence'] === \quiz_aigrader\local\criteria::CERTAIN;
+                if ($readexact) {
+                    $exact++;
+                }
+                $editorrows = \quiz_aigrader\local\confirmed::proposal($resolved, $isconfirmed ? $state['record'] : null);
+                $attrs += [
+                    'data-questionid' => (int)$q['questionid'],
+                    'data-slot' => (int)$q['slot'],
+                    'data-maxmark' => \quiz_aigrader\local\criteria::fmt($q['maxmark']),
+                    'data-state' => $state['state'],
+                    'data-since' => $state['record'] ? (int)$state['record']->timeconfirmed : 0,
+                    'data-exact' => $readexact ? '1' : '0',
+                    'data-proposal' => json_encode($editorrows, JSON_UNESCAPED_UNICODE),
+                ];
+                $noteshtml .= '<div class="aigrader-critcheck-actions">'
+                    . html_writer::tag(
+                        'button',
+                        get_string($isconfirmed ? 'criteriacheck_editconfirmed' : 'criteriacheck_confirm', 'quiz_aigrader'),
+                        ['type' => 'button', 'class' => 'aigrader-critcheck-review'
+                            . ($isconfirmed ? '' : ' aigrader-critcheck-review-primary')]
+                    )
+                    . '</div>';
+            }
+
+            $rowshtml .= html_writer::start_tag('tr', $attrs)
+                . '<td>' . $label . '</td>'
+                . '<td class="aigrader-critcheck-statecell">' . $count . '</td>'
+                . '<td>' . $source . '</td>'
+                . '<td class="aigrader-critcheck-notescell">' . $noteshtml . '</td>'
+                . '</tr>';
+        }
+
+        if ($rowshtml === '') {
+            return;
+        }
+
+        $total = $shown;
+        if ($confirming) {
+            $summary = $issues
+                ? get_string('criteriacheck_issues_confirm', 'quiz_aigrader', (object)['issues' => $issues, 'total' => $total])
+                : get_string('criteriacheck_ok_confirm', 'quiz_aigrader', $total);
+        } else {
+            $summary = $issues
+                ? get_string('criteriacheck_issues', 'quiz_aigrader', (object)['issues' => $issues, 'total' => $total])
+                : get_string('criteriacheck_ok', 'quiz_aigrader', $total);
+        }
+
+        // The editor's wording, read by the criteria_editor module from the panel itself.
+        $stringsattr = '';
+        if ($canconfirm) {
+            $editorstrings = [];
+            foreach (
+                [
+                'critedit_add', 'critedit_cancel', 'critedit_criterion', 'critedit_error_duplicate',
+                'critedit_error_label', 'critedit_error_mark', 'critedit_error_total', 'critedit_failed',
+                'critedit_hint', 'critedit_intro', 'critedit_marks', 'critedit_remove', 'critedit_reset', 'critedit_scale',
+                'critedit_save', 'critedit_saving', 'critedit_total', 'critedit_notconfirmed', 'criteriacheck_confirm',
+                'criteriacheck_confirmed', 'criteriacheck_editconfirmed', 'criteriacheck_toconfirm',
+                'criteriacheck_ok_confirm', 'criteriacheck_issues_confirm', 'criteriacheck_proposed',
+                ] as $id
+            ) {
+                $editorstrings[$id] = get_string($id, 'quiz_aigrader');
+            }
+            $stringsattr = ' data-strings="' . s(json_encode($editorstrings, JSON_UNESCAPED_UNICODE)) . '"';
+        }
+        echo '<details class="aigrader-critcheck' . ($issues ? ' aigrader-critcheck-has-issues' : '') . '"'
+            . ' id="aigrader-critcheck"' . $stringsattr . ($issues ? ' open' : '') . '>';
+        echo '<summary class="aigrader-critcheck-summary">'
+            . '<span class="aigrader-critcheck-title">' . get_string('criteriacheck_heading', 'quiz_aigrader') . '</span>'
+            . '<span class="aigrader-critcheck-status">' . s($summary) . '</span>'
+            . '</summary>';
+        echo '<div class="aigrader-critcheck-body">';
+        if ($confirming) {
+            echo '<p class="aigrader-critcheck-intro">' . get_string('criteriacheck_intro_confirm', 'quiz_aigrader') . '</p>';
+        }
+        if ($canconfirm && $exact > 0) {
+            echo '<div class="aigrader-critcheck-bulk">'
+                . html_writer::tag(
+                    'button',
+                    get_string('criteriacheck_confirmall', 'quiz_aigrader', $exact),
+                    ['type' => 'button', 'class' => 'aigrader-critcheck-confirmall']
+                )
+                . '<span class="aigrader-critcheck-bulkhint">' . get_string('criteriacheck_confirmall_hint', 'quiz_aigrader')
+                . '</span></div>';
+        }
+        echo '<table class="aigrader-critcheck-table">';
+        echo '<thead><tr>'
+            . '<th scope="col">' . get_string('criteriacheck_question', 'quiz_aigrader') . '</th>'
+            . '<th scope="col">' . get_string('criteriacheck_criteria', 'quiz_aigrader') . '</th>'
+            . '<th scope="col">' . get_string('criteriacheck_source', 'quiz_aigrader') . '</th>'
+            . '<th scope="col">' . get_string('criteriacheck_notes', 'quiz_aigrader') . '</th>'
+            . '</tr></thead><tbody>' . $rowshtml . '</tbody></table></div>';
+        echo '</details>';
     }
 
     /**

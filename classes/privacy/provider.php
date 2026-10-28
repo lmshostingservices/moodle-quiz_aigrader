@@ -68,6 +68,7 @@ class provider implements
                 'attemptnum' => 'privacy:metadata:quiz_aigrader_attempt_ctx:attemptnum',
                 'criteriamet' => 'privacy:metadata:quiz_aigrader_attempt_ctx:criteriamet',
                 'feedbacksummary' => 'privacy:metadata:quiz_aigrader_attempt_ctx:feedbacksummary',
+                'aicriteria' => 'privacy:metadata:quiz_aigrader_attempt_ctx:aicriteria',
                 'lastgrade' => 'privacy:metadata:quiz_aigrader_attempt_ctx:lastgrade',
                 'humanreview' => 'privacy:metadata:quiz_aigrader_attempt_ctx:humanreview',
                 'autolocked' => 'privacy:metadata:quiz_aigrader_attempt_ctx:autolocked',
@@ -109,6 +110,16 @@ class provider implements
                 'timecreated' => 'privacy:metadata:quiz_aigrader_decisions:timecreated',
             ],
             'privacy:metadata:quiz_aigrader_decisions'
+        );
+
+        $collection->add_database_table(
+            'quiz_aigrader_criteria',
+            [
+                'confirmedby' => 'privacy:metadata:quiz_aigrader_criteria:confirmedby',
+                'criteria' => 'privacy:metadata:quiz_aigrader_criteria:criteria',
+                'timeconfirmed' => 'privacy:metadata:quiz_aigrader_criteria:timeconfirmed',
+            ],
+            'privacy:metadata:quiz_aigrader_criteria'
         );
 
         $collection->add_database_table(
@@ -204,6 +215,19 @@ class provider implements
             'graderid' => $userid,
         ]);
 
+        $sql = "SELECT ctx.id
+                  FROM {quiz_aigrader_criteria} cr
+                  JOIN {quiz} q ON q.id = cr.quizid
+                  JOIN {course_modules} cm ON cm.instance = q.id
+                  JOIN {modules} m ON m.id = cm.module AND m.name = :modname
+                  JOIN {context} ctx ON ctx.instanceid = cm.id AND ctx.contextlevel = :contextlevel
+                 WHERE cr.confirmedby = :confirmedby AND cr.confirmedby > 0";
+        $contextlist->add_from_sql($sql, [
+            'modname' => 'quiz',
+            'contextlevel' => CONTEXT_MODULE,
+            'confirmedby' => $userid,
+        ]);
+
         if (self::has_schedules($userid)) {
             $contextlist->add_system_context();
         }
@@ -238,6 +262,14 @@ class provider implements
                       JOIN {modules} m ON m.id = cm.module AND m.name = :modname
                      WHERE cm.id = :cmid";
             $userlist->add_from_sql('graderid', $sql, $params);
+
+            $sql = "SELECT cr.confirmedby
+                      FROM {quiz_aigrader_criteria} cr
+                      JOIN {quiz} q ON q.id = cr.quizid
+                      JOIN {course_modules} cm ON cm.instance = q.id
+                      JOIN {modules} m ON m.id = cm.module AND m.name = :modname
+                     WHERE cm.id = :cmid AND cr.confirmedby > 0";
+            $userlist->add_from_sql('confirmedby', $sql, $params);
         } else if ($context instanceof context_system) {
             $sql = "SELECT s.userid FROM {quiz_aigrader_schedules} s";
             $userlist->add_from_sql('userid', $sql, []);
@@ -275,6 +307,7 @@ class provider implements
                             'attemptnum' => $record->attemptnum,
                             'criteriamet' => $record->criteriamet,
                             'feedbacksummary' => $record->feedbacksummary,
+                            'aicriteria' => $record->aicriteria ?? null,
                             'lastgrade' => $record->lastgrade,
                             'humanreview' => transform::yesno($record->humanreview),
                             'autolocked' => transform::yesno($record->autolocked),
@@ -304,6 +337,25 @@ class provider implements
                     writer::with_context($context)->export_data(
                         [get_string('privacy:path:gradinglogs', 'quiz_aigrader')],
                         (object) ['gradinglogs' => $data]
+                    );
+                }
+
+                $confirmations = $DB->get_records(
+                    'quiz_aigrader_criteria',
+                    ['quizid' => $cm->instance, 'confirmedby' => $userid]
+                );
+                if ($confirmations) {
+                    $data = [];
+                    foreach ($confirmations as $confirmation) {
+                        $data[] = (object) [
+                            'questionid' => $confirmation->questionid,
+                            'criteria' => $confirmation->criteria,
+                            'timeconfirmed' => transform::datetime($confirmation->timeconfirmed),
+                        ];
+                    }
+                    writer::with_context($context)->export_data(
+                        [get_string('privacy:path:criteria', 'quiz_aigrader')],
+                        (object) ['criteria' => $data]
                     );
                 }
             } else if ($context instanceof context_system) {
@@ -348,6 +400,8 @@ class provider implements
             $DB->delete_records('quiz_aigrader_attempt_ctx', ['quizid' => $cm->instance]);
             $DB->delete_records('quiz_aigrader_grading_logs', ['quizid' => $cm->instance]);
             $DB->delete_records('quiz_aigrader_decisions', ['quizid' => $cm->instance]);
+            // Confirmed criteria are the quiz's marking setup and stay; who confirmed them goes.
+            $DB->set_field('quiz_aigrader_criteria', 'confirmedby', 0, ['quizid' => $cm->instance]);
         } else if ($context instanceof context_system) {
             $DB->delete_records('quiz_aigrader_schedules');
         }
@@ -387,6 +441,12 @@ class provider implements
                 $DB->delete_records(
                     'quiz_aigrader_decisions',
                     ['quizid' => $cm->instance, 'graderid' => $userid]
+                );
+                $DB->set_field(
+                    'quiz_aigrader_criteria',
+                    'confirmedby',
+                    0,
+                    ['quizid' => $cm->instance, 'confirmedby' => $userid]
                 );
             } else if ($context instanceof context_system) {
                 $DB->delete_records('quiz_aigrader_schedules', ['userid' => $userid]);
@@ -436,6 +496,13 @@ class provider implements
             $DB->delete_records_select(
                 'quiz_aigrader_decisions',
                 "quizid = :quizid AND graderid {$insql}",
+                $params
+            );
+            $DB->set_field_select(
+                'quiz_aigrader_criteria',
+                'confirmedby',
+                0,
+                "quizid = :quizid AND confirmedby {$insql}",
                 $params
             );
         } else if ($context instanceof context_system) {

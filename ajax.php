@@ -410,6 +410,11 @@ try {
                 if (isset($questionobj->generalfeedback) && !empty($questionobj->generalfeedback)) {
                     $generalfeedback = \quiz_aigrader\local\formatter::html_to_text($questionobj->generalfeedback);
                 }
+                // The three fields as stored, for finding the criteria. Read from the raw HTML
+                // so a marking guide written as a table keeps its rows.
+                $rawgraderinfo = isset($questionobj->graderinfo) ? (string)$questionobj->graderinfo : '';
+                $rawquestiontext = (string)$questionobj->questiontext;
+                $rawgeneralfeedback = isset($questionobj->generalfeedback) ? (string)$questionobj->generalfeedback : '';
 
                 // Clean answer text: preserve line breaks so the AI can analyse structure.
                 $rawanswer = (string)$qa->get_response_summary();
@@ -522,9 +527,87 @@ try {
                 }
             }
 
-            // The assessor's own criteria, parsed from the question's grader information.
-            // These are what the card and the learner's feedback are built from.
-            $rubriccriteria = \quiz_aigrader\local\criteria::from_graderinfo($graderinfo);
+            // The criteria this response is marked against, from wherever the question's
+            // author put them: Information for graders, then the question text, then General
+            // feedback. Until 5.0.4 only the first was read, so a question with its criteria
+            // in the question text was marked with no criteria at all. See criteria::resolve().
+            $resolved = \quiz_aigrader\local\criteria::for_fields(
+                $rawgraderinfo,
+                $rawquestiontext,
+                $rawgeneralfeedback,
+                (float)$maxmark,
+                isset($questionobj->defaultmark) ? (float)$questionobj->defaultmark : 0.0
+            );
+            // What was read is a proposal. Unless the site has switched confirmation off, the
+            // breakdown uses only criteria an assessor confirmed for this question in the
+            // Criteria check panel; see confirmed::apply().
+            $confirmstate = \quiz_aigrader\local\confirmed::state(
+                (int)$quiz->id,
+                (int)$questionid,
+                \quiz_aigrader\local\confirmed::fields_hash(
+                    $rawgraderinfo,
+                    $rawquestiontext,
+                    $rawgeneralfeedback,
+                    isset($questionobj->defaultmark) ? (float)$questionobj->defaultmark : 0.0
+                ),
+                (float)$maxmark
+            );
+            $resolved = \quiz_aigrader\local\confirmed::apply($resolved, $confirmstate);
+            $unconfirmed = in_array(
+                $resolved['confirmation'],
+                [\quiz_aigrader\local\confirmed::STATE_REQUIRED, \quiz_aigrader\local\confirmed::STATE_STALE],
+                true
+            );
+            //
+            // Three outcomes. A rubric read with certainty is used as written ('rubric'). Marking
+            // guidance that cannot be read with certainty goes to the service to be condensed
+            // into criteria, which are then checked against the guidance ('extract'). With no
+            // guidance at all, the site's policy decides: derive criteria from the question
+            // ('infer'), one overall mark ('holistic'), or mark by hand.
+            $rubriccriteria = $resolved['criteria'];
+            $criterialimits = \quiz_aigrader\local\criteria::limits();
+            $criteriapolicy = \quiz_aigrader\local\criteria::policy();
+            if ($resolved['confidence'] === \quiz_aigrader\local\criteria::CERTAIN && !$unconfirmed) {
+                $criteriamode = 'rubric';
+            } else if ($unconfirmed) {
+                // Criteria nobody has confirmed never drive the breakdown: one overall mark.
+                $criteriamode = 'holistic';
+            } else if ($resolved['confidence'] === \quiz_aigrader\local\criteria::UNCERTAIN) {
+                $criteriamode = 'extract';
+            } else if ($criteriapolicy === \quiz_aigrader\local\criteria::POLICY_INFER) {
+                $criteriamode = 'infer';
+            } else {
+                $criteriamode = 'holistic';
+            }
+
+            // A site that marks only against written criteria: no suggestion, and no charge,
+            // for a question with no marking guidance. The assessor marks it by hand.
+            if ($unconfirmed && $criteriapolicy === \quiz_aigrader\local\criteria::POLICY_MANUAL) {
+                // A site that marks only against criteria: these are not confirmed yet.
+                echo json_encode([
+                    'ok' => false,
+                    'message' => get_string(
+                        $resolved['confirmation'] === \quiz_aigrader\local\confirmed::STATE_STALE
+                            ? 'error_criteriastale' : 'error_criteriaunconfirmed',
+                        'quiz_aigrader'
+                    ),
+                    'error_code' => 'NO_CRITERIA',
+                    'nocriteria' => true,
+                ]);
+                exit;
+            }
+            if (
+                $resolved['confidence'] === \quiz_aigrader\local\criteria::NONE
+                && $criteriapolicy === \quiz_aigrader\local\criteria::POLICY_MANUAL
+            ) {
+                echo json_encode([
+                    'ok' => false,
+                    'message' => get_string('error_nocriteria', 'quiz_aigrader'),
+                    'error_code' => 'NO_CRITERIA',
+                    'nocriteria' => true,
+                ]);
+                exit;
+            }
 
             // Language: prefer the explicit parameter, fall back to the user's Moodle language.
             $language = optional_param('language', '', PARAM_ALPHANUMEXT);
@@ -566,6 +649,20 @@ try {
                 // into a single sentence before it was sent, so there was nothing for the
                 // service to score against line by line.
                 'rubricCriteria' => $rubriccriteria,
+                // Where those criteria came from, what they add up to, and how to mark:
+                // 'rubric' (mark against rubricCriteria), 'extract' (restate the assessor's
+                // guidance in criteriaSource as criteria first, see criteriaInstruction; the
+                // plugin's own reading is in criteriaCandidates, as a hint only), 'infer'
+                // (derive criteria from the question first) or 'holistic' (one overall mark).
+                'criteriaSource' => $resolved['source'],
+                // Nothing nobody confirmed is sent as criteria: an unconfirmed question is
+                // marked overall against its guidance, not against the plugin's proposal.
+                'criteriaCandidates' => $unconfirmed ? [] : array_map(function ($c) {
+                    return ['label' => $c['label'], 'detail' => $c['detail'], 'max' => $c['max']];
+                }, $resolved['candidates']),
+                'rubricTotal' => $resolved['total'],
+                'criteriaMode' => $criteriamode,
+                'criteriaLimits' => $criterialimits,
                 // What we want back per criterion. The service does not have to honour
                 // this yet - the plugin renders the assessor's criteria either way and
                 // the assessor scores them - but when it does, the numbers and the
@@ -587,6 +684,19 @@ try {
                     'previousFeedbackSummary' => $previousfeedbacksummary,
                 ],
             ];
+
+            if ($criteriamode === 'infer') {
+                $payload['criteriaInstruction'] = \quiz_aigrader\local\criteria::inference_instruction(
+                    $criterialimits,
+                    (float)$maxmark
+                );
+            } else if ($criteriamode === 'extract') {
+                $payload['criteriaInstruction'] = \quiz_aigrader\local\criteria::extraction_instruction(
+                    $criterialimits,
+                    (float)$maxmark,
+                    $resolved['source']
+                );
+            }
 
             $res = quiz_aigrader_fetch($apibase . '/api/grade-essay', $apikey, true, $payload);
 
@@ -704,13 +814,7 @@ try {
             // Never let the AI invent criteria IDs. Validate against the known criteria so
             // hallucinated IDs cannot break persistence. These are the standard RTO
             // competency assessment criteria.
-            $validcriteria = [
-                'explain_process', 'example_provided', 'site_specific',
-                'hazard_identified', 'control_measure', 'procedure_followed',
-                'legislation_referenced', 'workplace_context', 'practical_application',
-                'communication_clear', 'documentation_complete', 'safety_awareness',
-                'risk_assessment', 'compliance_demonstrated', 'knowledge_applied',
-            ];
+            $validcriteria = \quiz_aigrader\local\criteria::VENDOR_IDS;
 
             // If the API returns allowedCriteria for this question, use it as the filter so
             // validation is tighter per question.
@@ -795,6 +899,10 @@ try {
                 $newhumanreview = true;
             }
 
+            // Criteria met across this and earlier attempts. Set here so the response below has
+            // it even when there is no learner record to merge with.
+            $mergedcriteria = array_values(array_unique(array_merge($previouscriteriamet, $newcriteriamet)));
+
             // Store the attempt context for the next grading run. Wrapped in try/catch: if the
             // attempt_ctx table is missing (pre-upgrade or failed install) grading still
             // succeeds, because attempt context is non-critical metadata.
@@ -878,6 +986,133 @@ try {
                 }
             }
 
+            // The criteria the assessor scores and the learner sees.
+            //
+            // A certain rubric: the question's own criteria, with the service's scores attached
+            // and scaled to the assessor's weights. Condensed or derived criteria: the service's
+            // set, accepted only if it is well formed, within the recommended range, and - for
+            // condensed guidance - found in the assessor's own text. In every other case no
+            // breakdown at all: one overall mark. Until 5.0.4 a question without criteria fell
+            // back to a fixed list of fifteen vendor identifiers, most shown at zero.
+            $servicecriteria = isset($data['criteria']) && is_array($data['criteria']) ? $data['criteria'] : [];
+            $criteriawarnings = $resolved['warnings'];
+            $criteriasource = $resolved['source'];
+            $displaycriteria = null;
+            if ($criteriamode === 'rubric') {
+                $displaycriteria = \quiz_aigrader\local\criteria::merge_scores(
+                    $rubriccriteria,
+                    $servicecriteria,
+                    $newcriteriamet
+                );
+            } else if ($criteriamode === 'extract' || $criteriamode === 'infer') {
+                $reference = $criteriamode === 'extract'
+                    ? $resolved['guidancetext']
+                    : \quiz_aigrader\local\formatter::rubric_text($rawquestiontext);
+                $accepted = \quiz_aigrader\local\criteria::from_service(
+                    $servicecriteria,
+                    $criterialimits,
+                    (float)$maxmark,
+                    $criteriamode,
+                    $reference,
+                    $criteriamode === 'extract' ? $resolved['candidates'] : []
+                );
+                if (!empty($accepted)) {
+                    $displaycriteria = $accepted;
+                    $criteriasource = $criteriamode === 'extract'
+                        ? \quiz_aigrader\local\criteria::SOURCE_EXTRACTED
+                        : \quiz_aigrader\local\criteria::SOURCE_INFERRED;
+                } else {
+                    $criteriawarnings[] = [
+                        'code' => $criteriamode === 'extract' ? 'extract_unavailable' : 'inferred_unavailable',
+                        'a' => null,
+                    ];
+                    $criteriasource = \quiz_aigrader\local\criteria::SOURCE_NONE;
+                }
+            } else {
+                $criteriasource = \quiz_aigrader\local\criteria::SOURCE_NONE;
+            }
+
+            // The breakdown must agree with the mark it sits beside. The card opens on the service's
+            // overall mark; a breakdown implying a different one is either the service's own
+            // inconsistency (condensed or derived criteria: refused, one overall mark) or worth
+            // the assessor's attention (the question's own criteria: shown, with a warning).
+            if (!empty($displaycriteria) && (float)$maxmark > 0) {
+                $sumawarded = 0.0;
+                $summax = 0.0;
+                foreach ($displaycriteria as $c) {
+                    $sumawarded += (float)$c['awarded'];
+                    $summax += (float)$c['max'];
+                }
+                $implied = $summax > 0 ? round($sumawarded / $summax * (float)$maxmark, 2) : 0.0;
+                // More than ten percentage points apart.
+                if (abs($implied - (float)$scaled) / (float)$maxmark > 0.10 + 0.0001) {
+                    if ($criteriamode === 'rubric') {
+                        $criteriawarnings[] = ['code' => 'breakdown_mismatch', 'a' => (object)[
+                            'breakdown' => \quiz_aigrader\local\criteria::fmt($implied),
+                            'suggested' => \quiz_aigrader\local\criteria::fmt((float)$scaled),
+                            'maxmark' => \quiz_aigrader\local\criteria::fmt((float)$maxmark),
+                        ]];
+                    } else {
+                        $displaycriteria = null;
+                        $criteriasource = \quiz_aigrader\local\criteria::SOURCE_NONE;
+                        $criteriawarnings[] = [
+                            'code' => $criteriamode === 'extract' ? 'extract_unavailable' : 'inferred_unavailable',
+                            'a' => null,
+                        ];
+                    }
+                }
+            }
+
+            // What this suggestion was measured against, kept server-side and tied to this exact
+            // response, so the decision record shows the criteria the assessor was shown - even
+            // if the question is edited before it is approved. Never taken from the browser.
+            $shown = !empty($displaycriteria) ? $displaycriteria : [];
+            if ($studentid > 0) {
+                try {
+                    $DB->set_field(
+                        'quiz_aigrader_attempt_ctx',
+                        'aicriteria',
+                        json_encode([
+                            'qubaid' => (int)$qubaid,
+                            'slot' => (int)$slot,
+                            'attempt' => (int)$attemptnum,
+                            'mode' => $criteriamode,
+                            'source' => $criteriasource,
+                            'fingerprint' => !empty($shown)
+                                ? \quiz_aigrader\local\criteria::fingerprint(['source' => $criteriasource, 'criteria' => $shown])
+                                : null,
+                            'criteria' => array_map(function ($c) {
+                                return ['label' => $c['label'], 'max' => $c['max']];
+                            }, $shown),
+                        ], JSON_UNESCAPED_UNICODE),
+                        ['quizid' => $quiz->id, 'userid' => $studentid, 'questionid' => $questionid, 'slot' => $slot]
+                    );
+                } catch (Exception $e) {
+                    debugging('AI Grader: suggestion criteria not stored: ' . $e->getMessage(), DEBUG_DEVELOPER);
+                }
+            }
+
+            // The line on the card that says what the mark is measured against.
+            if ($resolved['confirmation'] === \quiz_aigrader\local\confirmed::STATE_CONFIRMED && !empty($displaycriteria)) {
+                $confirmer = core_user::get_user($resolved['confirmedby']);
+                $criteriacontext = get_string('criteria_from_confirmed', 'quiz_aigrader', (object)[
+                    'name' => $confirmer ? fullname($confirmer) : get_string('unknownuser'),
+                    'date' => userdate($resolved['timeconfirmed'], get_string('strftimedatefullshort', 'langconfig')),
+                ]);
+            } else if ($unconfirmed) {
+                $criteriacontext = get_string(
+                    $resolved['confirmation'] === \quiz_aigrader\local\confirmed::STATE_STALE
+                        ? 'criteria_stale_holistic' : 'criteria_unconfirmed_holistic',
+                    'quiz_aigrader'
+                );
+            } else {
+                $criteriacontext = \quiz_aigrader\local\criteria::context_line(
+                    $criteriasource,
+                    $resolved['source'],
+                    $resolved['confidence'] === \quiz_aigrader\local\criteria::UNCERTAIN
+                );
+            }
+
             // Build the response with the additional context flags.
             $response = [
                 'ok' => true,
@@ -901,24 +1136,31 @@ try {
                 'aimark' => $scaled,
                 'criteriamet' => array_values($mergedcriteria),
                 'criteriatotal' => $apireportedtotal,
-                // Every criterion in force for this question, so the learner's breakdown can
-                // show what is still outstanding and not only what has been met.
-                'criteriaall' => array_values($questioncriteria),
+                // Every criterion in force for this question. The question's own criteria only:
+                // the vendor identifiers above validate what the service reports and are never
+                // shown to anyone.
+                'criteriaall' => !empty($rubriccriteria) ? array_column($rubriccriteria, 'key') : [],
                 // The assessor's own criteria. The card lists these whether or not the
                 // grading service scored them, so what a learner is marked against is always
                 // the rubric their assessor wrote.
                 'rubriccriteria' => !empty($rubriccriteria) ? $rubriccriteria : null,
                 // Per-criterion scores, when the grading service provides them, merged onto
                 // the assessor's labels so the two can never disagree about what was marked.
-                'criteria' => \quiz_aigrader\local\criteria::merge_scores(
-                    $rubriccriteria,
-                    isset($data['criteria']) && is_array($data['criteria']) ? $data['criteria'] : [],
-                    $newcriteriamet
-                ),
+                'criteria' => $displaycriteria,
+                // Where the criteria came from, shown on the card so the assessor knows what
+                // the mark is measured against, and anything the assessor should check.
+                'criteriasource' => $criteriasource,
+                'criteriamode' => $criteriamode,
+                'criteriarubrictotal' => $resolved['total'],
+                // Unconfirmed, the card says so in its context line; how the guidance was read is
+                // for the Marking criteria check, not the card.
+                'criteriawarnings' => $unconfirmed ? [] : \quiz_aigrader\local\criteria::warning_messages($criteriawarnings),
+                'criteriacontext' => $criteriacontext,
+                // Whether this question's criteria are confirmed, so the card can say so.
+                'criteriaconfirmation' => $resolved['confirmation'],
                 'suggestedtime' => time(),
                 'modelversion' => isset($data['modelVersion']) ? (string)$data['modelVersion'] : null,
                 'requestid' => isset($data['requestId']) ? (string)$data['requestId'] : null,
-                'graderinfohash' => sha1($graderinfo),
                 // Shown as a pill beside the feedback, so an assessor who does not read
                 // the language can see at a glance which one they are approving.
                 'languagelabel' => \quiz_aigrader\local\formatter::language_label($language),
@@ -1018,6 +1260,37 @@ try {
             $qa = $usage->get_question_attempt($slot);
 
             $maxmark = round((float)$qa->get_max_mark(), 2);
+
+            // The criteria in force at the moment of the decision, for the record. Resolved
+            // again here rather than taken from the browser, which is not evidence.
+            $decisioncriteria = null;
+            try {
+                $qobj = $qa->get_question();
+                $decisioncriteria = \quiz_aigrader\local\criteria::for_fields(
+                    isset($qobj->graderinfo) ? (string)$qobj->graderinfo : '',
+                    (string)$qobj->questiontext,
+                    isset($qobj->generalfeedback) ? (string)$qobj->generalfeedback : '',
+                    (float)$maxmark,
+                    isset($qobj->defaultmark) ? (float)$qobj->defaultmark : 0.0
+                );
+                $decisioncriteria = \quiz_aigrader\local\confirmed::apply(
+                    $decisioncriteria,
+                    \quiz_aigrader\local\confirmed::state(
+                        (int)$cm->instance,
+                        (int)$qobj->id,
+                        \quiz_aigrader\local\confirmed::fields_hash(
+                            isset($qobj->graderinfo) ? (string)$qobj->graderinfo : '',
+                            (string)$qobj->questiontext,
+                            isset($qobj->generalfeedback) ? (string)$qobj->generalfeedback : '',
+                            isset($qobj->defaultmark) ? (float)$qobj->defaultmark : 0.0
+                        ),
+                        (float)$maxmark
+                    )
+                );
+            } catch (Throwable $criteriaerror) {
+                debugging('AI Grader: criteria could not be resolved for the record: '
+                    . $criteriaerror->getMessage(), DEBUG_DEVELOPER);
+            }
 
             if ($marksupplied !== '') {
                 if (!is_numeric($marksupplied)) {
@@ -1336,14 +1609,63 @@ try {
                     // Validated as JSON before storing so a malformed post cannot put
                     // unparseable text into the record.
                     $decision->criteriamet = $approvectx ? $approvectx->aicriteriamet : null;
-                    if ($criteriajson !== '') {
-                        $decoded = json_decode($criteriajson, true);
-                        if (is_array($decoded)) {
-                            $decision->criteriamet = json_encode($decoded);
-                        }
-                    }
+                    $posted = $criteriajson !== '' ? json_decode($criteriajson, true) : null;
                     $decision->policymode = $policymode !== '' ? $policymode : null;
+                    // Where the criteria came from and a fingerprint of them, so an auditor can
+                    // see what this mark was measured against.
+                    $decision->criteriasource = null;
                     $decision->graderinfohash = null;
+                    // The suggestion's own record first: what the assessor was shown for this exact
+                    // response. Without one (marked by hand, or recorded before 5.0.4), the
+                    // question's criteria as they stand, when certain; otherwise one overall mark.
+                    $stored = $approvectx && !empty($approvectx->aicriteria) ? json_decode($approvectx->aicriteria, true) : null;
+                    if (
+                        is_array($stored)
+                        && (int)($stored['qubaid'] ?? 0) === (int)$qubaid
+                        && (int)($stored['slot'] ?? 0) === (int)$slot
+                        && (int)($stored['attempt'] ?? 0) === (int)$attempt->attempt
+                    ) {
+                        $decision->criteriasource = clean_param((string)($stored['source'] ?? ''), PARAM_ALPHA) ?: null;
+                        $decision->graderinfohash = !empty($stored['fingerprint'])
+                            ? clean_param((string)$stored['fingerprint'], PARAM_ALPHANUM)
+                            : null;
+                        // The assessor's per-criterion scores, recorded only when they are scores
+                        // on exactly the criteria this suggestion was measured against: same
+                        // criteria, same order, same weights, each score within its weight. The
+                        // browser is not evidence of what the criteria were.
+                        $shown = is_array($stored['criteria'] ?? null) ? $stored['criteria'] : [];
+                        if (is_array($posted) && $posted && count($posted) === count($shown)) {
+                            $scores = [];
+                            foreach (array_values($posted) as $i => $item) {
+                                $want = $shown[$i];
+                                $awarded = is_array($item) && isset($item['awarded']) && is_numeric($item['awarded'])
+                                    ? (float)$item['awarded'] : null;
+                                if (
+                                    !is_array($item) || $awarded === null
+                                    || (string)($item['label'] ?? '') !== (string)($want['label'] ?? '')
+                                    || abs((float)($item['max'] ?? -1) - (float)($want['max'] ?? 0)) > 0.005
+                                    || $awarded < -0.005 || $awarded > (float)$want['max'] + 0.005
+                                ) {
+                                    $scores = null;
+                                    break;
+                                }
+                                $scores[] = $item;
+                            }
+                            if ($scores !== null) {
+                                $decision->criteriamet = json_encode($scores, JSON_UNESCAPED_UNICODE);
+                            } else {
+                                debugging('AI Grader: posted criteria do not match the suggestion; not recorded.', DEBUG_DEVELOPER);
+                            }
+                        }
+                    } else if ($decisioncriteria !== null) {
+                        $certain = $decisioncriteria['confidence'] === \quiz_aigrader\local\criteria::CERTAIN;
+                        $decision->criteriasource = $certain
+                            ? $decisioncriteria['source']
+                            : \quiz_aigrader\local\criteria::SOURCE_NONE;
+                        $decision->graderinfohash = $certain
+                            ? \quiz_aigrader\local\criteria::fingerprint($decisioncriteria)
+                            : null;
+                    }
                     $decision->instructionshash = null;
                     $decision->modelversion = null;
                     $decision->requestid = null;
@@ -1353,6 +1675,15 @@ try {
                     $decision->acknowledgement = trim($acknowledgement) !== '' ? trim($acknowledgement) : null;
                     $decision->timecreated = time();
                     $DB->insert_record('quiz_aigrader_decisions', $decision);
+
+                    // The stored criteria belonged to the suggestion just decided. Cleared, so a
+                    // later decision on this response can never be recorded against them.
+                    // The context record is written back in full below, so it is cleared on the
+                    // object as well as in the table.
+                    if ($approvectx && !empty($approvectx->aicriteria)) {
+                        $DB->set_field('quiz_aigrader_attempt_ctx', 'aicriteria', null, ['id' => $approvectx->id]);
+                        $approvectx->aicriteria = null;
+                    }
                 } catch (Exception $decisionerror) {
                     // The mark is already committed, so a failure to write the record must not
                     // abort the response. It is logged loudly because the record is the point.
@@ -1518,6 +1849,120 @@ try {
     }
 
     // Action: list documents.
+    if ($action === 'confirmcriteria' || $action === 'resetcriteria') {
+        // Confirming a question's criteria sets what every response to it is marked against, in
+        // every group: setting the marking scheme, not marking. It has its own capability.
+        if (!has_capability('quiz/aigrader:confirmcriteria', $context)) {
+            echo json_encode([
+                'ok' => false,
+                'message' => get_string('confirm_error_capability', 'quiz_aigrader'),
+                'error_code' => 'no_confirm_capability',
+            ]);
+            exit;
+        }
+
+        $questionid = required_param('questionid', PARAM_INT);
+        $qmaxmark = round(required_param('maxmark', PARAM_FLOAT), 2);
+        // When the assessor opened the editor: the confirmation they were looking at, or 0.
+        $since = optional_param('since', 0, PARAM_INT);
+        $bulk = optional_param('bulk', 0, PARAM_BOOL);
+        $quizid = (int)$cm->instance;
+
+        // The question must have been attempted in this quiz at this mark; the criteria must
+        // add up to it. A question drawn into random slots has a confirmation for each mark.
+        $fields = \quiz_aigrader\local\confirmed::quiz_has_mark($quizid, $questionid, $qmaxmark)
+            ? \quiz_aigrader\local\confirmed::question_fields($questionid)
+            : null;
+        if (!$fields) {
+            echo json_encode([
+                'ok' => false,
+                'message' => get_string('confirm_error_question', 'quiz_aigrader'),
+                'error_code' => 'invalid_question',
+            ]);
+            exit;
+        }
+
+        // Someone else confirmed or withdrew these criteria after this assessor opened them:
+        // refuse, rather than silently replace their work.
+        $existing = \quiz_aigrader\local\confirmed::get($quizid, $questionid, $qmaxmark);
+        $current = $existing ? (int)$existing->timeconfirmed : 0;
+        if ($current !== $since) {
+            echo json_encode([
+                'ok' => false,
+                'message' => get_string('confirm_error_changed', 'quiz_aigrader'),
+                'error_code' => 'changed',
+            ]);
+            exit;
+        }
+
+        if ($action === 'resetcriteria') {
+            \quiz_aigrader\local\confirmed::reset($quizid, $questionid, $qmaxmark);
+            echo json_encode(['ok' => true, 'state' => \quiz_aigrader\local\confirmed::STATE_REQUIRED, 'since' => 0]);
+            exit;
+        }
+
+        // The criteria as JSON, checked field by field in validate().
+        $submitted = json_decode(required_param('criteria', PARAM_RAW), true); // pipeline-ignore: PARAM_RAW - JSON blob.
+        [$clean, $errors] = \quiz_aigrader\local\confirmed::validate($submitted, $qmaxmark);
+        if ($errors) {
+            echo json_encode([
+                'ok' => false,
+                'message' => implode(' ', array_map(function ($code) use ($qmaxmark) {
+                    return get_string($code, 'quiz_aigrader', \quiz_aigrader\local\criteria::fmt($qmaxmark));
+                }, $errors)),
+                'error_code' => 'invalid_criteria',
+                'errors' => $errors,
+            ]);
+            exit;
+        }
+
+        $proposed = \quiz_aigrader\local\criteria::for_fields(
+            $fields->graderinfo,
+            $fields->questiontext,
+            $fields->generalfeedback,
+            $qmaxmark,
+            $fields->defaultmark
+        );
+        try {
+            $record = \quiz_aigrader\local\confirmed::save(
+                $quizid,
+                $questionid,
+                $clean,
+                $qmaxmark,
+                \quiz_aigrader\local\confirmed::fields_hash(
+                    $fields->graderinfo,
+                    $fields->questiontext,
+                    $fields->generalfeedback,
+                    $fields->defaultmark
+                ),
+                (string)$proposed['source'],
+                (int)$USER->id,
+                (bool)$bulk
+            );
+        } catch (dml_write_exception $e) {
+            // Two assessors confirming the same question at the same moment: one wins.
+            echo json_encode([
+                'ok' => false,
+                'message' => get_string('confirm_error_changed', 'quiz_aigrader'),
+                'error_code' => 'changed',
+            ]);
+            exit;
+        }
+        echo json_encode([
+            'ok' => true,
+            'state' => \quiz_aigrader\local\confirmed::STATE_CONFIRMED,
+            'since' => (int)$record->timeconfirmed,
+            'criteria' => array_map(function ($c) {
+                return ['label' => $c['label'], 'max' => $c['max']];
+            }, $clean),
+            'confirmedtext' => get_string($bulk ? 'criteriacheck_bulkby' : 'criteriacheck_confirmedby', 'quiz_aigrader', (object)[
+                'name' => fullname($USER),
+                'date' => userdate($record->timeconfirmed, get_string('strftimedatefullshort', 'langconfig')),
+            ]),
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
     if ($action === 'listdocs') {
         $quiz = $DB->get_record('quiz', ['id' => $cm->instance], '*', MUST_EXIST);
 

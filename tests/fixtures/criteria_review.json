@@ -1,0 +1,2276 @@
+[
+    {
+        "id": "A01 two rubrics, plain headings no marks",
+        "why": "A01 two rubrics, plain headings no marks",
+        "graderinfo": "<p>Rubric for Part A</p><ol><li>Identifies hazard (2 marks)</li><li>Explains risk (2 marks)</li></ol><p>Rubric for Part B</p><ol><li>Identifies hazard (3 marks)</li><li>Explains risk (3 marks)</li></ol>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 10,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "A02 two rubrics alternative versions (use one)",
+        "why": "A02 two rubrics alternative versions (use one)",
+        "graderinfo": "<p>Version 1 (if learner chose the warehouse scenario):</p><ul><li>Identifies forklift hazard (2 marks)</li><li>Describes exclusion zone (2 marks)</li></ul><p>Version 2 (if learner chose the office scenario):</p><ul><li>Identifies trip hazard (2 marks)</li><li>Describes housekeeping control (2 marks)</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 4,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "A03 OR alternative criteria",
+        "why": "A03 OR alternative criteria",
+        "graderinfo": "<ul><li>Identifies two hazards (2 marks)</li><li>Describes a control (2 marks)</li></ul><p>OR</p><ul><li>Identifies one hazard and explains why it is the highest risk (4 marks)</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 4,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "A04 criteria + also accept unmarked list",
+        "why": "A04 criteria + also accept unmarked list",
+        "graderinfo": "<p>Marking criteria</p><ul><li>Names the relevant Act (1 mark)</li><li>Explains duty of care (2 marks)</li></ul><p>Also accept</p><ul><li>WHS Act 2011</li><li>OHS Act 2004 (Vic)</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 2,
+            "maxes": [
+                1,
+                2
+            ],
+            "labels": [
+                "Names the relevant Act",
+                "Explains duty of care"
+            ]
+        }
+    },
+    {
+        "id": "A05 criteria + acceptable answers list w/o colon heading",
+        "why": "A05 criteria + acceptable answers list w/o colon heading",
+        "graderinfo": "<ul><li>States the purpose of a toolbox talk</li><li>Lists two topics covered</li><li>Explains how records are kept</li></ul><p>Acceptable responses include</p><ul><li>Daily safety briefing</li><li>Prestart meeting</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "A06 \"Accept any of\"",
+        "why": "A06 \"Accept any of\"",
+        "graderinfo": "<ol><li>Defines consultation (1 mark)</li><li>Gives an example of consultation (1 mark)</li></ol><p>Accept any reasonable example</p><ul><li>HSR meeting</li><li>Survey</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 2,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "A07 procedure steps the learner must describe, in GI",
+        "why": "A07 procedure steps the learner must describe, in GI",
+        "graderinfo": "<p>The learner must describe the following steps of the lockout procedure:</p><ol><li>Notify affected staff</li><li>Shut down the machine</li><li>Isolate energy sources</li><li>Apply locks and tags</li><li>Test for zero energy</li></ol>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "A08 procedure steps with \"in the correct order\" all-or-nothing",
+        "why": "A08 procedure steps with \"in the correct order\" all-or-nothing",
+        "graderinfo": "<p>Learner must list ALL steps in the correct order to receive the 4 marks. No partial marks.</p><ol><li>Stop</li><li>Think</li><li>Act</li><li>Review</li></ol>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 4,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "A09 steps with \"Step N\" labels",
+        "why": "A09 steps with \"Step N\" labels",
+        "graderinfo": "<p>Step 1 Remove power</p><p>Step 2 Attach tag</p><p>Step 3 Verify isolation</p>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "A10 criteria list then a separate marks table",
+        "why": "A10 criteria list then a separate marks table",
+        "graderinfo": "<ol><li>Identifies the hazard</li><li>Assesses the risk</li><li>Recommends a control</li></ol><table><tr><th>Criterion</th><th>Marks</th></tr><tr><td>1</td><td>2</td></tr><tr><td>2</td><td>3</td></tr><tr><td>3</td><td>5</td></tr></table>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 10,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "A11 criteria list then \"Marks: 2, 3, 5\"",
+        "why": "A11 criteria list then \"Marks: 2, 3, 5\"",
+        "graderinfo": "<ol><li>Identifies the hazard</li><li>Assesses the risk</li><li>Recommends a control</li></ol><p>Marks allocated as 2, 3 and 5 respectively.</p>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 10,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "A12 marks table keyed by letter",
+        "why": "A12 marks table keyed by letter",
+        "graderinfo": "<ol type=\"a\"><li>Identifies the hazard</li><li>Assesses the risk</li></ol><p>a = 4 marks, b = 6 marks</p>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 10,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "A13 checklist with S / NS in line",
+        "why": "A13 checklist with S / NS in line",
+        "graderinfo": "<ul><li>Identifies hazard S / NS</li><li>Selects PPE S / NS</li><li>Reports incident S / NS</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "A14 S/NS table, no marks",
+        "why": "A14 S/NS table, no marks",
+        "graderinfo": "<table><tr><th>Observation checklist</th><th>S</th><th>NS</th></tr><tr><td>Identifies hazard</td><td>&#9744;</td><td>&#9744;</td></tr><tr><td>Selects PPE</td><td>&#9744;</td><td>&#9744;</td></tr><tr><td>Reports incident</td><td>&#9744;</td><td>&#9744;</td></tr></table>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "A15 must satisfy ALL for S",
+        "why": "A15 must satisfy ALL for S",
+        "graderinfo": "<p>To be marked Satisfactory the learner must address ALL of the following:</p><ul><li>Identifies the client need</li><li>Recommends a product</li><li>Explains the warranty</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 1,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "A16 table Sub-total rows + Grand total",
+        "why": "A16 table Sub-total rows + Grand total",
+        "graderinfo": "<table><tr><th>Criteria</th><th>Marks</th></tr><tr><td>Identifies hazard</td><td>2</td></tr><tr><td>Subtotal Part A</td><td>2</td></tr><tr><td>Explains control</td><td>3</td></tr><tr><td>Sub-total Part B</td><td>3</td></tr><tr><td>Grand total</td><td>5</td></tr></table>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "A17 table \"Marks for Q1\" row",
+        "why": "A17 table \"Marks for Q1\" row",
+        "graderinfo": "<table><tr><th>Criteria</th><th>Marks</th></tr><tr><td>Identifies hazard</td><td>2</td></tr><tr><td>Explains control</td><td>3</td></tr><tr><td>Total available</td><td>5</td></tr></table>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 2,
+            "maxes": [
+                2,
+                3
+            ],
+            "labels": [
+                "Identifies hazard",
+                "Explains control"
+            ]
+        }
+    },
+    {
+        "id": "A18 table with \"Sum\" row",
+        "why": "A18 table with \"Sum\" row",
+        "graderinfo": "<table><tr><th>Criteria</th><th>Marks</th></tr><tr><td>Identifies hazard</td><td>2</td></tr><tr><td>Explains control</td><td>3</td></tr><tr><td>Sum</td><td>5</td></tr></table>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 2,
+            "maxes": [
+                2,
+                3
+            ],
+            "labels": [
+                "Identifies hazard",
+                "Explains control"
+            ]
+        }
+    },
+    {
+        "id": "A19 table \"Maximum marks\" final row",
+        "why": "A19 table \"Maximum marks\" final row",
+        "graderinfo": "<table><tr><th>Criteria</th><th>Marks</th></tr><tr><td>Identifies hazard</td><td>2</td></tr><tr><td>Explains control</td><td>3</td></tr><tr><td>Maximum marks for this task</td><td>5</td></tr></table>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 2,
+            "maxes": [
+                2,
+                3
+            ],
+            "labels": [
+                "Identifies hazard",
+                "Explains control"
+            ]
+        }
+    },
+    {
+        "id": "A20 list \"Total = 5\" line form (equals)",
+        "why": "A20 list \"Total = 5\" line form (equals)",
+        "graderinfo": "<ul><li>Identifies hazard (2 marks)</li><li>Explains control (3 marks)</li></ul><p>TOTAL MARKS AVAILABLE = 5</p>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 2,
+            "maxes": [
+                2,
+                3
+            ],
+            "labels": [
+                "Identifies hazard",
+                "Explains control"
+            ]
+        }
+    },
+    {
+        "id": "A21 list with \"Overall mark: /10\" line",
+        "why": "A21 list with \"Overall mark: /10\" line",
+        "graderinfo": "<ul><li>Identifies hazard (4 marks)</li><li>Explains control (6 marks)</li><li>Overall presentation and spelling (10 marks)</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 10,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "A22 instructions as bullets, no marks",
+        "why": "A22 instructions as bullets, no marks",
+        "graderinfo": "<ul><li>Identifies two hazards</li><li>Describes one control for each hazard</li><li>Do not award marks for spelling or grammar</li><li>Do not accept \"be careful\" as a control</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 4,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "A23 instructions as bullets with marked criteria",
+        "why": "A23 instructions as bullets with marked criteria",
+        "graderinfo": "<ul><li>Identifies two hazards (2 marks)</li><li>Describes one control for each (2 marks)</li><li>Do not award marks for spelling</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 4,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "A24 note bullets after criteria heading",
+        "why": "A24 note bullets after criteria heading",
+        "graderinfo": "<p>Marking criteria</p><ul><li>Identifies two hazards</li><li>Describes a control</li><li>Note: learners who copy the policy verbatim receive no marks</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 4,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "A25 assessor guidance bullets only",
+        "why": "A25 assessor guidance bullets only",
+        "graderinfo": "<ul><li>Look for evidence of consultation</li><li>Learners often confuse hazard and risk</li><li>Refer to the WHS Act</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "A26 negative marking",
+        "why": "A26 negative marking",
+        "graderinfo": "<ul><li>Identifies hazard (2 marks)</li><li>Explains control (3 marks)</li><li>Deduct 1 mark for each incorrect hazard listed</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "A27 negative mark as -1",
+        "why": "A27 negative mark as -1",
+        "graderinfo": "<ul><li>Identifies hazard (2 marks)</li><li>Explains control (3 marks)</li><li>Incorrect terminology (-1 mark)</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "A28 bonus mark",
+        "why": "A28 bonus mark",
+        "graderinfo": "<ul><li>Identifies hazard (2 marks)</li><li>Explains control (3 marks)</li><li>Bonus: references the Code of Practice (1 mark)</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "A29 bonus without word bonus, \"extra\"",
+        "why": "A29 bonus without word bonus, \"extra\"",
+        "graderinfo": "<ul><li>Identifies hazard (2 marks)</li><li>Explains control (3 marks)</li><li>Extra mark if learner cites legislation (1 mark)</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "A30 penalty for word count",
+        "why": "A30 penalty for word count",
+        "graderinfo": "<ul><li>Explains the concept (5 marks)</li><li>Gives an example (5 marks)</li><li>Penalty for exceeding 300 words (2 marks)</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 10,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "A31 any 3 of the following, no colon, criterion heading",
+        "why": "A31 any 3 of the following, no colon, criterion heading",
+        "graderinfo": "<p>Marking criteria - learner identifies any three of the following</p><ul><li>Noise</li><li>Dust</li><li>Manual handling</li><li>Chemicals</li><li>Electrical</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "A32 \"three of\" without any",
+        "why": "A32 \"three of\" without any",
+        "graderinfo": "<p>Learner names three of these hazards</p><ul><li>Noise</li><li>Dust</li><li>Manual handling</li><li>Chemicals</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "A33 \"2 of the following\" digits w/o any",
+        "why": "A33 \"2 of the following\" digits w/o any",
+        "graderinfo": "<p>Learner must identify 2 of the following:</p><ul><li>Noise</li><li>Dust</li><li>Manual handling</li><li>Chemicals</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 2,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "A34 \"one or more of\"",
+        "why": "A34 \"one or more of\"",
+        "graderinfo": "<p>Award marks where the learner mentions one or more of:</p><ul><li>Noise</li><li>Dust</li><li>Chemicals</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "A35 \"either ... or\" list",
+        "why": "A35 \"either ... or\" list",
+        "graderinfo": "<p>The learner should describe either</p><ul><li>a verbal warning process</li><li>a written warning process</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 2,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "A36 \"up to 3 of\" in heading",
+        "why": "A36 \"up to 3 of\" in heading",
+        "graderinfo": "<p>Up to three of the following earn 1 mark each</p><ul><li>Noise</li><li>Dust</li><li>Manual handling</li><li>Chemicals</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "A37 pick with Thai number heading",
+        "why": "A37 pick with Thai number heading",
+        "graderinfo": "<p>Learner lists two</p><ul><li>Noise</li><li>Dust</li><li>Manual handling</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 2,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "A38 a/b/c each with sub-criteria, marks only on parts",
+        "why": "A38 a/b/c each with sub-criteria, marks only on parts",
+        "graderinfo": "<p>a) Define risk (2 marks)</p><ul><li>mentions likelihood</li><li>mentions consequence</li></ul><p>b) Give an example (3 marks)</p><ul><li>relevant workplace</li><li>names hazard</li><li>names harm</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "A39 a/b/c parts with marks, sub-bullets in GI as separate list (not nested)",
+        "why": "A39 a/b/c parts with marks, sub-bullets in GI as separate list (not nested)",
+        "graderinfo": "<ol type=\"a\"><li>Define risk (2 marks)</li></ol><ul><li>likelihood (1 mark)</li><li>consequence (1 mark)</li></ul><ol type=\"a\" start=\"2\"><li>Give an example (3 marks)</li></ol>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "A40 Question 1 / Question 2 headings each with item list, no head marks",
+        "why": "A40 Question 1 / Question 2 headings each with item list, no head marks",
+        "graderinfo": "<p>Question 1</p><ul><li>Defines risk (2 marks)</li><li>Gives example (1 mark)</li></ul><p>Question 2</p><ul><li>Defines hazard (2 marks)</li><li>Gives example (1 mark)</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 6,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "A41 sub-parts each with same criteria names",
+        "why": "A41 sub-parts each with same criteria names",
+        "graderinfo": "<p>Part A</p><ul><li>Accuracy (2 marks)</li><li>Clarity (1 mark)</li></ul><p>Part B</p><ul><li>Accuracy (2 marks)</li><li>Clarity (1 mark)</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 6,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "A42 Thai criteria with English marks",
+        "why": "A42 Thai criteria with English marks",
+        "graderinfo": "<ul><li>ระบุอันตราย (2 marks)</li><li>อธิบายมาตรการควบคุม (3 marks)</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 2,
+            "maxes": [
+                2,
+                3
+            ],
+            "labels": [
+                "ระบุอันตราย",
+                "อธิบายมาตรการควบคุม"
+            ]
+        }
+    },
+    {
+        "id": "A43 Thai with Thai marks unit",
+        "why": "A43 Thai with Thai marks unit",
+        "graderinfo": "<ul><li>ระบุอันตราย (2 คะแนน)</li><li>อธิบายมาตรการควบคุม (3 คะแนน)</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 2,
+            "maxes": [
+                2,
+                3
+            ],
+            "labels": [
+                "ระบุอันตราย",
+                "อธิบายมาตรการควบคุม"
+            ]
+        }
+    },
+    {
+        "id": "A44 Chinese with 分",
+        "why": "A44 Chinese with 分",
+        "graderinfo": "<ul><li>识别危险（2分）</li><li>说明控制措施（3分）</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 2,
+            "maxes": [
+                2,
+                3
+            ],
+            "labels": [
+                "识别危险",
+                "说明控制措施"
+            ]
+        }
+    },
+    {
+        "id": "A45 Chinese with English (2 marks) and fullwidth parens",
+        "why": "A45 Chinese with English (2 marks) and fullwidth parens",
+        "graderinfo": "<ul><li>识别危险（2 marks）</li><li>说明控制措施（3 marks）</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 2,
+            "maxes": [
+                2,
+                3
+            ],
+            "labels": [
+                "识别危险",
+                "说明控制措施"
+            ]
+        }
+    },
+    {
+        "id": "A46 Vietnamese with điểm",
+        "why": "A46 Vietnamese with điểm",
+        "graderinfo": "<ul><li>Xác định mối nguy (2 điểm)</li><li>Giải thích biện pháp kiểm soát (3 điểm)</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 2,
+            "maxes": [
+                2,
+                3
+            ],
+            "labels": [
+                "Xác định mối nguy",
+                "Giải thích biện pháp kiểm soát"
+            ]
+        }
+    },
+    {
+        "id": "A47 Thai bullets unmarked + Thai total",
+        "why": "A47 Thai bullets unmarked + Thai total",
+        "graderinfo": "<p>เกณฑ์การให้คะแนน</p><ul><li>ระบุอันตราย</li><li>อธิบายมาตรการ</li></ul><p>รวม 10 คะแนน</p>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 10,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "A48 nested 3 deep, marks at level 3",
+        "why": "A48 nested 3 deep, marks at level 3",
+        "graderinfo": "<ol><li>Hazards<ul><li>Physical<ul><li>Noise (1 mark)</li><li>Vibration (1 mark)</li></ul></li><li>Chemical (2 marks)</li></ul></li><li>Controls (4 marks)</li></ol>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 8,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "A49 nested 3 deep, marks only at level 1, level-2 items are distinct requirements",
+        "why": "A49 nested 3 deep, marks only at level 1, level-2 items are distinct requirements",
+        "graderinfo": "<ol><li>Explains the consultation process (4 marks)<ul><li>who is consulted<ul><li>HSRs</li><li>workers</li></ul></li><li>when consultation occurs</li></ul></li><li>Explains issue resolution (2 marks)</li></ol>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 6,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 2,
+            "maxes": [
+                4,
+                2
+            ],
+            "labels": [
+                "Explains the consultation process",
+                "Explains issue resolution"
+            ]
+        }
+    },
+    {
+        "id": "A50 nested where parent unmarked and children marked, two levels",
+        "why": "A50 nested where parent unmarked and children marked, two levels",
+        "graderinfo": "<ul><li>Part A<ul><li>Identifies hazard (2 marks)</li><li>Explains risk (2 marks)</li></ul></li><li>Part B<ul><li>Recommends control (3 marks)</li></ul></li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 7,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "A51 br-joined list with marks",
+        "why": "A51 br-joined list with marks",
+        "graderinfo": "<p>1. Identifies hazard (2 marks)<br>2. Explains risk (3 marks)<br>3. Recommends control (5 marks)</p>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 10,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 3,
+            "maxes": [
+                2,
+                3,
+                5
+            ],
+            "labels": [
+                "Identifies hazard",
+                "Explains risk",
+                "Recommends control"
+            ]
+        }
+    },
+    {
+        "id": "A52 br-joined bullets • unmarked",
+        "why": "A52 br-joined bullets • unmarked",
+        "graderinfo": "<p>• Identifies hazard<br>• Explains risk<br>• Recommends control</p>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "A53 br-joined with a stray instruction line",
+        "why": "A53 br-joined with a stray instruction line",
+        "graderinfo": "<p>Identifies hazard - 2 marks<br>Explains risk - 3 marks<br>Spelling not assessed - 0 marks<br>Recommends control - 5 marks</p>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 10,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 3,
+            "maxes": [
+                2,
+                3,
+                5
+            ],
+            "labels": [
+                "Identifies hazard",
+                "Explains risk",
+                "Recommends control"
+            ]
+        }
+    },
+    {
+        "id": "A54 empty li between items",
+        "why": "A54 empty li between items",
+        "graderinfo": "<ul><li>Identifies hazard (2 marks)</li><li></li><li>&nbsp;</li><li>Explains risk (3 marks)</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 2,
+            "maxes": [
+                2,
+                3
+            ],
+            "labels": [
+                "Identifies hazard",
+                "Explains risk"
+            ]
+        }
+    },
+    {
+        "id": "A55 li with only marks (marks on separate li)",
+        "why": "A55 li with only marks (marks on separate li)",
+        "graderinfo": "<ul><li>Identifies hazard</li><li>(2 marks)</li><li>Explains risk</li><li>(3 marks)</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "A56 marks in front as \"2m\"",
+        "why": "A56 marks in front as \"2m\"",
+        "graderinfo": "<ul><li>2m Identifies hazard</li><li>3m Explains risk</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "A57 marks \"x2\"",
+        "why": "A57 marks \"x2\"",
+        "graderinfo": "<ul><li>Identifies hazard x2</li><li>Explains risk x3</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "A58 \"2 marks for\" line",
+        "why": "A58 \"2 marks for\" line",
+        "graderinfo": "<ul><li>2 marks for identifying the hazard</li><li>3 marks for explaining the risk</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 2,
+            "maxes": [
+                2,
+                3
+            ],
+            "labels": [
+                "Identifying the hazard",
+                "Explaining the risk"
+            ]
+        }
+    },
+    {
+        "id": "A59 \"1 mark each\" heading form",
+        "why": "A59 \"1 mark each\" heading form",
+        "graderinfo": "<p>1 mark for each of the following:</p><ul><li>Noise</li><li>Dust</li><li>Chemicals</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "A60 \"Total 10\" but criteria parts with \"(5)\" after half-marks style",
+        "why": "A60 \"Total 10\" but criteria parts with \"(5)\" after half-marks style",
+        "graderinfo": "<ul><li>Introduction [1]</li><li>Body [6]</li><li>Conclusion [2]</li><li>Referencing [1]</li></ul><p>Total [10]</p>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 10,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 4,
+            "maxes": [
+                1,
+                6,
+                2,
+                1
+            ],
+            "labels": [
+                "Introduction",
+                "Body",
+                "Conclusion",
+                "Referencing"
+            ]
+        }
+    },
+    {
+        "id": "A61 bracket figure meaning count not marks",
+        "why": "A61 bracket figure meaning count not marks",
+        "graderinfo": "<ul><li>Lists hazards [3]</li><li>Lists controls [3]</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 2,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "A62 Learner instructions in GI: word count",
+        "why": "A62 Learner instructions in GI: word count",
+        "graderinfo": "<ul><li>Answer in 150-200 words</li><li>Use your own words</li><li>Reference the policy</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "A63 sample answer bullets without heading",
+        "why": "A63 sample answer bullets without heading",
+        "graderinfo": "<p>The learner should mention:</p><ul><li>Noise above 85 dB requires hearing protection</li><li>Dust masks P2</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 4,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "A64 Expected response bullets with heading \"Expected response:\"",
+        "why": "A64 Expected response bullets with heading \"Expected response:\"",
+        "graderinfo": "<p>Expected response:</p><ul><li>Noise above 85 dB requires hearing protection</li><li>Dust masks P2</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 4,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "A65 \"Benchmark answer\" with marks",
+        "why": "A65 \"Benchmark answer\" with marks (marked sample lines are proposed for confirmation, not used as written)",
+        "graderinfo": "<p>Benchmark</p><ul><li>Noise (1 mark)</li><li>Dust (1 mark)</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 2,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "A66 Criteria with \"or\" alternatives inside item",
+        "why": "A66 Criteria with \"or\" alternatives inside item",
+        "graderinfo": "<ul><li>Identifies hazard (2 marks)</li><li>Explains risk (3 marks) OR gives a worked example (3 marks)</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "A67 marks on criteria but weight \"(x2)\" multiplier",
+        "why": "A67 marks on criteria but weight \"(x2)\" multiplier",
+        "graderinfo": "<ul><li>Identifies hazard (2 marks) (x2)</li><li>Explains risk (1 mark)</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "A68 half-marks \"½ mark\"",
+        "why": "A68 half-marks \"½ mark\"",
+        "graderinfo": "<ul><li>Identifies hazard (½ mark)</li><li>Explains risk (1½ marks)</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 2,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "A69 decimal comma",
+        "why": "A69 decimal comma",
+        "graderinfo": "<ul><li>Identifies hazard (0,5 marks)</li><li>Explains risk (1,5 marks)</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 2,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 2,
+            "maxes": [
+                0.5,
+                1.5
+            ],
+            "labels": [
+                "Identifies hazard",
+                "Explains risk"
+            ]
+        }
+    },
+    {
+        "id": "A70 marks \"2 marks\" with trailing explanation after paren",
+        "why": "A70 marks \"2 marks\" with trailing explanation after paren",
+        "graderinfo": "<ul><li>Identifies hazard (2 marks) e.g. wet floor</li><li>Explains risk (3 marks) e.g. slip</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "A71 \"per\" phrasing \"2 marks per hazard\"",
+        "why": "A71 \"per\" phrasing \"2 marks per hazard\"",
+        "graderinfo": "<ul><li>Identifies hazards (2 marks per hazard)</li><li>Explains risk (3 marks)</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 7,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "A72 \"up to\" inside parens with each",
+        "why": "A72 \"up to\" inside parens with each",
+        "graderinfo": "<ul><li>Identifies hazards (up to 4 marks)</li><li>Explains risk (up to 6 marks)</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 10,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 2,
+            "maxes": [
+                4,
+                6
+            ],
+            "labels": [
+                "Identifies hazards",
+                "Explains risk"
+            ]
+        }
+    },
+    {
+        "id": "A73 question text sub-questions headed \"Marking criteria\" by learner instruction",
+        "why": "A73 question text sub-questions headed \"Marking criteria\" by learner instruction",
+        "graderinfo": "",
+        "questiontext": "<p>Your response will be marked against these criteria:</p><ul><li>Identifies hazard</li><li>Explains risk</li></ul><p>Answer all parts:</p><ol><li>What is a hazard?</li><li>What is a risk?</li><li>What is a control?</li></ol>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "A74 QT criteria heading then sub-questions w/o new heading",
+        "why": "A74 QT criteria heading then sub-questions w/o new heading",
+        "graderinfo": "",
+        "questiontext": "<p>Assessment criteria</p><ul><li>Accuracy (2 marks)</li><li>Use of examples (2 marks)</li></ul><ol><li>Define hazard (1 mark)</li><li>Define risk (1 mark)</li></ol>",
+        "generalfeedback": "",
+        "maxmark": 4,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "A75 GF Model answer then a criteria list",
+        "why": "A75 GF Model answer then a criteria list",
+        "graderinfo": "",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "<p>Model answer</p><p>A hazard is a source of harm.</p><p>Marking criteria</p><ul><li>Defines hazard (1 mark)</li><li>Gives example (1 mark)</li></ul>",
+        "maxmark": 2,
+        "expect": {
+            "confidence": "certain",
+            "source": "generalfeedback",
+            "count": 2,
+            "maxes": [
+                1,
+                1
+            ],
+            "labels": [
+                "Defines hazard",
+                "Gives example"
+            ]
+        }
+    },
+    {
+        "id": "B01 total line \"Total (10 marks)\"",
+        "why": "B01 total line \"Total (10 marks)\"",
+        "graderinfo": "<ul><li>Identifies hazard (4 marks)</li><li>Explains control (6 marks)</li></ul><p>Total (10 marks)</p>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 10,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 2,
+            "maxes": [
+                4,
+                6
+            ],
+            "labels": [
+                "Identifies hazard",
+                "Explains control"
+            ]
+        }
+    },
+    {
+        "id": "B02 total line \"Total: (10 marks)\"",
+        "why": "B02 total line \"Total: (10 marks)\"",
+        "graderinfo": "<ul><li>Identifies hazard (4 marks)</li><li>Explains control (6 marks)</li></ul><p>Total: (10 marks)</p>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 10,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 2,
+            "maxes": [
+                4,
+                6
+            ],
+            "labels": [
+                "Identifies hazard",
+                "Explains control"
+            ]
+        }
+    },
+    {
+        "id": "B03 total line \"Total marks (10)\"",
+        "why": "B03 total line \"Total marks (10)\"",
+        "graderinfo": "<ul><li>Identifies hazard (4 marks)</li><li>Explains control (6 marks)</li></ul><p>Total marks (10)</p>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 10,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 2,
+            "maxes": [
+                4,
+                6
+            ],
+            "labels": [
+                "Identifies hazard",
+                "Explains control"
+            ]
+        }
+    },
+    {
+        "id": "B04 total line \"(Total 10 marks)\"",
+        "why": "B04 total line \"(Total 10 marks)\"",
+        "graderinfo": "<ul><li>Identifies hazard (4 marks)</li><li>Explains control (6 marks)</li></ul><p>(Total 10 marks)</p>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 10,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 2,
+            "maxes": [
+                4,
+                6
+            ],
+            "labels": [
+                "Identifies hazard",
+                "Explains control"
+            ]
+        }
+    },
+    {
+        "id": "B05 total line \"Question total – 10 marks\"",
+        "why": "B05 total line \"Question total – 10 marks\"",
+        "graderinfo": "<ul><li>Identifies hazard (4 marks)</li><li>Explains control (6 marks)</li></ul><p>Question total – 10 marks</p>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 10,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "B06 total line \"Total for this question: 10 marks\"",
+        "why": "B06 total line \"Total for this question: 10 marks\"",
+        "graderinfo": "<ul><li>Identifies hazard (4 marks)</li><li>Explains control (6 marks)</li></ul><p>Total for this question: 10 marks</p>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 10,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 2,
+            "maxes": [
+                4,
+                6
+            ],
+            "labels": [
+                "Identifies hazard",
+                "Explains control"
+            ]
+        }
+    },
+    {
+        "id": "B07 total line \"Marks total – 10\"",
+        "why": "B07 total line \"Marks total – 10\"",
+        "graderinfo": "<ul><li>Identifies hazard (4 marks)</li><li>Explains control (6 marks)</li></ul><p>Marks total – 10</p>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 10,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 2,
+            "maxes": [
+                4,
+                6
+            ],
+            "labels": [
+                "Identifies hazard",
+                "Explains control"
+            ]
+        }
+    },
+    {
+        "id": "B08 total line \"TOTAL 10 MARKS\"",
+        "why": "B08 total line \"TOTAL 10 MARKS\"",
+        "graderinfo": "<ul><li>Identifies hazard (4 marks)</li><li>Explains control (6 marks)</li></ul><p>TOTAL 10 MARKS</p>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 10,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 2,
+            "maxes": [
+                4,
+                6
+            ],
+            "labels": [
+                "Identifies hazard",
+                "Explains control"
+            ]
+        }
+    },
+    {
+        "id": "B09 total line \"10 marks total\"",
+        "why": "B09 total line \"10 marks total\"",
+        "graderinfo": "<ul><li>Identifies hazard (4 marks)</li><li>Explains control (6 marks)</li></ul><p>10 marks total</p>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 10,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 2,
+            "maxes": [
+                4,
+                6
+            ],
+            "labels": [
+                "Identifies hazard",
+                "Explains control"
+            ]
+        }
+    },
+    {
+        "id": "B10 total line \"Total [10 marks]\"",
+        "why": "B10 total line \"Total [10 marks]\"",
+        "graderinfo": "<ul><li>Identifies hazard (4 marks)</li><li>Explains control (6 marks)</li></ul><p>Total [10 marks]</p>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 10,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 2,
+            "maxes": [
+                4,
+                6
+            ],
+            "labels": [
+                "Identifies hazard",
+                "Explains control"
+            ]
+        }
+    },
+    {
+        "id": "B11 total line \"Total marks available: 10\"",
+        "why": "B11 total line \"Total marks available: 10\"",
+        "graderinfo": "<ul><li>Identifies hazard (4 marks)</li><li>Explains control (6 marks)</li></ul><p>Total marks available: 10</p>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 10,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 2,
+            "maxes": [
+                4,
+                6
+            ],
+            "labels": [
+                "Identifies hazard",
+                "Explains control"
+            ]
+        }
+    },
+    {
+        "id": "B12 total line \"Out of 10 marks\"",
+        "why": "B12 total line \"Out of 10 marks\"",
+        "graderinfo": "<ul><li>Identifies hazard (4 marks)</li><li>Explains control (6 marks)</li></ul><p>Out of 10 marks</p>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 10,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 2,
+            "maxes": [
+                4,
+                6
+            ],
+            "labels": [
+                "Identifies hazard",
+                "Explains control"
+            ]
+        }
+    },
+    {
+        "id": "B13 total line \"Total - 10 marks\"",
+        "why": "B13 total line \"Total - 10 marks\"",
+        "graderinfo": "<ul><li>Identifies hazard (4 marks)</li><li>Explains control (6 marks)</li></ul><p>Total - 10 marks</p>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 10,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 2,
+            "maxes": [
+                4,
+                6
+            ],
+            "labels": [
+                "Identifies hazard",
+                "Explains control"
+            ]
+        }
+    },
+    {
+        "id": "B14 decimal comma sum matches",
+        "why": "B14 decimal comma sum matches",
+        "graderinfo": "<ul><li>Identifies hazard (0,5 marks)</li><li>Explains risk (1,5 marks)</li><li>Recommends control (1 mark)</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 3,
+            "maxes": [
+                0.5,
+                1.5,
+                1
+            ],
+            "labels": [
+                "Identifies hazard",
+                "Explains risk",
+                "Recommends control"
+            ]
+        }
+    },
+    {
+        "id": "B15 Indicative content heading",
+        "why": "B15 Indicative content heading",
+        "graderinfo": "<p>Indicative content</p><ul><li>Noise above 85 dB</li><li>Hearing protection</li><li>Audiometric testing</li><li>Engineering controls</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 4,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "B16 Responses may include (no colon)",
+        "why": "B16 Responses may include (no colon)",
+        "graderinfo": "<p>Responses may include</p><ul><li>Noise above 85 dB</li><li>Hearing protection</li><li>Audiometric testing</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "B17 Marking notes: list",
+        "why": "B17 Marking notes: list",
+        "graderinfo": "<p>Marking notes:</p><ul><li>Accept any recognised hazard</li><li>Spelling not assessed</li><li>Refer to the SWMS</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "B18 Assessor instructions: list",
+        "why": "B18 Assessor instructions: list",
+        "graderinfo": "<p>Assessor instructions:</p><ul><li>Accept any recognised hazard</li><li>Spelling not assessed</li><li>Refer to the SWMS</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "B19 Do not accept: list after criteria",
+        "why": "B19 Do not accept: list after criteria",
+        "graderinfo": "<ul><li>Identifies a hazard</li><li>Explains a control</li></ul><p>Do not accept:</p><ul><li>\"Be careful\"</li><li>\"Use common sense\"</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 2,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "B20 Do not accept: list alone",
+        "why": "B20 Do not accept: list alone",
+        "graderinfo": "<p>Do not accept:</p><ul><li>\"Be careful\"</li><li>\"Use common sense\"</li><li>\"Watch out\"</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "B21 Common errors: list",
+        "why": "B21 Common errors: list",
+        "graderinfo": "<ul><li>Identifies a hazard (1 mark)</li><li>Explains a control (1 mark)</li></ul><p>Common errors:</p><ul><li>Confusing hazard with risk</li><li>Listing PPE as the first control</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 2,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 2,
+            "maxes": [
+                1,
+                1
+            ],
+            "labels": [
+                "Identifies a hazard",
+                "Explains a control"
+            ]
+        }
+    },
+    {
+        "id": "B22 Mapping bullets PCs",
+        "why": "B22 Mapping bullets PCs",
+        "graderinfo": "<ul><li>Identifies hazard</li><li>Explains control</li></ul><p>Mapping:</p><ul><li>PC 1.1</li><li>PC 2.3</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 2,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "B23 Mapping labelled PCs with text",
+        "why": "B23 Mapping labelled PCs with text",
+        "graderinfo": "<p>Mapping</p><ul><li>PC 1.1 Identify hazards</li><li>PC 1.2 Assess risk</li><li>PE 2 Conduct risk assessment</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "B24 GF Benchmark: unmarked bullets",
+        "why": "B24 GF Benchmark: unmarked bullets",
+        "graderinfo": "",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "<p>Benchmark:</p><ul><li>A hazard is anything that can cause harm</li><li>A risk is the likelihood and consequence</li></ul>",
+        "maxmark": 2,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "B25 GI Benchmark: unmarked bullets",
+        "why": "B25 GI Benchmark: unmarked bullets",
+        "graderinfo": "<p>Benchmark:</p><ul><li>A hazard is anything that can cause harm</li><li>A risk is the likelihood and consequence</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 2,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "B26 Satisfactory response heading",
+        "why": "B26 Satisfactory response heading",
+        "graderinfo": "<p>Satisfactory response</p><ul><li>A hazard is anything that can cause harm</li><li>A risk is the likelihood and consequence</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 2,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "B27 tab-separated marks in li",
+        "why": "B27 tab-separated marks in li",
+        "graderinfo": "<ul><li>Identifies hazard&#9;2</li><li>Explains risk&#9;3</li><li>Recommends control&#9;5</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 10,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "B28 dotted leader marks",
+        "why": "B28 dotted leader marks",
+        "graderinfo": "<ul><li>Identifies hazard ........ 2 marks</li><li>Explains risk ........ 3 marks</li><li>Recommends control ........ 5 marks</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 10,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "B29 word-number marks",
+        "why": "B29 word-number marks",
+        "graderinfo": "<ul><li>Identifies hazard (two marks)</li><li>Explains risk (three marks)</li><li>Recommends control (five marks)</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 10,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "B30 strikethrough old criterion",
+        "why": "B30 strikethrough old criterion",
+        "graderinfo": "<ul><li>Identifies hazard (2 marks)</li><li><s>Explains risk (3 marks)</s></li><li>Recommends control (3 marks)</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 2,
+            "maxes": [
+                2,
+                3
+            ],
+            "labels": [
+                "Identifies hazard",
+                "Recommends control"
+            ]
+        }
+    },
+    {
+        "id": "B31 del old criterion",
+        "why": "B31 del old criterion",
+        "graderinfo": "<ul><li>Identifies hazard (2 marks)</li><li><del>Explains risk (3 marks)</del></li><li>Recommends control (3 marks)</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 2,
+            "maxes": [
+                2,
+                3
+            ],
+            "labels": [
+                "Identifies hazard",
+                "Recommends control"
+            ]
+        }
+    },
+    {
+        "id": "B32 hidden span",
+        "why": "B32 hidden span",
+        "graderinfo": "<ul><li>Identifies hazard (2 marks)</li><li style=\"display:none\">Explains risk (3 marks)</li><li>Recommends control (3 marks)</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 2,
+            "maxes": [
+                2,
+                3
+            ],
+            "labels": [
+                "Identifies hazard",
+                "Recommends control"
+            ]
+        }
+    },
+    {
+        "id": "B33 table Score blank + Max column",
+        "why": "B33 table Score blank + Max column",
+        "graderinfo": "<table><tr><th>Criteria</th><th>Score</th><th>Max</th></tr><tr><td>Identifies hazard</td><td></td><td>2</td></tr><tr><td>Explains risk</td><td></td><td>1</td></tr><tr><td>Recommends control</td><td></td><td>1</td></tr><tr><td>Reports</td><td></td><td>1</td></tr></table>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 4,
+            "maxes": [
+                2,
+                1,
+                1,
+                1
+            ],
+            "labels": [
+                "Identifies hazard",
+                "Explains risk",
+                "Recommends control",
+                "Reports"
+            ]
+        }
+    },
+    {
+        "id": "B34 table \"Mark allocation\" header",
+        "why": "B34 table \"Mark allocation\" header",
+        "graderinfo": "<table><tr><th>Criteria</th><th>Mark allocation</th></tr><tr><td>Identifies hazard</td><td>2</td></tr><tr><td>Explains risk</td><td>3</td></tr></table>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 2,
+            "maxes": [
+                2,
+                3
+            ],
+            "labels": [
+                "Identifies hazard",
+                "Explains risk"
+            ]
+        }
+    },
+    {
+        "id": "B35 analytic matrix 0|1|2",
+        "why": "B35 analytic matrix 0|1|2",
+        "graderinfo": "<table><tr><th>Criteria</th><th>Not shown</th><th>Partly</th><th>Fully</th></tr><tr><td>Identifies hazard</td><td>0</td><td>1</td><td>2</td></tr><tr><td>Explains risk</td><td>0</td><td>2</td><td>4</td></tr><tr><td>Recommends control</td><td>0</td><td>2</td><td>4</td></tr></table>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 10,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "B36 analytic matrix ascending no zero",
+        "why": "B36 analytic matrix ascending no zero",
+        "graderinfo": "<table><tr><td></td><td>Limited</td><td>Sound</td><td>Thorough</td></tr><tr><td>Identifies hazard</td><td>1</td><td>2</td><td>3</td></tr><tr><td>Explains risk</td><td>1</td><td>2</td><td>3</td></tr><tr><td>Recommends control</td><td>2</td><td>3</td><td>4</td></tr></table>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 10,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "B37 analytic matrix with marks header row",
+        "why": "B37 analytic matrix with marks header row",
+        "graderinfo": "<table><tr><th>Criteria</th><th>Marks</th><th>Marks</th><th>Marks</th></tr><tr><td>Identifies hazard</td><td>1</td><td>2</td><td>3</td></tr><tr><td>Explains risk</td><td>1</td><td>2</td><td>3</td></tr><tr><td>Recommends control</td><td>2</td><td>3</td><td>4</td></tr></table>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 10,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "B38 prose weights then list",
+        "why": "B38 prose weights then list",
+        "graderinfo": "<p>Criteria 1 and 2 are worth 2 marks each; criterion 3 is worth 6 marks.</p><ol><li>Identifies hazard</li><li>Explains risk</li><li>Recommends control</li></ol>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 10,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "B39 each criterion worth N in prose",
+        "why": "B39 each criterion worth N in prose",
+        "graderinfo": "<p>Each criterion below is worth 2 marks.</p><ol><li>Identifies hazard</li><li>Explains risk</li><li>Recommends control</li></ol>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 6,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "B40 marked criteria + unmarked examples as separate sibling list after colon item",
+        "why": "B40 marked criteria + unmarked examples as separate sibling list after colon item",
+        "graderinfo": "<ul><li>Identifies two hazards such as: (2 marks)</li><li>noise</li><li>dust</li><li>Explains a control (2 marks)</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 4,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "B41 Learner instructions then criteria heading",
+        "why": "B41 Learner instructions then criteria heading",
+        "graderinfo": "<p>Instructions:</p><ul><li>Answer in 200 words</li><li>Use your own words</li></ul><p>Criteria:</p><ul><li>Identifies hazard</li><li>Explains risk</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 2,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "B42 Criteria then Instructions heading w/o colon, >4 words",
+        "why": "B42 Criteria then Instructions heading w/o colon, >4 words",
+        "graderinfo": "<ul><li>Identifies hazard</li><li>Explains risk</li></ul><p>Instructions for the assessor marking this</p><ul><li>Accept any recognised hazard</li><li>Spelling not assessed</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 2,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "B43 numbered steps learner must perform IN ORDER, maxmark matches",
+        "why": "B43 numbered steps learner must perform IN ORDER, maxmark matches",
+        "graderinfo": "<p>The learner must describe all five steps in order. Award full marks only if all steps are present.</p><ol><li>Notify</li><li>Shut down</li><li>Isolate</li><li>Lock and tag</li><li>Test</li></ol>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "B44 competency all-of with S",
+        "why": "B44 competency all-of with S",
+        "graderinfo": "<p>Satisfactory if the learner addresses all of:</p><ul><li>Client need</li><li>Product</li><li>Warranty</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "B45 marks per item but heading says \"any two\" (pick w/ marks)",
+        "why": "B45 marks per item but heading says \"any two\" (pick w/ marks)",
+        "graderinfo": "<p>Learner identifies any two:</p><ul><li>Noise (1 mark)</li><li>Dust (1 mark)</li><li>Chemicals (1 mark)</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 2,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "B46 Two-question field (Q1 / Q2) where this slot is Q2",
+        "why": "B46 Two-question field (Q1 / Q2) where this slot is Q2",
+        "graderinfo": "<p>Question 1 marking guide</p><ul><li>Defines hazard (2 marks)</li><li>Gives example (2 marks)</li></ul><p>Question 2 marking guide</p><ul><li>Defines risk (2 marks)</li><li>Gives example (2 marks)</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 4,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "B47 sub-criteria bullets each marked, plus parent marked, sibling list (no nesting)",
+        "why": "B47 sub-criteria bullets each marked, plus parent marked, sibling list (no nesting)",
+        "graderinfo": "<p>1. Explains consultation (4 marks)</p><p>- who is consulted (2 marks)</p><p>- when (2 marks)</p><p>2. Explains issue resolution (2 marks)</p>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 6,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "B48 lettered parts with sub-parts i/ii marked",
+        "why": "B48 lettered parts with sub-parts i/ii marked",
+        "graderinfo": "<p>a) Define hazard (1 mark)</p><p>b) Explain controls (4 marks)</p><p>i. elimination (2 marks)</p><p>ii. substitution (2 marks)</p>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "B49 Chinese fullwidth colon marks",
+        "why": "B49 Chinese fullwidth colon marks",
+        "graderinfo": "<ul><li>识别危险：2分</li><li>说明控制措施：3分</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 2,
+            "maxes": [
+                2,
+                3
+            ],
+            "labels": [
+                "识别危险",
+                "说明控制措施"
+            ]
+        }
+    },
+    {
+        "id": "B50 Thai digits",
+        "why": "B50 Thai digits",
+        "graderinfo": "<ul><li>ระบุอันตราย (๒ คะแนน)</li><li>อธิบายมาตรการควบคุม (๓ คะแนน)</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "B51 English criteria with Thai examples in parens",
+        "why": "B51 English criteria with Thai examples in parens",
+        "graderinfo": "<ul><li>Identifies hazard (เช่น พื้นเปียก) (2 marks)</li><li>Explains control (3 marks)</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 2,
+            "maxes": [
+                2,
+                3
+            ],
+            "labels": [
+                "Identifies hazard",
+                "Explains control"
+            ]
+        }
+    },
+    {
+        "id": "B52 empty li with nbsp between br-joined",
+        "why": "B52 empty li with nbsp between br-joined",
+        "graderinfo": "<ul><li>Identifies hazard (2 marks)<br><br>Explains risk (3 marks)</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 2,
+            "maxes": [
+                2,
+                3
+            ],
+            "labels": [
+                "Identifies hazard",
+                "Explains risk"
+            ]
+        }
+    },
+    {
+        "id": "B53 one li containing two criteria joined by br",
+        "why": "B53 one li containing two criteria joined by br",
+        "graderinfo": "<ul><li>Identifies hazard<br>Explains risk</li><li>Recommends control</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "B54 nested 3 deep unmarked children are separate required criteria",
+        "why": "B54 nested 3 deep unmarked children are separate required criteria",
+        "graderinfo": "<ol><li>Explains the process (6 marks)<ol><li>Planning<ol><li>scope</li><li>budget</li></ol></li><li>Implementation</li><li>Review</li></ol></li><li>Gives example (4 marks)</li></ol>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 10,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 2,
+            "maxes": [
+                6,
+                4
+            ],
+            "labels": [
+                "Explains the process",
+                "Gives example"
+            ]
+        }
+    },
+    {
+        "id": "B55 nested with example list where sub-items have counts \"2 x\"",
+        "why": "B55 nested with example list where sub-items have counts \"2 x\"",
+        "graderinfo": "<ol><li>Identifies hazards<ul><li>2 x physical</li><li>1 x chemical</li></ul></li><li>Explains control</li></ol>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 2,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "B56 \"pts\" unit",
+        "why": "B56 \"pts\" unit",
+        "graderinfo": "<ul><li>Identifies hazard 2pts</li><li>Explains risk 3pts</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "B57 \"Bonus\" heading with list",
+        "why": "B57 \"Bonus\" heading with list",
+        "graderinfo": "<ul><li>Identifies hazard (2 marks)</li><li>Explains risk (3 marks)</li></ul><p>Bonus marks</p><ul><li>Cites legislation (1 mark)</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 2,
+            "maxes": [
+                2,
+                3
+            ],
+            "labels": [
+                "Identifies hazard",
+                "Explains risk"
+            ]
+        }
+    },
+    {
+        "id": "B58 Optional/extension criterion",
+        "why": "B58 Optional/extension criterion",
+        "graderinfo": "<ul><li>Identifies hazard (2 marks)</li><li>Explains risk (3 marks)</li><li>(Optional) Cites legislation (1 mark)</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "B59 deduction lines with marks after criteria heading",
+        "why": "B59 deduction lines with marks after criteria heading",
+        "graderinfo": "<p>Marking criteria</p><ul><li>Identifies hazard (3 marks)</li><li>Explains risk (3 marks)</li><li>Minus 1 mark for each spelling error (max 1 mark)</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 6,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "B60 rubric items each with \"1 mark\" but final \"Maximum 3 marks\" (cap)",
+        "why": "B60 rubric items each with \"1 mark\" but final \"Maximum 3 marks\" (cap)",
+        "graderinfo": "<ul><li>Noise (1 mark)</li><li>Dust (1 mark)</li><li>Chemicals (1 mark)</li><li>Manual handling (1 mark)</li></ul><p>Maximum 3 marks.</p>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "B61 cap stated as \"(max. 3)\" without marks word",
+        "why": "B61 cap stated as \"(max. 3)\" without marks word",
+        "graderinfo": "<ul><li>Noise (1 mark)</li><li>Dust (1 mark)</li><li>Chemicals (1 mark)</li><li>Manual handling (1 mark)</li></ul><p>(max. 3)</p>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "B62 cap stated as \"Award no more than 3\"",
+        "why": "B62 cap stated as \"Award no more than 3\"",
+        "graderinfo": "<ul><li>Noise (1 mark)</li><li>Dust (1 mark)</li><li>Chemicals (1 mark)</li><li>Manual handling (1 mark)</li></ul><p>No more than 3 marks in total for this question.</p>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "B63 QT strict: Marking criteria heading then learner reading list",
+        "why": "B63 QT strict: Marking criteria heading then learner reading list",
+        "graderinfo": "",
+        "questiontext": "<p>Read the case study and answer.</p><p>Marking criteria</p><ul><li>Accuracy</li><li>Use of examples</li></ul><p>Resources</p><ul><li>WHS Act 2011</li><li>Code of Practice</li></ul>",
+        "generalfeedback": "",
+        "maxmark": 2,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "B64 GI blank-ish then QT criteria",
+        "why": "B64 GI blank-ish then QT criteria",
+        "graderinfo": "<p>&nbsp;</p><p><br></p>",
+        "questiontext": "<p>Marking criteria</p><ul><li>Accuracy (2 marks)</li><li>Use of examples (2 marks)</li></ul>",
+        "generalfeedback": "",
+        "maxmark": 4,
+        "expect": {
+            "confidence": "certain",
+            "source": "questiontext",
+            "count": 2,
+            "maxes": [
+                2,
+                2
+            ],
+            "labels": [
+                "Accuracy",
+                "Use of examples"
+            ]
+        }
+    },
+    {
+        "id": "B65 GI says see question; QT has criteria",
+        "why": "B65 GI says see question; QT has criteria",
+        "graderinfo": "<p>See marking criteria in the question.</p>",
+        "questiontext": "<p>Marking criteria</p><ul><li>Accuracy (2 marks)</li><li>Use of examples (2 marks)</li></ul>",
+        "generalfeedback": "",
+        "maxmark": 4,
+        "expect": {
+            "confidence": "certain",
+            "source": "questiontext",
+            "count": 2,
+            "maxes": [
+                2,
+                2
+            ],
+            "labels": [
+                "Accuracy",
+                "Use of examples"
+            ]
+        }
+    },
+    {
+        "id": "X01 GI rubric with marks on separate lines + QT generic criteria",
+        "why": "X01 GI rubric with marks on separate lines + QT generic criteria",
+        "graderinfo": "<p>Identifies hazard</p><p>(2 marks)</p><p>Explains risk</p><p>(2 marks)</p><p>Recommends control</p><p>(1 mark)</p>",
+        "questiontext": "<p>Describe the hazards.</p><p>Marking criteria</p><ul><li>Accuracy (2 marks)</li><li>Use of examples (3 marks)</li></ul>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "X02 GI pick-list rubric + QT generic criteria",
+        "why": "X02 GI pick-list rubric + QT generic criteria",
+        "graderinfo": "<p>Award 1 mark for each hazard identified, up to 5 marks:</p><ul><li>noise</li><li>dust</li><li>heat</li><li>chemicals</li><li>manual handling</li><li>electrical</li></ul>",
+        "questiontext": "<p>Describe the hazards.</p><p>Marking criteria</p><ul><li>Accuracy (2 marks)</li><li>Use of examples (3 marks)</li></ul>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "X03 GI \"any two\" pick list + GF criteria",
+        "why": "X03 GI \"any two\" pick list + GF criteria",
+        "graderinfo": "<p>Identify any two of:</p><ul><li>noise</li><li>dust</li><li>heat</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "<p>Marking criteria</p><ul><li>Identifies hazards (1 mark)</li><li>Explains why (1 mark)</li></ul>",
+        "maxmark": 2,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "X04 GI single marked criterion + QT criteria",
+        "why": "X04 GI single marked criterion + QT criteria",
+        "graderinfo": "<p>Award 5 marks for a response that identifies the hazards and explains the controls in the context of the case study.</p>",
+        "questiontext": "<p>Describe the hazards.</p><p>Marking criteria</p><ul><li>Accuracy (2 marks)</li><li>Use of examples (3 marks)</li></ul>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "X05 GI sample answer paragraph + QT marked sub-questions (unheaded)",
+        "why": "X05 GI sample answer paragraph + QT marked sub-questions (unheaded)",
+        "graderinfo": "<p>A hazard is a source of harm. Risk is likelihood x consequence.</p>",
+        "questiontext": "<p>a) Define hazard (2 marks)</p><p>b) Define risk (3 marks)</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "confidence": "certain",
+            "source": "questiontext",
+            "count": 2,
+            "maxes": [
+                2,
+                3
+            ],
+            "labels": [
+                "Define hazard",
+                "Define risk"
+            ]
+        }
+    },
+    {
+        "id": "X06 GI prose with weights + QT criteria",
+        "why": "X06 GI prose with weights + QT criteria",
+        "graderinfo": "<p>Weight the hazard identification at 4 marks and the explanation at 1 mark.</p>",
+        "questiontext": "<p>Describe the hazards.</p><p>Marking criteria</p><ul><li>Accuracy (2 marks)</li><li>Use of examples (3 marks)</li></ul>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "X07 GI \"Model answer:\" bullets + QT criteria",
+        "why": "X07 GI \"Model answer:\" bullets + QT criteria",
+        "graderinfo": "<p>Model answer:</p><ul><li>Noise</li><li>Dust</li></ul>",
+        "questiontext": "<p>Describe the hazards.</p><p>Marking criteria</p><ul><li>Accuracy (2 marks)</li><li>Use of examples (3 marks)</li></ul>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "confidence": "certain",
+            "source": "questiontext",
+            "count": 2,
+            "maxes": [
+                2,
+                3
+            ],
+            "labels": [
+                "Accuracy",
+                "Use of examples"
+            ]
+        }
+    },
+    {
+        "id": "X08 GI has bands (uncertain) + QT criteria",
+        "why": "X08 GI has bands (uncertain) + QT criteria",
+        "graderinfo": "<ul><li>5 marks: thorough explanation with example</li><li>3 marks: partial explanation</li><li>1 mark: limited</li></ul>",
+        "questiontext": "<p>Describe the hazards.</p><p>Marking criteria</p><ul><li>Accuracy (2 marks)</li><li>Use of examples (3 marks)</li></ul>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "X09 GI only \"Accept any reasonable answer.\" + QT criteria",
+        "why": "X09 GI only \"Accept any reasonable answer.\" + QT criteria",
+        "graderinfo": "<p>Accept any reasonable answer.</p>",
+        "questiontext": "<p>Describe the hazards.</p><p>Marking criteria</p><ul><li>Accuracy (2 marks)</li><li>Use of examples (3 marks)</li></ul>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "confidence": "certain",
+            "source": "questiontext",
+            "count": 2,
+            "maxes": [
+                2,
+                3
+            ],
+            "labels": [
+                "Accuracy",
+                "Use of examples"
+            ]
+        }
+    },
+    {
+        "id": "X10 GI single-line \"Marking criteria: see table below\" + table w/o header word",
+        "why": "X10 GI single-line \"Marking criteria: see table below\" + table w/o header word",
+        "graderinfo": "<p>Marking criteria</p><table><tr><td>Hazard</td><td>2</td></tr><tr><td>Risk</td><td>3</td></tr></table>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 2,
+            "maxes": [
+                2,
+                3
+            ],
+            "labels": [
+                "Hazard",
+                "Risk"
+            ]
+        }
+    },
+    {
+        "id": "X11 1-mark Q, 4 unmarked criteria",
+        "why": "X11 1-mark Q, 4 unmarked criteria",
+        "graderinfo": "<ul><li>Identifies hazard</li><li>Explains risk</li><li>Recommends control</li><li>Reports</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 1,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "X12 label suffix \"(2)\" duplicates",
+        "why": "X12 label suffix \"(2)\" duplicates",
+        "graderinfo": "<p>Part A</p><ul><li>Accuracy (3 marks)</li><li>Clarity (1 mark)</li></ul><p>Part B</p><ul><li>Accuracy (5 marks)</li><li>Clarity (1 mark)</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 10,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "X13 GF \"Benchmarks\" with marked lines (sample answer with mark hints)",
+        "why": "X13 GF \"Benchmarks\" with marked lines (sample answer with mark hints) (marked sample lines are proposed for confirmation, not used as written)",
+        "graderinfo": "",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "<p>Benchmarks</p><ul><li>Hazard is a source of harm (1 mark)</li><li>Risk is likelihood and consequence (1 mark)</li></ul>",
+        "maxmark": 2,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "X14 QT learner self-checklist",
+        "why": "X14 QT learner self-checklist",
+        "graderinfo": "",
+        "questiontext": "<p>Write a report.</p><p>Before you submit, use this checklist:</p><ul><li>Spell-checked</li><li>Referenced</li><li>Under 500 words</li></ul>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "X15 QT \"assessed on\" learner info",
+        "why": "X15 QT \"assessed on\" learner info",
+        "graderinfo": "",
+        "questiontext": "<p>Write a report. You will be assessed on:</p><ul><li>Spelling</li><li>Referencing</li><li>Word count</li></ul><p>Part 1: describe the hazard. Part 2: describe the control.</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "X16 GI list where item text has \"(2 marks)\" mid-sentence before a colon",
+        "why": "X16 GI list where item text has \"(2 marks)\" mid-sentence before a colon",
+        "graderinfo": "<ul><li>Hazards (2 marks): identifies two hazards</li><li>Controls (3 marks): explains one control</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 2,
+            "maxes": [
+                2,
+                3
+            ],
+            "labels": [
+                "Hazards",
+                "Controls"
+            ]
+        }
+    },
+    {
+        "id": "X17 GI items with marks followed by full stop and comment",
+        "why": "X17 GI items with marks followed by full stop and comment",
+        "graderinfo": "<ul><li>Identifies two hazards (2 marks). Accept any reasonable.</li><li>Explains one control (3 marks). Must be specific.</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "X18 GI bullets then \"OR\" bullets",
+        "why": "X18 GI bullets then \"OR\" bullets",
+        "graderinfo": "<ul><li>Explains elimination (2 marks)</li><li>OR explains substitution (2 marks)</li><li>Gives an example (1 mark)</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "X19 GI \"Either\" item",
+        "why": "X19 GI \"Either\" item",
+        "graderinfo": "<ul><li>Either explains elimination or substitution (2 marks)</li><li>Gives an example (1 mark)</li></ul>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "not_certain": true
+        }
+    },
+    {
+        "id": "X20 GI two marks columns (Part marks vs Total marks)",
+        "why": "X20 GI two marks columns (Part marks vs Total marks)",
+        "graderinfo": "<table><tr><th>Criteria</th><th>Marks</th><th>Total</th></tr><tr><td>Identifies hazard</td><td>2</td><td></td></tr><tr><td>Explains risk</td><td>3</td><td>5</td></tr></table>",
+        "questiontext": "<p>Answer the question.</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "not_certain": true
+        }
+    }
+]

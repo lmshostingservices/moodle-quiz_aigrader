@@ -31,6 +31,12 @@ use core_text;
  */
 class formatter {
     /**
+     * A line rubric_text() writes where a list nested in a list item carries its own marks: a
+     * multi-level rubric that criteria::parse() does not read with certainty.
+     */
+    public const NESTED_MARKS = "\u{2060}[nested-marked-list]\u{2060}";
+
+    /**
      * Format a mark and a maximum mark as a score label.
      *
      * Both values are formatted rather than cast with intval(), which rendered a 2.5-mark
@@ -85,6 +91,163 @@ class formatter {
         $text = preg_replace('/\n{3,}/', "\n\n", $text);
 
         return trim($text);
+    }
+
+    /**
+     * Flatten a rubric field to plain text, keeping table rows readable as criteria.
+     *
+     * RTO marking guides are very often tables - a criterion in one column, its marks in the
+     * next. html_to_text() runs a table's cells together, so "Identifies the hazard" and "2"
+     * became "Identifies the hazard2" and the row could not be read as a criterion. Here each
+     * row becomes one line with its cells joined by " | ", which criteria::parse() reads.
+     * Used only for reading criteria; what is sent to the grading service is unchanged.
+     *
+     * @param string $html Raw HTML from a question field.
+     * @return string Plain text.
+     */
+    public static function rubric_text($html): string {
+        $html = (string)$html;
+        if (trim($html) === '') {
+            return '';
+        }
+
+        // Struck-out and hidden text is not part of the rubric the assessor meant, and a list
+        // inside a list item belongs to that item: "Identifies hazards, such as:" with the
+        // examples nested beneath it is one criterion, not four.
+        if (
+            preg_match('~<li\b.*?<(ul|ol)\b~is', $html)
+            || preg_match('~<(s|strike|del)\b|\bhidden\b|display\s*:\s*none|visibility\s*:\s*hidden|line-through~i', $html)
+        ) {
+            $html = self::flatten_nested_lists($html);
+        }
+
+        // Full-width brackets and colons, as typed in Chinese and Japanese, read as their
+        // ordinary forms so "（2分）" is read as marks.
+        $html = str_replace(['（', '）', '［', '］', '：'], ['(', ')', '[', ']', ':'], $html);
+
+        // Word splits a sentence into many spans, sometimes mid-word ("Identif" "ies"), and
+        // html_to_text() is told to space adjacent spans apart. In a rubric the spans carry no
+        // structure, so they are removed before conversion and the words stay whole.
+        $html = preg_replace('~</?(span|font|o:p)\b[^>]*>~i', '', $html);
+
+        // Moodle's converter writes bold text and headings in capitals, so a criterion whose
+        // name the assessor put in bold, as most are, would read in capitals on the card. The
+        // bold and heading tags are therefore removed first, which keeps the author's own case.
+        $html = preg_replace('~</?(strong|b)\b[^>]*>~i', '', $html);
+        $html = preg_replace('~<(/?)h[1-6]\b[^>]*>~i', '<$1p>', $html);
+
+        if (stripos($html, '<td') !== false || stripos($html, '<th') !== false) {
+            // Each cell ends with a separator, each row with a line break. Paragraphs and
+            // breaks inside a cell become spaces so a row stays on one line.
+            $html = preg_replace_callback('~<t([dh])\b[^>]*>(.*?)</t\1\s*>~is', function ($m) {
+                $cell = preg_replace('~<\s*(br|/p|/div|/li)\b[^>]*>~i', ' ', $m[2]);
+                return '<span>' . $cell . ' | </span>';
+            }, $html);
+            $html = preg_replace('~</tr\s*>~i', "</tr><br>", $html);
+        }
+        // Non-breaking spaces, which Word and the editors put after list numbers and in empty
+        // cells, become ordinary spaces so a list marker and its text are recognised.
+        $text = str_replace(["\u{00A0}", "\u{2007}", "\u{202F}"], ' ', self::html_to_text($html));
+        return trim(preg_replace('/[^\S\n]+/u', ' ', $text));
+    }
+
+    /**
+     * Fold each list nested inside a list item into that item's text.
+     *
+     * Unmarked sub-items are examples or detail of their parent, and are written into it, in
+     * brackets, before the parent's own marks: "Identifies two hazards (wet floor, pallet
+     * jack) (2 marks)". Sub-items that carry their own marks are a multi-level rubric; they
+     * are kept as lines, and the NESTED_MARKS line marks the field as not read with certainty.
+     *
+     * @param string $html Editor HTML.
+     * @return string The HTML with nested lists written inline, or unchanged if it cannot be parsed.
+     */
+    private static function flatten_nested_lists(string $html): string {
+        $doc = new \DOMDocument();
+        $previous = libxml_use_internal_errors(true);
+        $loaded = $doc->loadHTML(
+            '<?xml encoding="utf-8"?><div id="aigrader-root">' . $html . '</div>',
+            LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD
+        );
+        libxml_clear_errors();
+        libxml_use_internal_errors($previous);
+        if (!$loaded) {
+            return $html;
+        }
+        $xpath = new \DOMXPath($doc);
+        $hidden = '//s | //strike | //del | //*[@hidden] | //*[contains(translate(@style, " ", ""), "display:none")]'
+            . ' | //*[contains(translate(@style, " ", ""), "visibility:hidden")]'
+            . ' | //*[contains(translate(@style, " ", ""), "line-through")]';
+        foreach (iterator_to_array($xpath->query($hidden)) as $node) {
+            if ($node->parentNode) {
+                $node->parentNode->removeChild($node);
+            }
+        }
+        // Innermost first, so a list nested three deep folds into its parent before that folds.
+        $nested = iterator_to_array($xpath->query('//li//ul | //li//ol'));
+        $marks = '(?:\d+(?:[.,]\d+)?\s*(?:marks?|mks?|points?|pts?|'
+            . '\x{0E04}\x{0E30}\x{0E41}\x{0E19}\x{0E19}|\x{0111}i\x{1EC3}m|\x{5206})'
+            . '(?![\p{L}]))';
+        foreach (array_reverse($nested) as $list) {
+            if (!$list->parentNode) {
+                continue;
+            }
+            $parts = [];
+            foreach ($list->childNodes as $child) {
+                if ($child instanceof \DOMElement && strtolower($child->nodeName) === 'li') {
+                    $text = trim(preg_replace('/\s+/u', ' ', $child->textContent));
+                    if ($text !== '') {
+                        $parts[] = $text;
+                    }
+                }
+            }
+
+            if (preg_match('/' . $marks . '/iu', implode(' ', $parts))) {
+                $fragment = $doc->createDocumentFragment();
+                foreach ($parts as $part) {
+                    $fragment->appendChild($doc->createElement('br'));
+                    $fragment->appendChild($doc->createTextNode('- ' . $part));
+                }
+                $fragment->appendChild($doc->createElement('br'));
+                $fragment->appendChild($doc->createTextNode(self::NESTED_MARKS));
+                $fragment->appendChild($doc->createElement('br'));
+                $list->parentNode->replaceChild($fragment, $list);
+                continue;
+            }
+
+            // The parent item's own text, without the nested list.
+            $item = $list->parentNode;
+            while ($item && !($item instanceof \DOMElement && strtolower($item->nodeName) === 'li')) {
+                $item = $item->parentNode;
+            }
+            $list->parentNode->removeChild($list);
+            if (!$item || empty($parts)) {
+                continue;
+            }
+            $own = trim(preg_replace('/\s+/u', ' ', $item->textContent));
+            $folded = implode(', ', $parts);
+            $trailing = '/^(.*?)\s*([\(\[]\s*(?:up\s+to\s+)?' . $marks . '\s*[\)\]]\.?|\s[\x{2013}\x{2014}=-]\s*' . $marks
+                . '\.?)\s*$/iu';
+            $lead = '/[,\s]*(?:such\s+as|e\.g\.|eg|for\s+example|including|for\s+instance)?\s*:?\s*$/iu';
+            if (preg_match($trailing, $own, $m)) {
+                $own = preg_replace($lead, '', trim($m[1])) . ' (' . $folded . ') ' . trim($m[2]);
+            } else {
+                $own = preg_replace($lead, '', $own) . ' (' . $folded . ')';
+            }
+            while ($item->firstChild) {
+                $item->removeChild($item->firstChild);
+            }
+            $item->appendChild($doc->createTextNode($own));
+        }
+        $root = $doc->getElementById('aigrader-root');
+        if (!$root) {
+            return $html;
+        }
+        $out = '';
+        foreach ($root->childNodes as $child) {
+            $out .= $doc->saveHTML($child);
+        }
+        return $out;
     }
 
     /**

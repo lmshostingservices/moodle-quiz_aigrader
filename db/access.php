@@ -44,4 +44,21 @@ $capabilities = [
         ],
         'clonepermissionsfrom' => 'mod/quiz:grade',
     ],
+
+    // Confirm the marking criteria a quiz's questions are marked against (5.0.4).
+    //
+    // Confirming criteria decides the breakdown, and so the mark, for every learner's response
+    // to a question, in every group. That is setting the marking scheme rather than marking,
+    // so by default it belongs to those who can change the quiz itself: editing teachers and
+    // managers. For custom roles the permission is cloned from mod/quiz:manage.
+    'quiz/aigrader:confirmcriteria' => [
+        'riskbitmask' => RISK_XSS,
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_MODULE,
+        'archetypes' => [
+            'editingteacher' => CAP_ALLOW,
+            'manager' => CAP_ALLOW,
+        ],
+        'clonepermissionsfrom' => 'mod/quiz:manage',
+    ],
 ];

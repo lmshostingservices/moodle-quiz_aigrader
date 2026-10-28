@@ -268,4 +268,163 @@ final class report_render_test extends \advanced_testcase {
         $this->assertSame('Clarity and structure', $criteria[2]['label']);
         $this->assertEqualsWithDelta(10.0, $criteria[0]['max'], 0.001);
     }
+
+    /**
+     * The marking criteria check above the queue shows each question's criteria and where
+     * they were found (5.0.4).
+     */
+    public function test_criteria_check_lists_the_question(): void {
+        $html = $this->render();
+
+        $this->assertStringContainsString('aigrader-critcheck', $html);
+        $this->assertStringContainsString(get_string('criteriacheck_heading', 'quiz_aigrader'), $html);
+        $this->assertStringContainsString(get_string('criteriasource_graderinfo', 'quiz_aigrader'), $html);
+    }
+
+    /**
+     * The fixture's rubric is three criteria of 10 on a question worth 10, so the check
+     * flags the disagreement instead of hiding it.
+     */
+    public function test_criteria_check_flags_a_total_that_does_not_match(): void {
+        $html = $this->render();
+
+        $this->assertStringContainsString('aigrader-critcheck-has-issues', $html);
+        $this->assertStringContainsString('add up to 30 marks but the question is worth 10', $html);
+    }
+
+    /**
+     * Grading, approval and the check all resolve the fixture's criteria the same way: three
+     * criteria of 10 on a question worth 10 do not add up, so they are not used as written.
+     */
+    public function test_criteria_resolve_from_the_stored_fields(): void {
+        global $DB;
+
+        $question = $DB->get_record('question', ['qtype' => 'essay'], '*', IGNORE_MULTIPLE);
+        $options = $DB->get_record('qtype_essay_options', ['questionid' => $question->id]);
+        $resolved = local\criteria::for_fields(
+            (string)$options->graderinfo,
+            (string)$question->questiontext,
+            (string)$question->generalfeedback,
+            10.0,
+            (float)$question->defaultmark
+        );
+
+        $this->assertSame(local\criteria::SOURCE_GRADERINFO, $resolved['source']);
+        $this->assertSame(local\criteria::UNCERTAIN, $resolved['confidence']);
+        $this->assertContains('total', $resolved['reasons']);
+        $this->assertCount(3, $resolved['candidates']);
+        $this->assertSame('Use of a workplace example', $resolved['candidates'][1]['label']);
+    }
+
+    /**
+     * With confirmation on (the default), the panel proposes the criteria and asks for them to
+     * be confirmed; once confirmed, it lists what was confirmed and by whom.
+     */
+    public function test_criteria_check_asks_for_confirmation(): void {
+        global $DB, $USER;
+
+        $html = $this->render();
+        $this->assertStringContainsString(get_string('criteriacheck_toconfirm', 'quiz_aigrader'), $html);
+        $this->assertStringContainsString('aigrader-critcheck-review', $html);
+        $this->assertStringContainsString('data-proposal=', $html);
+        $this->assertStringContainsString('data-strings=', $html);
+        $this->assertStringContainsString('Understanding of the concept', $html);
+        // Three criteria of 10 on a question worth 10 are not read exactly: no bulk confirm.
+        $this->assertStringNotContainsString('aigrader-critcheck-confirmall', $html);
+
+        $question = $DB->get_record('question', ['qtype' => 'essay'], '*', IGNORE_MULTIPLE);
+        $fields = local\confirmed::question_fields((int)$question->id);
+        $this->assertSame([10.0], local\confirmed::quiz_maxmarks((int)$this->quiz->id, (int)$question->id));
+        $this->assertTrue(local\confirmed::quiz_has_mark((int)$this->quiz->id, (int)$question->id, 10.0));
+        $this->assertFalse(local\confirmed::quiz_has_mark((int)$this->quiz->id, (int)$question->id, 5.0));
+        $this->assertFalse(local\confirmed::quiz_has_mark((int)$this->quiz->id + 1, (int)$question->id, 10.0));
+        $maxmark = 10.0;
+        [$clean, $errors] = local\confirmed::validate([
+            ['label' => 'Understanding of the concept', 'max' => 4],
+            ['label' => 'Use of a workplace example', 'max' => 3],
+            ['label' => 'Clarity and structure', 'max' => 3],
+        ], $maxmark);
+        $this->assertSame([], $errors);
+        local\confirmed::save(
+            (int)$this->quiz->id,
+            (int)$question->id,
+            $clean,
+            $maxmark,
+            local\confirmed::fields_hash(
+                $fields->graderinfo,
+                $fields->questiontext,
+                $fields->generalfeedback,
+                $fields->defaultmark
+            ),
+            'graderinfo',
+            (int)$USER->id
+        );
+
+        $html = $this->render();
+        $this->assertStringContainsString(get_string('criteriacheck_confirmed', 'quiz_aigrader', 3), $html);
+        $this->assertStringContainsString(get_string('criteriacheck_ok_confirm', 'quiz_aigrader', 1), $html);
+        $this->assertStringNotContainsString('aigrader-critcheck-has-issues', $html);
+        $this->assertStringContainsString(fullname($USER), $html);
+    }
+
+    /**
+     * Editing the question after confirming asks for the criteria again.
+     */
+    public function test_editing_the_question_asks_for_confirmation_again(): void {
+        global $DB, $USER;
+
+        $question = $DB->get_record('question', ['qtype' => 'essay'], '*', IGNORE_MULTIPLE);
+        $fields = local\confirmed::question_fields((int)$question->id);
+        [$clean] = local\confirmed::validate([['label' => 'Explains active listening', 'max' => 10]], 10.0);
+        local\confirmed::save(
+            (int)$this->quiz->id,
+            (int)$question->id,
+            $clean,
+            10.0,
+            local\confirmed::fields_hash(
+                $fields->graderinfo,
+                $fields->questiontext,
+                $fields->generalfeedback,
+                $fields->defaultmark
+            ),
+            'graderinfo',
+            (int)$USER->id
+        );
+        $DB->set_field('qtype_essay_options', 'graderinfo', '<p>Rewritten guidance.</p>', ['questionid' => $question->id]);
+        \question_bank::notify_question_edited($question->id);
+
+        $html = $this->render();
+        $this->assertStringContainsString(get_string('criteriacheck_reconfirm', 'quiz_aigrader'), $html);
+        $this->assertStringContainsString(get_string('criteriacheck_stale_note', 'quiz_aigrader'), $html);
+    }
+
+    /**
+     * With confirmation off, the panel is the plain check it was.
+     */
+    public function test_criteria_check_without_confirmation(): void {
+        set_config('criteria_confirmation', 0, 'quiz_aigrader');
+        $html = $this->render();
+        $this->assertStringNotContainsString(get_string('criteriacheck_toconfirm', 'quiz_aigrader'), $html);
+        $this->assertStringNotContainsString('data-proposal=', $html);
+        $this->assertStringContainsString('add up to 30 marks but the question is worth 10', $html);
+    }
+
+    /**
+     * Confirming criteria sets the marking scheme: a non-editing teacher sees the panel but
+     * cannot confirm, while still being able to mark.
+     */
+    public function test_non_editing_teacher_cannot_confirm(): void {
+        $dg = $this->getDataGenerator();
+        $tutor = $dg->create_user();
+        $dg->enrol_user($tutor->id, $this->course->id, 'teacher');
+        $this->setUser($tutor);
+        $context = \context_module::instance($this->cm->id);
+        $this->assertTrue(has_capability('quiz/aigrader:approve', $context));
+        $this->assertFalse(has_capability('quiz/aigrader:confirmcriteria', $context));
+
+        $html = $this->render();
+        $this->assertStringContainsString(get_string('criteriacheck_toconfirm', 'quiz_aigrader'), $html);
+        $this->assertStringNotContainsString('aigrader-critcheck-review', $html);
+        $this->assertStringNotContainsString('data-proposal=', $html);
+    }
 }

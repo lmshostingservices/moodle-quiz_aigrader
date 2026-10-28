@@ -1,25 +1,29 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="mod/quiz/report/aigrader/db" VERSION="20251228" COMMENT="AI Grader quiz report plugin tables">
+<XMLDB PATH="mod/quiz/report/aigrader/db" VERSION="20261027" COMMENT="AI Grader quiz report plugin tables"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="../../../../../lib/xmldb/xmldb.xsd"
+>
   <TABLES>
     <TABLE NAME="quiz_aigrader_attempt_ctx" COMMENT="Stores attempt context for consistent grading across attempts">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
-        <FIELD NAME="quizid" TYPE="int" LENGTH="10" NOTNULL="true"/>
-        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true"/>
-        <FIELD NAME="questionid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Question ID being graded"/>
-        <FIELD NAME="slot" TYPE="int" LENGTH="10" NOTNULL="true"/>
-        <FIELD NAME="attemptnum" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="1" COMMENT="Which attempt number"/>
-        <FIELD NAME="criteriamet" TYPE="text" NOTNULL="false" COMMENT="JSON array of criterion IDs that were met"/>
-        <FIELD NAME="feedbacksummary" TYPE="text" NOTNULL="false" COMMENT="Summary of last feedback for consistency"/>
-        <FIELD NAME="lastgrade" TYPE="number" LENGTH="10" DECIMALS="2" NOTNULL="false" COMMENT="Last APPROVED grade as a percentage, written by the assessor's approval - not the AI's suggestion"/>
-        <FIELD NAME="aigrade" TYPE="number" LENGTH="10" DECIMALS="2" NOTNULL="false" COMMENT="Last grade the AI suggested, as a percentage, kept separate from the approved grade"/>
-        <FIELD NAME="aicriteriamet" TYPE="text" NOTNULL="false" COMMENT="JSON array of criterion IDs the AI last reported, before assessor confirmation"/>
-        <FIELD NAME="aifeedback" TYPE="text" NOTNULL="false" COMMENT="The AI feedback as issued for the current suggestion, before site policy filtering or assessor edits"/>
-        <FIELD NAME="suggestedtime" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="When the current suggestion was issued, used to enforce the minimum review time server-side"/>
-        <FIELD NAME="humanreview" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" COMMENT="Flagged for human review - approval requires an explicit assessor acknowledgement"/>
-        <FIELD NAME="autolocked" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" COMMENT="Competency established on an earlier attempt - advisory only, never awards a mark"/>
-        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
-        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="quizid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="questionid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Question ID being graded"/>
+        <FIELD NAME="slot" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="attemptnum" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="1" SEQUENCE="false" COMMENT="Which attempt number"/>
+        <FIELD NAME="criteriamet" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="JSON array of criterion IDs that were met"/>
+        <FIELD NAME="feedbacksummary" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Summary of last feedback for consistency"/>
+        <FIELD NAME="lastgrade" TYPE="number" LENGTH="10" NOTNULL="false" SEQUENCE="false" DECIMALS="2" COMMENT="Last APPROVED grade as a percentage, written by the assessor's approval - not the AI's suggestion"/>
+        <FIELD NAME="aigrade" TYPE="number" LENGTH="10" NOTNULL="false" SEQUENCE="false" DECIMALS="2" COMMENT="Last grade the AI suggested, as a percentage, kept separate from the approved grade"/>
+        <FIELD NAME="aicriteriamet" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="JSON array of criterion IDs the AI last reported, before assessor confirmation"/>
+        <FIELD NAME="aifeedback" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="The AI feedback as issued for the current suggestion, before site policy filtering or assessor edits"/>
+        <FIELD NAME="aicriteria" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="JSON record of what the current suggestion was measured against: mode, source, fingerprint and the criteria shown"/>
+        <FIELD NAME="suggestedtime" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="When the current suggestion was issued, used to enforce the minimum review time server-side"/>
+        <FIELD NAME="humanreview" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Flagged for human review - approval requires an explicit assessor acknowledgement"/>
+        <FIELD NAME="autolocked" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Competency established on an earlier attempt - advisory only, never awards a mark"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
@@ -33,12 +37,12 @@
     <TABLE NAME="quiz_aigrader_grading_logs" COMMENT="Logs each essay grading event for time tracking">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
-        <FIELD NAME="quizid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Quiz that was graded"/>
-        <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Course containing the quiz"/>
-        <FIELD NAME="graderid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="User who approved the grade"/>
-        <FIELD NAME="qubaid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Question usage by activity ID"/>
-        <FIELD NAME="slot" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Question slot number"/>
-        <FIELD NAME="timegraded" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Timestamp when grade was approved"/>
+        <FIELD NAME="quizid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Quiz that was graded"/>
+        <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Course containing the quiz"/>
+        <FIELD NAME="graderid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="User who approved the grade"/>
+        <FIELD NAME="qubaid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Question usage by activity ID"/>
+        <FIELD NAME="slot" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Question slot number"/>
+        <FIELD NAME="timegraded" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Timestamp when grade was approved"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
@@ -55,32 +59,33 @@
     <TABLE NAME="quiz_aigrader_decisions" COMMENT="Append-only record of every assessment decision: what the AI suggested, what the assessor approved, and whether they differed">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
-        <FIELD NAME="quizid" TYPE="int" LENGTH="10" NOTNULL="true"/>
-        <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true"/>
-        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="The learner whose work was assessed"/>
-        <FIELD NAME="graderid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="The assessor who approved this decision"/>
-        <FIELD NAME="qubaid" TYPE="int" LENGTH="10" NOTNULL="true"/>
-        <FIELD NAME="slot" TYPE="int" LENGTH="10" NOTNULL="true"/>
-        <FIELD NAME="questionid" TYPE="int" LENGTH="10" NOTNULL="true"/>
-        <FIELD NAME="attemptnum" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="1"/>
-        <FIELD NAME="maxmark" TYPE="number" LENGTH="10" DECIMALS="5" NOTNULL="true" DEFAULT="0" COMMENT="The question's maximum mark at the time of the decision"/>
-        <FIELD NAME="aimark" TYPE="number" LENGTH="10" DECIMALS="5" NOTNULL="false" COMMENT="The mark the AI suggested, null when no suggestion was issued"/>
-        <FIELD NAME="finalmark" TYPE="number" LENGTH="10" DECIMALS="5" NOTNULL="true" DEFAULT="0" COMMENT="The mark the assessor approved and that was written to the gradebook"/>
-        <FIELD NAME="markchanged" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" COMMENT="Whether the assessor changed the suggested mark"/>
-        <FIELD NAME="feedbackchanged" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" COMMENT="Whether the assessor edited the suggested feedback"/>
-        <FIELD NAME="aifeedback" TYPE="text" NOTNULL="false" COMMENT="The AI feedback as issued, before any site policy filtering or assessor edit"/>
-        <FIELD NAME="finalfeedback" TYPE="text" NOTNULL="false" COMMENT="The feedback the learner received"/>
-        <FIELD NAME="criteriamet" TYPE="text" NOTNULL="false" COMMENT="JSON array of criterion IDs recorded against this decision"/>
-        <FIELD NAME="policymode" TYPE="char" LENGTH="20" NOTNULL="false" COMMENT="The full-marks feedback policy in force when this decision was made"/>
-        <FIELD NAME="graderinfohash" TYPE="char" LENGTH="40" NOTNULL="false" COMMENT="SHA-1 of the rubric sent to the grading service"/>
-        <FIELD NAME="instructionshash" TYPE="char" LENGTH="40" NOTNULL="false" COMMENT="SHA-1 of the extra AI instructions in force"/>
-        <FIELD NAME="modelversion" TYPE="char" LENGTH="100" NOTNULL="false" COMMENT="Model or prompt version reported by the grading service"/>
-        <FIELD NAME="requestid" TYPE="char" LENGTH="100" NOTNULL="false" COMMENT="Grading service request identifier, for tracing a decision back to its suggestion"/>
-        <FIELD NAME="reviewseconds" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="Seconds between the suggestion being issued and the assessor approving it"/>
-        <FIELD NAME="humanreview" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" COMMENT="Whether this decision was made under a human-review flag"/>
-        <FIELD NAME="autolocked" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" COMMENT="Whether competency had already been established on an earlier attempt"/>
-        <FIELD NAME="acknowledgement" TYPE="text" NOTNULL="false" COMMENT="The assessor's stated reason, required when approving under a human-review flag"/>
-        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="quizid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="The learner whose work was assessed"/>
+        <FIELD NAME="graderid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="The assessor who approved this decision"/>
+        <FIELD NAME="qubaid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="slot" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="questionid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="attemptnum" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
+        <FIELD NAME="maxmark" TYPE="number" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" DECIMALS="5" COMMENT="The question's maximum mark at the time of the decision"/>
+        <FIELD NAME="aimark" TYPE="number" LENGTH="10" NOTNULL="false" SEQUENCE="false" DECIMALS="5" COMMENT="The mark the AI suggested, null when no suggestion was issued"/>
+        <FIELD NAME="finalmark" TYPE="number" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" DECIMALS="5" COMMENT="The mark the assessor approved and that was written to the gradebook"/>
+        <FIELD NAME="markchanged" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Whether the assessor changed the suggested mark"/>
+        <FIELD NAME="feedbackchanged" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Whether the assessor edited the suggested feedback"/>
+        <FIELD NAME="aifeedback" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="The AI feedback as issued, before any site policy filtering or assessor edit"/>
+        <FIELD NAME="finalfeedback" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="The feedback the learner received"/>
+        <FIELD NAME="criteriamet" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="JSON array of criterion IDs recorded against this decision"/>
+        <FIELD NAME="policymode" TYPE="char" LENGTH="20" NOTNULL="false" SEQUENCE="false" COMMENT="The full-marks feedback policy in force when this decision was made"/>
+        <FIELD NAME="graderinfohash" TYPE="char" LENGTH="40" NOTNULL="false" SEQUENCE="false" COMMENT="SHA-1 of the criteria the decision was made against"/>
+        <FIELD NAME="criteriasource" TYPE="char" LENGTH="20" NOTNULL="false" SEQUENCE="false" COMMENT="Where the criteria came from: graderinfo, questiontext, generalfeedback, extracted, inferred or none"/>
+        <FIELD NAME="instructionshash" TYPE="char" LENGTH="40" NOTNULL="false" SEQUENCE="false" COMMENT="SHA-1 of the extra AI instructions in force"/>
+        <FIELD NAME="modelversion" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" COMMENT="Model or prompt version reported by the grading service"/>
+        <FIELD NAME="requestid" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" COMMENT="Grading service request identifier, for tracing a decision back to its suggestion"/>
+        <FIELD NAME="reviewseconds" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Seconds between the suggestion being issued and the assessor approving it"/>
+        <FIELD NAME="humanreview" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Whether this decision was made under a human-review flag"/>
+        <FIELD NAME="autolocked" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Whether competency had already been established on an earlier attempt"/>
+        <FIELD NAME="acknowledgement" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="The assessor's stated reason, required when approving under a human-review flag"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
@@ -99,15 +104,15 @@
     <TABLE NAME="quiz_aigrader_schedules" COMMENT="Stores scheduled report email configurations">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
-        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="User who created the schedule"/>
-        <FIELD NAME="frequency" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="weekly" COMMENT="daily, weekly, or monthly"/>
-        <FIELD NAME="recipients" TYPE="text" NOTNULL="false" COMMENT="Comma-separated email addresses to CC"/>
-        <FIELD NAME="lastrun" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="Timestamp of last email sent"/>
-        <FIELD NAME="nextrun" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="Timestamp of next scheduled run"/>
-        <FIELD NAME="enabled" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" COMMENT="Whether schedule is active"/>
-        <FIELD NAME="format" TYPE="char" LENGTH="10" NOTNULL="true" DEFAULT="excel" COMMENT="excel or pdf"/>
-        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
-        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="User who created the schedule"/>
+        <FIELD NAME="frequency" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="weekly" SEQUENCE="false" COMMENT="daily, weekly, or monthly"/>
+        <FIELD NAME="recipients" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Comma-separated email addresses to CC"/>
+        <FIELD NAME="lastrun" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Timestamp of last email sent"/>
+        <FIELD NAME="nextrun" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Timestamp of next scheduled run"/>
+        <FIELD NAME="enabled" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false" COMMENT="Whether schedule is active"/>
+        <FIELD NAME="format" TYPE="char" LENGTH="10" NOTNULL="true" DEFAULT="excel" SEQUENCE="false" COMMENT="excel or pdf"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
@@ -115,6 +120,28 @@
       </KEYS>
       <INDEXES>
         <INDEX NAME="enabled_nextrun" UNIQUE="false" FIELDS="enabled, nextrun"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="quiz_aigrader_criteria" COMMENT="Marking criteria an assessor confirmed for a question at a mark in a quiz. Only confirmed criteria drive the per-criterion breakdown">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="quizid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="questionid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="The question version the criteria were confirmed for"/>
+        <FIELD NAME="criteria" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="JSON array of the confirmed criteria, each with label and max"/>
+        <FIELD NAME="maxmark" TYPE="number" LENGTH="12" NOTNULL="true" DEFAULT="0" SEQUENCE="false" DECIMALS="7" COMMENT="The question's mark in the quiz when confirmed; the criteria add up to it"/>
+        <FIELD NAME="fieldshash" TYPE="char" LENGTH="40" NOTNULL="true" SEQUENCE="false" COMMENT="SHA-1 of the question text, Information for graders, General feedback and default mark when confirmed"/>
+        <FIELD NAME="proposedsource" TYPE="char" LENGTH="20" NOTNULL="false" SEQUENCE="false" COMMENT="Where the plugin found the criteria it proposed: graderinfo, questiontext, generalfeedback or none"/>
+        <FIELD NAME="confirmedby" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="User who confirmed the criteria"/>
+        <FIELD NAME="method" TYPE="char" LENGTH="10" NOTNULL="true" DEFAULT="reviewed" SEQUENCE="false" COMMENT="reviewed: confirmed in the editor; bulk: confirmed with other exact readings in one action"/>
+        <FIELD NAME="timeconfirmed" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="quizid" TYPE="foreign" FIELDS="quizid" REFTABLE="quiz" REFFIELDS="id"/>
+        <KEY NAME="confirmedby" TYPE="foreign" FIELDS="confirmedby" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="quiz_question_mark" UNIQUE="true" FIELDS="quizid, questionid, maxmark"/>
       </INDEXES>
     </TABLE>
   </TABLES>

@@ -1,0 +1,1483 @@
+[
+    {
+        "id": "screenshot-sam-hazard",
+        "why": "Criteria in question text under 'Marking Criteria (2 marks total)', sample answer in general feedback, empty graderinfo, quiz mark 1 [5.0.4: used as written only when every criterion carries marks adding up to the question's mark; here its marks do not add up to the question's mark]",
+        "graderinfo": "",
+        "questiontext": "<p dir=\"ltr\" style=\"text-align: left;\">Sam is a new storeperson at a warehouse. While restocking shelves he notices a pallet jack left in the walkway near the loading dock.</p><p dir=\"ltr\" style=\"text-align: left;\">What should Sam do, and why?</p><p dir=\"ltr\" style=\"text-align: left;\"><strong>Marking Criteria (2 marks total)</strong></p><p dir=\"ltr\" style=\"text-align: left;\">1 mark: Describe one action Sam should take (e.g. report or control the hazard).<br>1 mark: Explain why this action is important.</p>",
+        "generalfeedback": "<p><strong>Sample answer</strong></p><ul><li>Sam should move the pallet jack out of the walkway or report it to his supervisor.</li><li>This prevents someone tripping or colliding with it and being injured.</li></ul>",
+        "maxmark": 1,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "questiontext"
+        }
+    },
+    {
+        "id": "gi-ol-plain-3",
+        "why": "BSBWHS assessor guide: plain ordered list of what the answer must cover, no marks [5.0.4: used as written only when every criterion carries marks adding up to the question's mark; here its criteria carry no marks of their own]",
+        "graderinfo": "<p>The student's response must:</p><ol><li>Identify the hazard (wet floor in the cool room)</li><li>Assess the risk as high</li><li>Recommend a control from the hierarchy of controls</li></ol>",
+        "questiontext": "<p>A kitchen hand has reported water pooling on the cool-room floor. Describe how you would respond using the risk management process.</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        }
+    },
+    {
+        "id": "gi-ul-paren-marks",
+        "why": "BSBCUS customer service: bullets each carrying (2 marks)",
+        "graderinfo": "<ul><li>Acknowledges the customer's complaint and apologises (2 marks)</li><li>Asks questions to clarify the problem (2 marks)</li><li>Offers a resolution within organisational policy (2 marks)</li></ul>",
+        "questiontext": "<p>A customer calls to complain that their online order arrived damaged. Explain how you would handle the call.</p>",
+        "generalfeedback": "",
+        "maxmark": 6,
+        "expect": {
+            "source": "graderinfo",
+            "count": 3,
+            "maxes": [
+                2,
+                2,
+                2
+            ],
+            "labels_contain": [
+                "Acknowledges",
+                "Asks questions",
+                "Offers a resolution"
+            ],
+            "confidence": "certain"
+        }
+    },
+    {
+        "id": "gi-heading-total-shared",
+        "why": "Declared total in heading shared equally across unmarked bullets [5.0.4: used as written only when every criterion carries marks adding up to the question's mark; here its criteria carry no marks of their own]",
+        "graderinfo": "<p><strong>Marking criteria (10 marks total)</strong></p><ul><li>Defines emotional intelligence</li><li>Explains self-awareness</li><li>Explains self-regulation</li><li>Explains empathy</li><li>Links EI to team performance</li></ul>",
+        "questiontext": "<p>Explain the role of emotional intelligence in leading a team. (200–300 words)</p>",
+        "generalfeedback": "",
+        "maxmark": 10,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        }
+    },
+    {
+        "id": "gi-too-many-7",
+        "why": "Assessor checklist with 7 points, quiz mark 7 — too_many warning, all kept [5.0.4: used as written only when every criterion carries marks adding up to the question's mark; here its criteria carry no marks of their own]",
+        "graderinfo": "<p>Check that the student has:</p><ol><li>Completed the pre-start checklist</li><li>Checked tyre pressure</li><li>Checked hydraulic fluid levels</li><li>Tested the horn and lights</li><li>Checked the mast and chains</li><li>Checked the seatbelt</li><li>Recorded defects in the logbook</li></ol>",
+        "questiontext": "<p>Describe the pre-operational checks you must carry out on a forklift before use.</p>",
+        "generalfeedback": "",
+        "maxmark": 7,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        }
+    },
+    {
+        "id": "gi-table-criteria-marks-total",
+        "why": "Two-column Criteria | Marks table with header and Total row",
+        "graderinfo": "<table class=\"table\"><tbody><tr><td><strong>Criteria</strong></td><td><strong>Marks</strong></td></tr><tr><td>Explains the purpose of a food safety program</td><td>4</td></tr><tr><td>Identifies critical control points in the process</td><td>3</td></tr><tr><td>Describes monitoring and corrective actions</td><td>3</td></tr><tr><td><strong>Total</strong></td><td><strong>10</strong></td></tr></tbody></table>",
+        "questiontext": "<p>Explain how a food safety program is used in a commercial kitchen.</p>",
+        "generalfeedback": "",
+        "maxmark": 10,
+        "expect": {
+            "source": "graderinfo",
+            "count": 3,
+            "maxes": [
+                4,
+                3,
+                3
+            ],
+            "labels_contain": [
+                "purpose of a food safety program",
+                "critical control points",
+                "monitoring and corrective"
+            ],
+            "confidence": "certain"
+        }
+    },
+    {
+        "id": "gi-table-hash-criterion-desc-marks",
+        "why": "Four-column # | Criterion | Description | Marks marking guide table",
+        "graderinfo": "<p><strong>Marking guide</strong></p><table border=\"1\" style=\"border-collapse: collapse; width: 100%;\"><tbody><tr><td>#</td><td>Criterion</td><td>Description</td><td>Marks</td></tr><tr><td>1</td><td>Consultation</td><td>Describes how workers were consulted</td><td>2</td></tr><tr><td>2</td><td>Hazard identification</td><td>Lists hazards identified in the walkthrough</td><td>2</td></tr><tr><td>3</td><td>Risk assessment</td><td>Rates each risk using the matrix</td><td>3</td></tr><tr><td>4</td><td>Controls</td><td>Selects controls using the hierarchy</td><td>3</td></tr></tbody></table>",
+        "questiontext": "<p>Using the workplace inspection notes provided, prepare a summary of the WHS risk assessment.</p>",
+        "generalfeedback": "",
+        "maxmark": 10,
+        "expect": {
+            "source": "graderinfo",
+            "count": 4,
+            "maxes": [
+                2,
+                2,
+                3,
+                3
+            ],
+            "labels_contain": [
+                "Consultation",
+                "Hazard identification",
+                "Risk assessment",
+                "Controls"
+            ],
+            "confidence": "certain"
+        }
+    },
+    {
+        "id": "gi-table-s-ns-ticks",
+        "why": "Criteria | S | NS observation table with empty tick cells (competency style) [5.0.4: used as written only when every criterion carries marks adding up to the question's mark; here its criteria carry no marks of their own]",
+        "graderinfo": "<table><tbody><tr><td><strong>Criteria</strong></td><td><strong>S</strong></td><td><strong>NS</strong></td></tr><tr><td>Identifies the resident's dietary needs from the care plan</td><td>&nbsp;</td><td>&nbsp;</td></tr><tr><td>Describes how to assist with eating while maintaining dignity</td><td>&nbsp;</td><td>&nbsp;</td></tr><tr><td>States when to report changes to the RN</td><td>&nbsp;</td><td>&nbsp;</td></tr><tr><td>Describes documentation requirements</td><td>&nbsp;</td><td>&nbsp;</td></tr></tbody></table>",
+        "questiontext": "<p>Mrs Nguyen, 84, has dysphagia and requires a texture-modified diet. Describe how you would support her at mealtimes.</p>",
+        "generalfeedback": "",
+        "maxmark": 4,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        }
+    },
+    {
+        "id": "gi-benchmark-prose-only",
+        "why": "Benchmark answer as prose in graderinfo, no criteria anywhere [5.0.4: marking guidance that cannot be read with certainty goes to the AI to condense, checked against the text]",
+        "graderinfo": "<p><strong>Benchmark answer:</strong></p><p>The Fair Work Act 2009 sets out the National Employment Standards, which are minimum entitlements for employees including maximum weekly hours, leave and notice of termination. Employers must comply with these regardless of the award or agreement.</p>",
+        "questiontext": "<p>Explain the purpose of the National Employment Standards.</p>",
+        "generalfeedback": "",
+        "maxmark": 2,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        }
+    },
+    {
+        "id": "gi-benchmark-plus-criteria",
+        "why": "Graderinfo has a criteria list followed by a benchmark paragraph [5.0.4: used as written only when every criterion carries marks adding up to the question's mark; here its criteria carry no marks of their own]",
+        "graderinfo": "<p><strong>Assessment criteria</strong></p><ol><li>Defines delegation</li><li>Gives two benefits of delegation</li><li>Describes one risk and how to manage it</li></ol><p><strong>Benchmark answer</strong></p><p>Delegation is assigning responsibility and authority for a task to another team member. It frees the leader for strategic work and develops staff. A risk is that the task is not completed to standard, which can be managed by agreeing clear outcomes and check-in points.</p>",
+        "questiontext": "<p>What is delegation and why is it important for a team leader?</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        }
+    },
+    {
+        "id": "gi-sample-answer-bullets",
+        "why": "Graderinfo contains only a sample answer as bullets — not criteria [5.0.4: marking guidance that cannot be read with certainty goes to the AI to condense, checked against the text]",
+        "graderinfo": "<p>Sample answer:</p><ul><li>Greet guests within 30 seconds of arrival</li><li>Use the guest's name where known</li><li>Offer assistance with luggage</li><li>Explain hotel facilities</li></ul>",
+        "questiontext": "<p>Describe how you would welcome a guest at the front desk of a hotel.</p>",
+        "generalfeedback": "",
+        "maxmark": 4,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        }
+    },
+    {
+        "id": "gi-sample-answer-bullets-with-marks",
+        "why": "Sample answer whose bullets each carry marks: criteria or a marked model answer, so proposed for confirmation rather than used as written",
+        "graderinfo": "<p><strong>Sample answer</strong></p><ul><li>Check the guest's booking and ID (1 mark)</li><li>Confirm the room type and rate (1 mark)</li><li>Issue keys and explain facilities (1 mark)</li></ul>",
+        "questiontext": "<p>Outline the steps to check in a hotel guest.</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        }
+    },
+    {
+        "id": "gi-examples-fall-to-qt",
+        "why": "Graderinfo is an 'answers may include' examples list; criteria are in the question text [5.0.4: used as written only when every criterion carries marks adding up to the question's mark; here its criteria carry no marks of their own]",
+        "graderinfo": "<p>Answers may include:</p><ul><li>Noise</li><li>Manual handling</li><li>Falls from height</li><li>Dust</li><li>Electrical</li><li>Hazardous chemicals</li></ul>",
+        "questiontext": "<p>You are a leading hand on a residential building site. Identify hazards on site and describe a control for each.</p><p><strong>You will be marked on:</strong></p><ul><li>Identifying three relevant hazards</li><li>Describing a suitable control for each hazard</li><li>Using correct WHS terminology</li></ul>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "questiontext"
+        }
+    },
+    {
+        "id": "gi-picklist-at-least-3",
+        "why": "Pick-list in graderinfo ('at least 3 of the following'), nothing else [5.0.4: marking guidance that cannot be read with certainty goes to the AI to condense, checked against the text]",
+        "graderinfo": "<p>Student must identify at least 3 of the following:</p><ul><li>Hand hygiene</li><li>Use of PPE</li><li>Safe handling of sharps</li><li>Cleaning and disinfection</li><li>Waste management</li><li>Respiratory hygiene</li><li>Standard precautions</li><li>Transmission-based precautions</li></ul>",
+        "questiontext": "<p>List three infection control practices used in an aged care facility.</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo",
+            "warnings": [
+                "points_list"
+            ]
+        }
+    },
+    {
+        "id": "gi-picklist-1-each-falls-to-qt",
+        "why": "Graderinfo '1 mark for each, max 3 marks' over 6 options; real criteria in question text [5.0.4: used as written only when every criterion carries marks adding up to the question's mark; here it lists acceptable points]",
+        "graderinfo": "<p>1 mark for each, max 3 marks:</p><ul><li>Active listening</li><li>Open questions</li><li>Paraphrasing</li><li>Body language</li><li>Empathy</li><li>Summarising</li></ul>",
+        "questiontext": "<p>Describe communication techniques you would use with a distressed client.</p><p>You will be marked on:</p><ol><li>Naming three techniques</li><li>Explaining how each technique helps the client</li><li>Relating the techniques to the scenario</li></ol>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        }
+    },
+    {
+        "id": "gi-mark-bands-only",
+        "why": "Graderinfo is a mark band guide (0/1/2) — one judgement, not criteria [5.0.4: marking guidance that cannot be read with certainty goes to the AI to condense, checked against the text]",
+        "graderinfo": "<p>0 marks: no answer or incorrect<br>1 mark: partial answer, identifies the legislation only<br>2 marks: full answer, identifies legislation and explains one employer duty</p>",
+        "questiontext": "<p>Name the main WHS legislation in your state and explain one duty of a PCBU.</p>",
+        "generalfeedback": "",
+        "maxmark": 2,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        }
+    },
+    {
+        "id": "gi-criteria-then-bands",
+        "why": "Graderinfo criteria list followed by a mark band guide [5.0.4: used as written only when every criterion carries marks adding up to the question's mark; here its criteria carry no marks of their own]",
+        "graderinfo": "<p>Criteria:</p><ol><li>Explains the purpose of a toolbox talk</li><li>Describes who should attend</li><li>Describes how outcomes are recorded</li></ol><p>Guide: 0 marks: not addressed; 1 mark: addressed.</p>",
+        "questiontext": "<p>Explain how toolbox talks are used on a construction site.</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        }
+    },
+    {
+        "id": "gi-total-line",
+        "why": "Criteria with marks plus a separate 'Total: 10 marks' line",
+        "graderinfo": "<ul><li>Explains the stages of team development (4 marks)</li><li>Applies Tuckman's model to the scenario (3 marks)</li><li>Recommends leader actions for the current stage (3 marks)</li></ul><p>Total: 10 marks</p>",
+        "questiontext": "<p>Your new team has been arguing about roles for two weeks. Using a team development model, explain what is happening and what you will do.</p>",
+        "generalfeedback": "",
+        "maxmark": 10,
+        "expect": {
+            "source": "graderinfo",
+            "count": 3,
+            "maxes": [
+                4,
+                3,
+                3
+            ],
+            "labels_contain": [
+                "stages of team development",
+                "Tuckman",
+                "Recommends leader actions"
+            ],
+            "confidence": "certain"
+        }
+    },
+    {
+        "id": "gi-declared-mismatch",
+        "why": "Heading declares 10 marks total but per-line marks sum to 8 [5.0.4: marking guidance that cannot be read with certainty goes to the AI to condense, checked against the text]",
+        "graderinfo": "<p><strong>Marking criteria (10 marks total)</strong></p><ol><li>Describes the complaint handling procedure (3 marks)</li><li>Explains escalation points (3 marks)</li><li>Describes record keeping (2 marks)</li></ol>",
+        "questiontext": "<p>Explain your organisation's complaint handling procedure.</p>",
+        "generalfeedback": "",
+        "maxmark": 10,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo",
+            "warnings": [
+                "declared_mismatch"
+            ]
+        }
+    },
+    {
+        "id": "gi-total-mismatch",
+        "why": "Criteria marks sum to 6 but question is worth 5 in the quiz [5.0.4: used as written only when every criterion carries marks adding up to the question's mark; here its marks do not add up to the question's mark]",
+        "graderinfo": "<ul><li>Identifies the duty of care owed (2 marks)</li><li>Describes how it applies to the scenario (2 marks)</li><li>Recommends an action (2 marks)</li></ul>",
+        "questiontext": "<p>A child at your service has a known peanut allergy. Explain your duty of care.</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        }
+    },
+    {
+        "id": "gi-too-few",
+        "why": "Only two criteria, question worth 4 [5.0.4: used as written only when every criterion carries marks adding up to the question's mark; here its criteria carry no marks of their own]",
+        "graderinfo": "<ol><li>States the purpose of a handover</li><li>Lists information to include in a handover</li></ol>",
+        "questiontext": "<p>Explain why clinical handover is important and what it should include.</p>",
+        "generalfeedback": "",
+        "maxmark": 4,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        }
+    },
+    {
+        "id": "gi-two-criteria-mark-2",
+        "why": "Two criteria, question worth 2 — no warnings (too_few needs maxmark >= 3) [5.0.4: used as written only when every criterion carries marks adding up to the question's mark; here its criteria carry no marks of their own]",
+        "graderinfo": "<ol><li>Names the legislation</li><li>States one employer obligation</li></ol>",
+        "questiontext": "<p>Name the anti-discrimination legislation that applies in your workplace and state one employer obligation.</p>",
+        "generalfeedback": "",
+        "maxmark": 2,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        }
+    },
+    {
+        "id": "gi-single-bullet",
+        "why": "Graderinfo has one bullet only — not a rubric, nothing else either [5.0.4: marking guidance that cannot be read with certainty goes to the AI to condense, checked against the text]",
+        "graderinfo": "<ul><li>Must mention the Privacy Act</li></ul>",
+        "questiontext": "<p>How should client records be stored?</p>",
+        "generalfeedback": "",
+        "maxmark": 2,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        }
+    },
+    {
+        "id": "qt-paren-marks-list",
+        "why": "Question text bullets each with (1 mark)",
+        "graderinfo": "",
+        "questiontext": "<p>Read the case study about Riverside Café.</p><p>In your answer you must:</p><ul><li>Identify the cause of the customer complaint (1 mark)</li><li>Describe how the supervisor should respond (1 mark)</li><li>Suggest one change to prevent recurrence (1 mark)</li></ul>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "source": "questiontext",
+            "count": 3,
+            "maxes": [
+                1,
+                1,
+                1
+            ],
+            "labels_contain": [
+                "cause of the customer complaint",
+                "supervisor should respond",
+                "prevent recurrence"
+            ],
+            "confidence": "certain"
+        }
+    },
+    {
+        "id": "qt-dash-marks",
+        "why": "Question text lines ending ' - 2 marks'",
+        "graderinfo": "",
+        "questiontext": "<p>Explain the following in relation to manual handling:</p><p>The risk factors that make a task hazardous - 2 marks<br>The safe lifting technique - 2 marks<br>When mechanical aids must be used - 2 marks</p>",
+        "generalfeedback": "",
+        "maxmark": 6,
+        "expect": {
+            "source": "questiontext",
+            "count": 3,
+            "maxes": [
+                2,
+                2,
+                2
+            ],
+            "labels_contain": [
+                "risk factors",
+                "safe lifting technique",
+                "mechanical aids"
+            ],
+            "confidence": "certain"
+        }
+    },
+    {
+        "id": "qt-label-marks-colon",
+        "why": "'Knowledge (3 marks): ...' style labelled criteria in question text",
+        "graderinfo": "",
+        "questiontext": "<p>Write a short report on the leadership style you would use for a newly merged team.</p><p>Knowledge (3 marks): explains two leadership styles.<br>Application (4 marks): applies a style to the merged-team scenario.<br>Communication (3 marks): clear structure and professional language.</p>",
+        "generalfeedback": "",
+        "maxmark": 10,
+        "expect": {
+            "source": "questiontext",
+            "count": 3,
+            "maxes": [
+                3,
+                4,
+                3
+            ],
+            "labels_contain": [
+                "Knowledge",
+                "Application",
+                "Communication"
+            ],
+            "confidence": "certain"
+        }
+    },
+    {
+        "id": "qt-assessment-criteria-heading",
+        "why": "'Assessment criteria' heading over unmarked bullets in question text [5.0.4: used as written only when every criterion carries marks adding up to the question's mark; here its criteria carry no marks of their own]",
+        "graderinfo": "",
+        "questiontext": "<p>Describe the steps you would take to set up a function room for a 60-guest cocktail event.</p><h5>Assessment criteria</h5><ul><li>Confirms requirements from the function sheet</li><li>Describes layout and furniture placement</li><li>Describes equipment and safety checks</li></ul>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "questiontext"
+        }
+    },
+    {
+        "id": "qt-marked-on-heading",
+        "why": "'You will be marked on:' heading with four items [5.0.4: used as written only when every criterion carries marks adding up to the question's mark; here its criteria carry no marks of their own]",
+        "graderinfo": "",
+        "questiontext": "<p dir=\"ltr\" style=\"text-align: left;\">Prepare a toolbox talk outline on working at heights.</p><p dir=\"ltr\" style=\"text-align: left;\">You will be marked on:</p><ol><li>Relevant regulations referenced</li><li>Hazards specific to the site</li><li>Control measures</li><li>Emergency and rescue procedure</li></ol>",
+        "generalfeedback": "",
+        "maxmark": 4,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "questiontext"
+        }
+    },
+    {
+        "id": "qt-pc-numbering",
+        "why": "Performance criteria heading with 'PC 1.1' numbered items [5.0.4: used as written only when every criterion carries marks adding up to the question's mark; here its criteria carry no marks of their own]",
+        "graderinfo": "",
+        "questiontext": "<p>Describe how you would plan a team meeting to review last quarter's results.</p><p><strong>Performance criteria</strong></p><p>PC 1.1 Identify the purpose and objectives of the meeting<br>PC 1.2 Prepare and distribute an agenda<br>PC 1.3 Confirm attendees and arrangements</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "questiontext"
+        }
+    },
+    {
+        "id": "qt-numbered-subq-nomarks",
+        "why": "Plain numbered sub-questions without marks — not criteria",
+        "graderinfo": "",
+        "questiontext": "<p>Answer the following:</p><ol><li>What is a Safety Data Sheet?</li><li>Where must SDSs be kept?</li><li>Who must have access to them?</li></ol>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "source": "none",
+            "confidence": "none"
+        }
+    },
+    {
+        "id": "qt-subq-abc-marks",
+        "why": "Sub-questions a) b) c) with their own marks (3 lines) — treated as criteria",
+        "graderinfo": "",
+        "questiontext": "<p>Refer to the incident report for Bay 4.</p><p>a) Identify the immediate cause of the incident (2 marks)<br>b) Identify one underlying cause (2 marks)<br>c) Recommend one corrective action (1 mark)</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "source": "questiontext",
+            "count": 3,
+            "maxes": [
+                2,
+                2,
+                1
+            ],
+            "labels_contain": [
+                "immediate cause",
+                "underlying cause",
+                "corrective action"
+            ],
+            "confidence": "certain"
+        }
+    },
+    {
+        "id": "qt-subq-abc-nomarks",
+        "why": "Sub-questions a) b) c) without marks",
+        "graderinfo": "",
+        "questiontext": "<p>a) What is the role of a Health and Safety Representative?<br>b) How is an HSR elected?<br>c) What training is an HSR entitled to?</p>",
+        "generalfeedback": "",
+        "maxmark": 6,
+        "expect": {
+            "source": "none",
+            "confidence": "none"
+        }
+    },
+    {
+        "id": "qt-six-marked-falls-to-gf",
+        "why": "Six marked sub-questions in question text (sub-questions, not rubric); criteria in general feedback [5.0.4: used as written only when every criterion carries marks adding up to the question's mark; here its criteria carry no marks of their own]",
+        "graderinfo": "",
+        "questiontext": "<p>Answer all parts.</p><ol><li>Define risk (1 mark)</li><li>Define hazard (1 mark)</li><li>Name the hierarchy of controls (1 mark)</li><li>Give an example of elimination (1 mark)</li><li>Give an example of PPE (1 mark)</li><li>Explain why PPE is the last resort (1 mark)</li></ol>",
+        "generalfeedback": "<p><strong>Marking criteria</strong></p><ul><li>Accurate definitions</li><li>Correct order of controls</li><li>Relevant workplace examples</li></ul>",
+        "maxmark": 6,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "generalfeedback"
+        }
+    },
+    {
+        "id": "qt-six-marked-none",
+        "why": "Six marked sub-questions and nothing elsewhere [5.0.4: marking guidance that cannot be read with certainty goes to the AI to condense, checked against the text]",
+        "graderinfo": "",
+        "questiontext": "<p>1. Define consultation (1 mark)<br>2. Name two consultation methods (1 mark)<br>3. Who is an HSR? (1 mark)<br>4. What is an HSC? (1 mark)<br>5. When must a PCBU consult? (1 mark)<br>6. How are issues resolved? (1 mark)</p>",
+        "generalfeedback": "",
+        "maxmark": 6,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "questiontext"
+        }
+    },
+    {
+        "id": "qt-five-marked-boundary",
+        "why": "Exactly five marked lines in question text — still a rubric",
+        "graderinfo": "",
+        "questiontext": "<p>Write a procedure for closing the bar at the end of a shift. You will be assessed on:</p><ul><li>Cash handling and reconciliation (1 mark)</li><li>Stock security (1 mark)</li><li>Cleaning of equipment (1 mark)</li><li>RSA records (1 mark)</li><li>Handover to the duty manager (1 mark)</li></ul>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "source": "questiontext",
+            "count": 5,
+            "maxes": [
+                1,
+                1,
+                1,
+                1,
+                1
+            ],
+            "labels_contain": [
+                "Cash handling",
+                "Stock security",
+                "Cleaning",
+                "RSA",
+                "Handover"
+            ],
+            "confidence": "certain"
+        }
+    },
+    {
+        "id": "qt-incident-data-table",
+        "why": "Incident figures table in question text — data, not criteria",
+        "graderinfo": "",
+        "questiontext": "<p>The table shows incidents at the depot over the last year.</p><table><tbody><tr><td>Month</td><td>Incidents</td><td>Lost time (days)</td></tr><tr><td>Jan</td><td>4</td><td>2</td></tr><tr><td>Feb</td><td>6</td><td>5</td></tr><tr><td>Mar</td><td>3</td><td>0</td></tr><tr><td>Apr</td><td>7</td><td>9</td></tr></tbody></table><p>Analyse the trend and recommend actions for management.</p>",
+        "generalfeedback": "",
+        "maxmark": 4,
+        "expect": {
+            "source": "none",
+            "confidence": "none"
+        }
+    },
+    {
+        "id": "qt-risk-matrix-plus-criteria",
+        "why": "Risk matrix table in question text plus a real marked criteria list",
+        "graderinfo": "",
+        "questiontext": "<p>Use the risk matrix below.</p><table border=\"1\"><tbody><tr><td></td><td>Minor</td><td>Moderate</td><td>Major</td></tr><tr><td>Likely</td><td>Medium</td><td>High</td><td>Extreme</td></tr><tr><td>Possible</td><td>Low</td><td>Medium</td><td>High</td></tr><tr><td>Unlikely</td><td>Low</td><td>Low</td><td>Medium</td></tr></tbody></table><p><strong>Marking criteria</strong></p><p>2 marks: Rates the scaffold risk correctly using the matrix<br>2 marks: Justifies the likelihood and consequence chosen<br>2 marks: Recommends controls to reduce the rating</p>",
+        "generalfeedback": "",
+        "maxmark": 6,
+        "expect": {
+            "source": "questiontext",
+            "count": 3,
+            "maxes": [
+                2,
+                2,
+                2
+            ],
+            "labels_contain": [
+                "Rates the scaffold risk",
+                "Justifies",
+                "Recommends controls"
+            ],
+            "confidence": "certain"
+        }
+    },
+    {
+        "id": "qt-price-list-table",
+        "why": "Price list table in a hospitality costing question — no criteria",
+        "graderinfo": "",
+        "questiontext": "<p>Calculate the food cost percentage for the dish using the supplier price list.</p><table><tbody><tr><td>Item</td><td>Unit</td><td>Price</td></tr><tr><td>Chicken breast</td><td>1 kg</td><td>$14.50</td></tr><tr><td>Cream</td><td>1 L</td><td>$6.20</td></tr><tr><td>Mushrooms</td><td>1 kg</td><td>$11.00</td></tr></tbody></table><p>Selling price: $32.00</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "source": "none",
+            "confidence": "none"
+        }
+    },
+    {
+        "id": "qt-legislation-years",
+        "why": "Numbered sub-questions referencing Acts with years in brackets — years are not marks",
+        "graderinfo": "",
+        "questiontext": "<ol><li>Outline employer duties under the Work Health and Safety Act (2011).</li><li>Outline worker duties under the same Act.</li><li>Explain the role of the regulator under the Act (2011).</li></ol>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "source": "none",
+            "confidence": "none"
+        }
+    },
+    {
+        "id": "qt-word-limit",
+        "why": "Word limits in brackets are not marks",
+        "graderinfo": "",
+        "questiontext": "<p>Explain how you would support an older person to maintain independence in daily living. (150-200 words)</p><p>[150 words minimum]</p>",
+        "generalfeedback": "",
+        "maxmark": 4,
+        "expect": {
+            "source": "none",
+            "confidence": "none"
+        }
+    },
+    {
+        "id": "qt-rubric-in-sentence",
+        "why": "'rubric' appears mid-sentence, not as a heading; unmarked numbered questions",
+        "graderinfo": "",
+        "questiontext": "<p>Your assessor will use the unit rubric to decide if your answer is satisfactory.</p><ol><li>What is a code of conduct?</li><li>Why do organisations have one?</li><li>Give an example of a breach.</li></ol>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "source": "none",
+            "confidence": "none"
+        }
+    },
+    {
+        "id": "qt-25kg-scenario",
+        "why": "Scenario with 'a total of 25 kg' — a figure, not marks",
+        "graderinfo": "",
+        "questiontext": "<p>A delivery driver must unload boxes weighing a total of 25 kg each from a van with a 1.2 m floor height, 40 times per shift.</p><p>Identify the manual handling risk factors and suggest controls.</p>",
+        "generalfeedback": "",
+        "maxmark": 4,
+        "expect": {
+            "source": "none",
+            "confidence": "none"
+        }
+    },
+    {
+        "id": "qt-scenario-fact-bullets",
+        "why": "Bullet list of scenario facts in question text — not criteria",
+        "graderinfo": "",
+        "questiontext": "<p>Case study: Greenway Childcare</p><ul><li>48 children enrolled</li><li>3 rooms: nursery, toddler, pre-kindy</li><li>2 educators recently resigned</li><li>Parents have complained about communication</li></ul><p>As the room leader, explain how you would improve communication with families.</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "source": "none",
+            "confidence": "none"
+        }
+    },
+    {
+        "id": "qt-numbered-instructions",
+        "why": "Numbered instructions to the student — not criteria",
+        "graderinfo": "",
+        "questiontext": "<p>Instructions:</p><p>1. Read the case study in Appendix B<br>2. Answer the question below in your own words<br>3. Upload your answer as a Word document</p><p>Explain how the site supervisor failed to meet their WHS obligations.</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "source": "none",
+            "confidence": "none"
+        }
+    },
+    {
+        "id": "qt-question-heading-total-only",
+        "why": "'Question 1 (4 marks)' heading over a plain question",
+        "graderinfo": "",
+        "questiontext": "<p><strong>Question 1 (4 marks)</strong></p><p>Explain why it is important to follow the client's individualised plan.</p>",
+        "generalfeedback": "",
+        "maxmark": 4,
+        "expect": {
+            "source": "none",
+            "confidence": "none"
+        }
+    },
+    {
+        "id": "qt-part-a-heading-marked-lines",
+        "why": "'Part A (5 marks)' heading is a total; the marked lines below are criteria",
+        "graderinfo": "",
+        "questiontext": "<p><strong>Part A (5 marks)</strong></p><p>Review the attached rostering spreadsheet.</p><p>2 marks: Identify the award breach in the roster<br>2 marks: Explain the impact on the employee<br>1 mark: Recommend a correction</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "source": "questiontext",
+            "count": 3,
+            "maxes": [
+                2,
+                2,
+                1
+            ],
+            "labels_contain": [
+                "award breach",
+                "impact on the employee",
+                "Recommend a correction"
+            ],
+            "confidence": "certain"
+        }
+    },
+    {
+        "id": "qt-mark-bands",
+        "why": "Mark bands in question text — one judgement, not criteria [5.0.4: marking guidance that cannot be read with certainty goes to the AI to condense, checked against the text]",
+        "graderinfo": "",
+        "questiontext": "<p>Explain the purpose of a Safe Work Method Statement.</p><p>Marking guide:<br>0 marks: not attempted<br>1 mark: partial explanation<br>2 marks: full explanation with an example of high-risk construction work</p>",
+        "generalfeedback": "",
+        "maxmark": 2,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "questiontext"
+        }
+    },
+    {
+        "id": "qt-total-line-and-marked",
+        "why": "Marked criteria lines plus 'Total: 10 marks' in question text",
+        "graderinfo": "",
+        "questiontext": "<p>Develop a customer feedback strategy for a boutique hotel.</p><ul><li>Methods for collecting feedback (3 marks)</li><li>How feedback will be analysed (3 marks)</li><li>How improvements will be communicated to staff (4 marks)</li></ul><p><strong>Total: 10 marks</strong></p>",
+        "generalfeedback": "",
+        "maxmark": 10,
+        "expect": {
+            "source": "questiontext",
+            "count": 3,
+            "maxes": [
+                3,
+                3,
+                4
+            ],
+            "labels_contain": [
+                "collecting feedback",
+                "analysed",
+                "communicated to staff"
+            ],
+            "confidence": "certain"
+        }
+    },
+    {
+        "id": "qt-declared-mismatch",
+        "why": "'Marking criteria (6 marks total)' but lines sum to 5 [5.0.4: marking guidance that cannot be read with certainty goes to the AI to condense, checked against the text]",
+        "graderinfo": "",
+        "questiontext": "<p>Explain how you would conduct a performance review with an underperforming team member.</p><p><strong>Marking criteria (6 marks total)</strong></p><p>2 marks: Preparation before the meeting<br>2 marks: Conducting the conversation<br>1 mark: Agreeing a performance improvement plan</p>",
+        "generalfeedback": "",
+        "maxmark": 6,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "questiontext",
+            "warnings": [
+                "declared_mismatch"
+            ]
+        }
+    },
+    {
+        "id": "qt-heading-total-shared",
+        "why": "'Marking criteria (6 marks total)' with three unmarked items — 2 each [5.0.4: used as written only when every criterion carries marks adding up to the question's mark; here its criteria carry no marks of their own]",
+        "graderinfo": "",
+        "questiontext": "<p>Describe how you would respond to a fire alarm in a restaurant during service.</p><p><strong>Marking criteria (6 marks total)</strong></p><ul><li>Follows the emergency procedure</li><li>Ensures guest and staff safety</li><li>Reports to the warden at the assembly point</li></ul>",
+        "generalfeedback": "",
+        "maxmark": 6,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "questiontext"
+        }
+    },
+    {
+        "id": "qt-picklist-any-2",
+        "why": "Pick-list in question text ('any 2 of the following') with nothing else [5.0.4: marking guidance that cannot be read with certainty goes to the AI to condense, checked against the text]",
+        "graderinfo": "",
+        "questiontext": "<p>Identify any 2 of the following safety signs and explain their meaning:</p><ul><li>Prohibition</li><li>Mandatory</li><li>Warning</li><li>Emergency information</li><li>Fire</li></ul><p>1 mark for each, max 2 marks.</p>",
+        "generalfeedback": "",
+        "maxmark": 2,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "questiontext",
+            "warnings": [
+                "points_list"
+            ]
+        }
+    },
+    {
+        "id": "qt-privacy-act-year-and-marks",
+        "why": "Marked lines that also contain an Act year in brackets",
+        "graderinfo": "",
+        "questiontext": "<p>Explain the purpose of the Privacy Act (1988) as it applies to client records (2 marks)<br>Describe how you would store paper-based records securely (2 marks)<br>Describe when information can be disclosed without consent (2 marks)</p>",
+        "generalfeedback": "",
+        "maxmark": 6,
+        "expect": {
+            "source": "questiontext",
+            "count": 3,
+            "maxes": [
+                2,
+                2,
+                2
+            ],
+            "labels_contain": [
+                "Privacy Act",
+                "paper-based records",
+                "disclosed without consent"
+            ],
+            "confidence": "certain"
+        }
+    },
+    {
+        "id": "qt-question-heading-plus-4-marked",
+        "why": "'Question 3 (8 marks)' heading followed by four (2 marks) lines",
+        "graderinfo": "",
+        "questiontext": "<p><strong>Question 3 (8 marks)</strong></p><p>Explain:</p><ul><li>the purpose of a site induction (2 marks)</li><li>the information covered in a site induction (2 marks)</li><li>how inductions are recorded (2 marks)</li><li>the consequences of working without one (2 marks)</li></ul>",
+        "generalfeedback": "",
+        "maxmark": 8,
+        "expect": {
+            "source": "questiontext",
+            "count": 4,
+            "maxes": [
+                2,
+                2,
+                2,
+                2
+            ],
+            "labels_contain": [
+                "purpose of a site induction",
+                "information covered",
+                "recorded",
+                "consequences"
+            ],
+            "confidence": "certain"
+        }
+    },
+    {
+        "id": "qt-en-dash-prefix",
+        "why": "'1 mark – ...' en-dash prefix lines under Marking criteria heading",
+        "graderinfo": "",
+        "questiontext": "<p>Describe how to safely operate a commercial deep fryer.</p><p>Marking criteria</p><p>1 mark – checks oil level and condition<br>1 mark – uses correct PPE<br>1 mark – describes the fire suppression response</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "source": "questiontext",
+            "count": 3,
+            "maxes": [
+                1,
+                1,
+                1
+            ],
+            "labels_contain": [
+                "oil level",
+                "PPE",
+                "fire suppression"
+            ],
+            "confidence": "certain"
+        }
+    },
+    {
+        "id": "qt-rubric-heading",
+        "why": "'Rubric' heading over marked lines in question text",
+        "graderinfo": "",
+        "questiontext": "<p>Write an email to staff announcing a change to the leave request process.</p><p><strong>Rubric</strong></p><ul><li>Purpose of the change is clear (2 marks)</li><li>New process steps are accurate (2 marks)</li><li>Tone and format are professional (1 mark)</li></ul>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "source": "questiontext",
+            "count": 3,
+            "maxes": [
+                2,
+                2,
+                1
+            ],
+            "labels_contain": [
+                "Purpose of the change",
+                "process steps",
+                "Tone"
+            ],
+            "confidence": "certain"
+        }
+    },
+    {
+        "id": "gf-criteria-heading",
+        "why": "Criteria only in General feedback under 'Marking criteria' [5.0.4: used as written only when every criterion carries marks adding up to the question's mark; here its criteria carry no marks of their own]",
+        "graderinfo": "",
+        "questiontext": "<p>Explain the importance of cultural safety when working with Aboriginal and Torres Strait Islander clients.</p>",
+        "generalfeedback": "<p><strong>Marking criteria</strong></p><ul><li>Defines cultural safety</li><li>Explains why it matters for health outcomes</li><li>Gives one example of culturally safe practice</li></ul>",
+        "maxmark": 3,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "generalfeedback"
+        }
+    },
+    {
+        "id": "gf-sample-answer-only",
+        "why": "General feedback holds only a sample answer bullet list [5.0.4: marking guidance that cannot be read with certainty goes to the AI to condense, checked against the text]",
+        "graderinfo": "",
+        "questiontext": "<p>Describe two ways to minimise waste in a commercial kitchen.</p>",
+        "generalfeedback": "<p><strong>Model answer</strong></p><ul><li>Use FIFO stock rotation</li><li>Portion control using standard recipes</li><li>Use trim in stocks and staff meals</li></ul>",
+        "maxmark": 2,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "generalfeedback"
+        }
+    },
+    {
+        "id": "gf-mark-lines",
+        "why": "General feedback with '1 mark:' lines",
+        "graderinfo": "",
+        "questiontext": "<p>What should you do if you find a co-worker unconscious near an electrical panel?</p>",
+        "generalfeedback": "<p>1 mark: Do not touch the person until the power is isolated<br>1 mark: Isolate the power at the switchboard<br>1 mark: Call 000 and begin first aid</p>",
+        "maxmark": 3,
+        "expect": {
+            "source": "generalfeedback",
+            "count": 3,
+            "maxes": [
+                1,
+                1,
+                1
+            ],
+            "labels_contain": [
+                "Do not touch",
+                "Isolate the power",
+                "Call 000"
+            ],
+            "confidence": "certain"
+        }
+    },
+    {
+        "id": "gf-mark-bands",
+        "why": "General feedback with mark bands only [5.0.4: marking guidance that cannot be read with certainty goes to the AI to condense, checked against the text]",
+        "graderinfo": "",
+        "questiontext": "<p>Explain what a duty of care is in a community services context.</p>",
+        "generalfeedback": "<p>0 marks: no answer<br>1 mark: basic definition<br>2 marks: definition plus an example relevant to community services</p>",
+        "maxmark": 2,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "generalfeedback"
+        }
+    },
+    {
+        "id": "gi-wins-over-qt",
+        "why": "Both graderinfo list and question-text marked lines present — graderinfo wins [5.0.4: used as written only when every criterion carries marks adding up to the question's mark; here its marks do not add up to the question's mark]",
+        "graderinfo": "<ol><li>Identifies the type of conflict</li><li>Describes a resolution strategy</li><li>Explains how to follow up</li><li>Describes documentation</li></ol>",
+        "questiontext": "<p>Two team members are in conflict over shift allocation.</p><p>Identify the conflict (1 mark)<br>Describe how you will resolve it (2 marks)</p>",
+        "generalfeedback": "",
+        "maxmark": 4,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "questiontext"
+        }
+    },
+    {
+        "id": "qt-wins-over-gf",
+        "why": "Question text criteria win over general feedback criteria",
+        "graderinfo": "",
+        "questiontext": "<p>Describe how you would greet and seat a guest with a mobility aid.</p><p>You will be marked on:</p><ul><li>Greeting (1 mark)</li><li>Offering assistance respectfully (1 mark)</li><li>Selecting an accessible table (1 mark)</li></ul>",
+        "generalfeedback": "<p><strong>Marking criteria</strong></p><ul><li>Polite greeting</li><li>Accessible seating</li></ul>",
+        "maxmark": 3,
+        "expect": {
+            "source": "questiontext",
+            "count": 3,
+            "maxes": [
+                1,
+                1,
+                1
+            ],
+            "labels_contain": [
+                "Greeting",
+                "Offering assistance",
+                "accessible table"
+            ],
+            "confidence": "certain"
+        }
+    },
+    {
+        "id": "gi-nested-such-as",
+        "why": "Criteria list where one criterion has a nested 'such as:' example sub-list [5.0.4: used as written only when every criterion carries marks adding up to the question's mark; here its criteria carry no marks of their own]",
+        "graderinfo": "<ol><li>Identifies hazards in the scenario, such as:<ul><li>slippery floors</li><li>hot surfaces</li><li>sharp knives</li></ul></li><li>Assesses the risk of each hazard</li><li>Proposes controls for each hazard</li></ol>",
+        "questiontext": "<p>Conduct a hazard assessment of the kitchen described in the case study.</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        }
+    },
+    {
+        "id": "gi-long-criteria",
+        "why": "Criteria longer than 100 characters each [5.0.4: used as written only when every criterion carries marks adding up to the question's mark; here its criteria carry no marks of their own]",
+        "graderinfo": "<ul><li>Explains how the organisation's strategic objectives were translated into the operational plan, with specific reference to the KPIs set for the customer service team in the case study</li><li>Describes the consultation process used with team members and other stakeholders when developing the plan, including how feedback was recorded and incorporated</li><li>Identifies at least two resource requirements (human, physical or financial) and explains how each will be acquired within the budget constraints described</li></ul>",
+        "questiontext": "<p>Using the case study, explain how you developed the operational plan for the customer service team.</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        }
+    },
+    {
+        "id": "gi-shared-first-word",
+        "why": "Criteria that all start with 'Explain' [5.0.4: used as written only when every criterion carries marks adding up to the question's mark; here its criteria carry no marks of their own]",
+        "graderinfo": "<ol><li>Explain the purpose of a risk register</li><li>Explain the process for updating the register</li><li>Explain the consequences of not maintaining it</li></ol>",
+        "questiontext": "<p>Explain how a risk register is used in a small business.</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        }
+    },
+    {
+        "id": "gi-thai",
+        "why": "Thai-language assessor criteria list (Thai hospitality client) [5.0.4: used as written only when every criterion carries marks adding up to the question's mark; here its criteria carry no marks of their own]",
+        "graderinfo": "<p>เกณฑ์การให้คะแนน</p><ol><li>ทักทายแขกอย่างสุภาพ</li><li>ตรวจสอบการจองห้องพัก</li><li>อธิบายสิ่งอำนวยความสะดวกของโรงแรม</li></ol>",
+        "questiontext": "<p>อธิบายขั้นตอนการเช็คอินแขกที่โรงแรม</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        }
+    },
+    {
+        "id": "gi-vietnamese",
+        "why": "Vietnamese-language criteria list [5.0.4: used as written only when every criterion carries marks adding up to the question's mark; here its criteria carry no marks of their own]",
+        "graderinfo": "<ul><li>Xác định các mối nguy hiểm trong bếp</li><li>Đánh giá mức độ rủi ro</li><li>Đề xuất biện pháp kiểm soát</li></ul>",
+        "questiontext": "<p>Hãy mô tả quy trình quản lý rủi ro trong nhà bếp thương mại.</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        }
+    },
+    {
+        "id": "gi-half-marks",
+        "why": "Half-mark criteria (0.5) mixed with a 1-mark criterion",
+        "graderinfo": "<ul><li>Names the first aid kit location (0.5 marks)</li><li>Names the AED location (0.5 marks)</li><li>Names the emergency assembly area (0.5 marks)</li><li>Names the first aid officer (0.5 marks)</li><li>Describes how to report an injury (1 mark)</li></ul>",
+        "questiontext": "<p>Describe the first aid arrangements at your workplace.</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "source": "graderinfo",
+            "count": 5,
+            "maxes": [
+                0.5,
+                0.5,
+                0.5,
+                0.5,
+                1
+            ],
+            "labels_contain": [
+                "first aid kit",
+                "AED",
+                "assembly area",
+                "first aid officer",
+                "report an injury"
+            ],
+            "confidence": "certain"
+        }
+    },
+    {
+        "id": "gi-criterion-n-labels",
+        "why": "Paragraphs prefixed 'Criterion 1:', 'Criterion 2:' with marks",
+        "graderinfo": "<p>Criterion 1: Identifies the client's rights (2 marks)</p><p>Criterion 2: Explains how rights are upheld in service delivery (2 marks)</p><p>Criterion 3: Describes the complaints process available to clients (2 marks)</p>",
+        "questiontext": "<p>Explain how you uphold the rights of clients in a disability support setting.</p>",
+        "generalfeedback": "",
+        "maxmark": 6,
+        "expect": {
+            "source": "graderinfo",
+            "count": 3,
+            "maxes": [
+                2,
+                2,
+                2
+            ],
+            "confidence": "certain"
+        }
+    },
+    {
+        "id": "gi-out-of-10-each",
+        "why": "'marked out of 10 each' heading sets each criterion's max",
+        "graderinfo": "<p>The following criteria are marked out of 10 each:</p><ol><li>Analysis of the business problem</li><li>Quality of the proposed solution</li><li>Implementation plan</li></ol>",
+        "questiontext": "<p>Prepare a business case for introducing a new rostering system.</p>",
+        "generalfeedback": "",
+        "maxmark": 30,
+        "expect": {
+            "source": "graderinfo",
+            "count": 3,
+            "maxes": [
+                10,
+                10,
+                10
+            ],
+            "labels_contain": [
+                "Analysis",
+                "proposed solution",
+                "Implementation plan"
+            ],
+            "confidence": "certain"
+        }
+    },
+    {
+        "id": "gi-p-br-numbered",
+        "why": "Numbered criteria typed inside one paragraph with <br> (no list markup) [5.0.4: used as written only when every criterion carries marks adding up to the question's mark; here its criteria carry no marks of their own]",
+        "graderinfo": "<p>1. Correctly identifies the award<br>2. Calculates the ordinary hourly rate<br>3. Calculates the Sunday penalty rate</p>",
+        "questiontext": "<p>Using the Hospitality Industry (General) Award, calculate the pay for the shift shown.</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        }
+    },
+    {
+        "id": "gi-lettered-paras",
+        "why": "Lettered a) b) c) criteria as separate paragraphs in graderinfo [5.0.4: used as written only when every criterion carries marks adding up to the question's mark; here a line reads as a second mark figure]",
+        "graderinfo": "<p>a) Describes how to check the ladder before use</p><p>b) Describes the 3 points of contact rule</p><p>c) Describes correct ladder angle (1:4)</p>",
+        "questiontext": "<p>Explain how to use an extension ladder safely.</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        }
+    },
+    {
+        "id": "gi-table-no-marks-col",
+        "why": "Criteria | Assessor comments table without a marks column [5.0.4: used as written only when every criterion carries marks adding up to the question's mark; here its criteria carry no marks of their own]",
+        "graderinfo": "<table><tbody><tr><th>Criteria</th><th>Assessor comments</th></tr><tr><td>Identifies signs of elder abuse</td><td>&nbsp;</td></tr><tr><td>Describes reporting obligations</td><td>&nbsp;</td></tr><tr><td>Describes how to support the resident</td><td>&nbsp;</td></tr></tbody></table>",
+        "questiontext": "<p>You notice unexplained bruising on a resident. Describe what you would do.</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        }
+    },
+    {
+        "id": "gi-table-sit-mismatch",
+        "why": "SIT marking table whose marks sum to 12 but question worth 10 [5.0.4: used as written only when every criterion carries marks adding up to the question's mark; here its marks do not add up to the question's mark]",
+        "graderinfo": "<table><tbody><tr><td>Criteria</td><td>Marks</td></tr><tr><td>Menu items meet dietary requirements</td><td>4</td></tr><tr><td>Costing is accurate</td><td>4</td></tr><tr><td>Presentation of menu</td><td>4</td></tr><tr><td>Total</td><td>12</td></tr></tbody></table>",
+        "questiontext": "<p>Design a three-course menu for a function with vegetarian and gluten-free guests.</p>",
+        "generalfeedback": "",
+        "maxmark": 10,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        }
+    },
+    {
+        "id": "gi-nbsp-blank-paras",
+        "why": "Criteria as paragraphs separated by &nbsp; blank paragraphs (pasted from Word) [5.0.4: used as written only when every criterion carries marks adding up to the question's mark; here its criteria carry no marks of their own]",
+        "graderinfo": "<p>-&nbsp;Identifies the emergency type</p><p>&nbsp;</p><p>-&nbsp;Describes evacuation route</p><p>&nbsp;</p><p>-&nbsp;Describes assembly point procedure</p><p>&nbsp;</p>",
+        "questiontext": "<p>Describe the evacuation procedure for your workplace.</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        }
+    },
+    {
+        "id": "gi-must-include",
+        "why": "HLT aged care: 'Student response must include:' bullets (requirements, not examples) [5.0.4: used as written only when every criterion carries marks adding up to the question's mark; here its criteria carry no marks of their own]",
+        "graderinfo": "<p>Student response must include:</p><ul><li>Checking the care plan</li><li>Gaining consent</li><li>Maintaining privacy and dignity</li><li>Reporting and documenting</li></ul>",
+        "questiontext": "<p>Describe how you would assist a resident with showering.</p>",
+        "generalfeedback": "",
+        "maxmark": 4,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        }
+    },
+    {
+        "id": "gi-possible-answers",
+        "why": "'Possible answers:' examples list in graderinfo — not criteria [5.0.4: marking guidance that cannot be read with certainty goes to the AI to condense, checked against the text]",
+        "graderinfo": "<p>Possible answers:</p><ul><li>Phone</li><li>Email</li><li>Face to face</li><li>Newsletter</li><li>Social media</li></ul>",
+        "questiontext": "<p>List two methods to communicate with families at a childcare service.</p>",
+        "generalfeedback": "",
+        "maxmark": 2,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        }
+    },
+    {
+        "id": "gi-for-example-list",
+        "why": "'For example:' list in graderinfo with no other criteria [5.0.4: marking guidance that cannot be read with certainty goes to the AI to condense, checked against the text]",
+        "graderinfo": "<p>Accept any reasonable answer. For example:</p><ul><li>Rotating tasks</li><li>Using trolleys</li><li>Team lifting</li></ul>",
+        "questiontext": "<p>Give one way to reduce the risk of manual handling injury.</p>",
+        "generalfeedback": "",
+        "maxmark": 1,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        }
+    },
+    {
+        "id": "gi-six-with-declared-total",
+        "why": "Six unmarked criteria with '12 marks total' — shared 2 each, too_many [5.0.4: used as written only when every criterion carries marks adding up to the question's mark; here its criteria carry no marks of their own]",
+        "graderinfo": "<p>Marking criteria (12 marks total)</p><ul><li>Introduction</li><li>Analysis of the current process</li><li>Identification of inefficiencies</li><li>Recommendations</li><li>Implementation timeline</li><li>Conclusion</li></ul>",
+        "questiontext": "<p>Write a report on improving the stock ordering process at your venue.</p>",
+        "generalfeedback": "",
+        "maxmark": 12,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        }
+    },
+    {
+        "id": "gi-model-answer-and-criteria",
+        "why": "Model answer bullets plus a separate Marking criteria list [5.0.4: used as written only when every criterion carries marks adding up to the question's mark; here its criteria carry no marks of their own]",
+        "graderinfo": "<p><strong>Model answer</strong></p><ul><li>Stop work</li><li>Barricade the area</li><li>Notify the site supervisor</li><li>Do not disturb the suspected asbestos</li></ul><p><strong>Marking criteria</strong></p><ol><li>Stops work immediately</li><li>Isolates the area</li><li>Reports to the supervisor</li></ol>",
+        "questiontext": "<p>You discover material you suspect contains asbestos while removing a wall lining. What do you do?</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        }
+    },
+    {
+        "id": "gi-instructions-prose",
+        "why": "Graderinfo has only prose marking instructions [5.0.4: marking guidance that cannot be read with certainty goes to the AI to condense, checked against the text]",
+        "graderinfo": "<p>Mark as satisfactory if the student shows an understanding of the difference between a policy and a procedure. Refer to the benchmark in the assessor guide.</p>",
+        "questiontext": "<p>What is the difference between a policy and a procedure?</p>",
+        "generalfeedback": "",
+        "maxmark": 2,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        }
+    },
+    {
+        "id": "gi-en-dash-prefix-marks",
+        "why": "Graderinfo numbered list with '2 marks – ...' prefixes",
+        "graderinfo": "<ol><li>2 marks – explains the legal requirement for RSA</li><li>2 marks – describes signs of intoxication</li><li>2 marks – describes how to refuse service</li></ol>",
+        "questiontext": "<p>Explain how you would apply responsible service of alcohol principles during a busy Friday night.</p>",
+        "generalfeedback": "",
+        "maxmark": 6,
+        "expect": {
+            "source": "graderinfo",
+            "count": 3,
+            "maxes": [
+                2,
+                2,
+                2
+            ],
+            "labels_contain": [
+                "legal requirement",
+                "signs of intoxication",
+                "refuse service"
+            ],
+            "confidence": "certain"
+        }
+    },
+    {
+        "id": "gi-label-colon",
+        "why": "Short 'Label:' prefixes on graderinfo criteria [5.0.4: used as written only when every criterion carries marks adding up to the question's mark; here its criteria carry no marks of their own]",
+        "graderinfo": "<ul><li>Context: describes the team's current situation</li><li>Goals: sets two SMART goals</li><li>Monitoring: explains how progress will be tracked</li></ul>",
+        "questiontext": "<p>Develop a performance plan for your team for the next quarter.</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        }
+    },
+    {
+        "id": "gi-eg-aside-labels",
+        "why": "Criteria containing '(e.g. ...)' asides [5.0.4: used as written only when every criterion carries marks adding up to the question's mark; here its criteria carry no marks of their own]",
+        "graderinfo": "<ol><li>Identifies an appropriate communication aid (e.g. picture cards, Auslan)</li><li>Explains how to check understanding (e.g. ask the person to repeat back)</li><li>Describes how to involve family or carers</li></ol>",
+        "questiontext": "<p>A client has limited English. Describe how you would communicate a change to their support schedule.</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        }
+    },
+    {
+        "id": "gi-picklist-any2-none",
+        "why": "Graderinfo 'any 2 of the following' and nothing else [5.0.4: marking guidance that cannot be read with certainty goes to the AI to condense, checked against the text]",
+        "graderinfo": "<p>Award 1 mark each for any 2 of the following:</p><ul><li>Fire extinguisher</li><li>Fire blanket</li><li>Hose reel</li><li>Sprinkler system</li><li>Smoke detector</li></ul>",
+        "questiontext": "<p>Name two types of fire safety equipment.</p>",
+        "generalfeedback": "",
+        "maxmark": 2,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo",
+            "warnings": [
+                "points_list"
+            ]
+        }
+    },
+    {
+        "id": "chc-qt-marked-gf-sample",
+        "why": "CHC early childhood: criteria in question text, sample answer in feedback, empty graderinfo",
+        "graderinfo": "",
+        "questiontext": "<p>Lily (3 years) bites another child during outdoor play.</p><p>Describe how you would respond to Lily (1 mark)<br>Describe how you would support the child who was bitten (1 mark)<br>Explain how you would communicate the incident to both families (1 mark)</p>",
+        "generalfeedback": "<p>Sample answer: Calmly separate the children, tell Lily that biting hurts, comfort and give first aid to the bitten child, complete an incident report and speak to both families without naming the other child.</p>",
+        "maxmark": 3,
+        "expect": {
+            "source": "questiontext",
+            "count": 3,
+            "maxes": [
+                1,
+                1,
+                1
+            ],
+            "labels_contain": [
+                "respond to Lily",
+                "child who was bitten",
+                "communicate the incident"
+            ],
+            "confidence": "certain"
+        }
+    },
+    {
+        "id": "cpc-qt-marked-on-dash",
+        "why": "CPC construction: 'You will be marked on:' with ' - n marks' suffixes",
+        "graderinfo": "",
+        "questiontext": "<p>Explain the process for obtaining a permit to work for hot works on site.</p><p>You will be marked on:<br>Identifying when a hot work permit is required - 1 mark<br>Describing the approval steps - 2 marks<br>Describing fire watch requirements - 2 marks</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "source": "questiontext",
+            "count": 3,
+            "maxes": [
+                1,
+                2,
+                2
+            ],
+            "labels_contain": [
+                "hot work permit is required",
+                "approval steps",
+                "fire watch"
+            ],
+            "confidence": "certain"
+        }
+    },
+    {
+        "id": "empty-everything",
+        "why": "Bare question, empty graderinfo and feedback",
+        "graderinfo": "",
+        "questiontext": "<p>What does WHS stand for?</p>",
+        "generalfeedback": "",
+        "maxmark": 1,
+        "expect": {
+            "source": "none",
+            "confidence": "none"
+        }
+    },
+    {
+        "id": "gi-empty-p-only",
+        "why": "Graderinfo left with an empty Atto paragraph",
+        "graderinfo": "<p><br></p>",
+        "questiontext": "<p dir=\"ltr\" style=\"text-align: left;\">Describe the purpose of a position description.<br></p>",
+        "generalfeedback": "<p dir=\"ltr\" style=\"text-align: left;\"><br></p>",
+        "maxmark": 3,
+        "expect": {
+            "source": "none",
+            "confidence": "none"
+        }
+    },
+    {
+        "id": "gi-marking-criteria-total-heading-marked",
+        "why": "Graderinfo 'Marking criteria (2 marks total)' with two '1 mark:' lines — matches quiz mark",
+        "graderinfo": "<p><strong>Marking criteria (2 marks total)</strong></p><p>1 mark: States the purpose of an SDS.<br>1 mark: States where SDSs must be kept.</p>",
+        "questiontext": "<p>What is a Safety Data Sheet and where should it be kept?</p>",
+        "generalfeedback": "",
+        "maxmark": 2,
+        "expect": {
+            "source": "graderinfo",
+            "count": 2,
+            "maxes": [
+                1,
+                1
+            ],
+            "warnings": [],
+            "labels_contain": [
+                "purpose of an SDS",
+                "where SDSs must be kept"
+            ],
+            "confidence": "certain"
+        }
+    },
+    {
+        "id": "qt-marked-lines-plus-zero-band",
+        "why": "Marked criteria lines in question text with an extra '0 marks:' line",
+        "graderinfo": "",
+        "questiontext": "<p>Explain why reconciling the till at end of shift is important.</p><p>Marking criteria</p><p>1 mark: Explains the purpose of reconciliation<br>1 mark: Describes what to do with discrepancies<br>1 mark: Describes security of cash<br>0 marks: Answer not attempted</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "source": "questiontext",
+            "count": 3,
+            "maxes": [
+                1,
+                1,
+                1
+            ],
+            "labels_contain": [
+                "purpose of reconciliation",
+                "discrepancies",
+                "security of cash"
+            ],
+            "confidence": "certain"
+        }
+    },
+    {
+        "id": "gi-bsb-leadership-table-with-desc",
+        "why": "BSB leadership table Criterion | Marks with long descriptions and no Total row",
+        "graderinfo": "<table style=\"width: 100%;\"><tbody><tr><td><p><strong>Criterion</strong></p></td><td><p><strong>Marks</strong></p></td></tr><tr><td><p>Describes the leader's role in modelling organisational values</p></td><td><p>3</p></td></tr><tr><td><p>Explains how to build trust with a new team</p></td><td><p>3</p></td></tr><tr><td><p>Describes two techniques for gaining team commitment</p></td><td><p>4</p></td></tr></tbody></table>",
+        "questiontext": "<p>As a new manager, how would you build trust and commitment in your team?</p>",
+        "generalfeedback": "",
+        "maxmark": 10,
+        "expect": {
+            "source": "graderinfo",
+            "count": 3,
+            "maxes": [
+                3,
+                3,
+                4
+            ],
+            "labels_contain": [
+                "modelling organisational values",
+                "build trust",
+                "team commitment"
+            ],
+            "confidence": "certain"
+        }
+    },
+    {
+        "id": "qt-eg-aside-marked",
+        "why": "Question text marked lines with (e.g. ...) asides — labels drop the aside",
+        "graderinfo": "",
+        "questiontext": "<p>Marking criteria</p><ul><li>2 marks: Identifies a suitable de-escalation technique (e.g. calm voice, giving space).</li><li>2 marks: Explains when to call security or police.</li></ul>",
+        "generalfeedback": "",
+        "maxmark": 4,
+        "expect": {
+            "source": "questiontext",
+            "count": 2,
+            "maxes": [
+                2,
+                2
+            ],
+            "labels_contain": [
+                "de-escalation technique",
+                "call security or police"
+            ],
+            "warnings": [
+                "too_few"
+            ],
+            "confidence": "certain"
+        }
+    },
+    {
+        "id": "gf-declared-total-shared",
+        "why": "General feedback 'Assessment criteria (4 marks total)' over two unmarked items [5.0.4: used as written only when every criterion carries marks adding up to the question's mark; here its criteria carry no marks of their own]",
+        "graderinfo": "",
+        "questiontext": "<p>Explain the difference between a complaint and feedback.</p>",
+        "generalfeedback": "<p><strong>Assessment criteria (4 marks total)</strong></p><ul><li>Defines a complaint</li><li>Defines feedback and contrasts the two</li></ul>",
+        "maxmark": 4,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "generalfeedback"
+        }
+    },
+    {
+        "id": "gi-sample-answer-and-qt-criteria",
+        "why": "Graderinfo is only a model answer; criteria are marked lines in question text",
+        "graderinfo": "<p>Example answer:</p><ol><li>Check the patient's identity</li><li>Check the medication chart</li><li>Observe the patient take the medication</li></ol>",
+        "questiontext": "<p>Describe how you would assist a client with self-administration of medication.</p><p>1 mark: Confirms identity<br>1 mark: Checks the medication against the chart<br>1 mark: Documents the assistance</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "source": "questiontext",
+            "count": 3,
+            "maxes": [
+                1,
+                1,
+                1
+            ],
+            "labels_contain": [
+                "Confirms identity",
+                "medication against the chart",
+                "Documents"
+            ],
+            "confidence": "certain"
+        }
+    },
+    {
+        "id": "gi-ambiguous-mixed-list",
+        "why": "Graderinfo list mixes criteria and a stray note — count is a judgement call [5.0.4: used as written only when every criterion carries marks adding up to the question's mark; here a line is a note to the marker]",
+        "graderinfo": "<ul><li>Explains the purpose of an evacuation diagram</li><li>Identifies the information shown on it</li><li>Note: accept any state-based standard</li></ul>",
+        "questiontext": "<p>What is an evacuation diagram and what must it show?</p>",
+        "generalfeedback": "",
+        "maxmark": 2,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        }
+    }
+]

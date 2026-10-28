@@ -310,4 +310,43 @@ final class privacy_provider_test extends \core_privacy\tests\provider_testcase 
 
         $this->assertEquals(0, $DB->count_records('quiz_aigrader_schedules'));
     }
+
+    /**
+     * Who confirmed a question's criteria is personal data: found, exported, and on deletion
+     * removed while the quiz keeps its confirmed criteria (5.0.4).
+     */
+    public function test_confirmed_criteria(): void {
+        global $DB;
+
+        $assessor = $this->getDataGenerator()->create_user();
+        $DB->insert_record('quiz_aigrader_criteria', (object) [
+            'quizid' => $this->quiz->id,
+            'questionid' => 1,
+            'criteria' => json_encode([['label' => 'Identifies the hazard', 'max' => 2]]),
+            'maxmark' => 2,
+            'fieldshash' => sha1('x'),
+            'proposedsource' => 'graderinfo',
+            'confirmedby' => $assessor->id,
+            'timeconfirmed' => time(),
+        ]);
+        $context = \context_module::instance($this->cm->id);
+
+        $contexts = provider::get_contexts_for_userid($assessor->id)->get_contextids();
+        $this->assertContains((string)$context->id, array_map('strval', $contexts));
+
+        $userlist = new \core_privacy\local\request\userlist($context, 'quiz_aigrader');
+        provider::get_users_in_context($userlist);
+        $this->assertContains((int)$assessor->id, array_map('intval', $userlist->get_userids()));
+
+        $this->export_context_data_for_user($assessor->id, $context, 'quiz_aigrader');
+        $writer = \core_privacy\local\request\writer::with_context($context);
+        $data = $writer->get_data([get_string('privacy:path:criteria', 'quiz_aigrader')]);
+        $this->assertNotEmpty($data->criteria);
+
+        $approved = new \core_privacy\local\request\approved_contextlist($assessor, 'quiz_aigrader', [$context->id]);
+        provider::delete_data_for_user($approved);
+        $record = $DB->get_record('quiz_aigrader_criteria', ['quizid' => $this->quiz->id]);
+        $this->assertNotFalse($record, 'the quiz keeps its confirmed criteria');
+        $this->assertSame(0, (int)$record->confirmedby);
+    }
 }

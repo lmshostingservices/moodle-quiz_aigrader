@@ -36,7 +36,7 @@ namespace quiz_aigrader;
  */
 class api_client {
     /** @var string Default base URL of the grading service. */
-    const DEFAULT_BASE_URL = 'https://lms-labs.com';
+    public const DEFAULT_BASE_URL = 'https://lms-labs.com';
 
     /** @var string The site identifier issued for this Moodle site. */
     protected $siteid;

@@ -1,0 +1,1401 @@
+[
+    {
+        "id": "P01 nested sub-bullets GI",
+        "graderinfo": "<ol><li>Identifies two hazards (2 marks)<ul><li>wet floor</li><li>pallet jack</li></ul></li><li>Describes a control for each hazard (2 marks)</li><li>States who to report to (1 mark)</li></ol>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 3,
+            "maxes": [
+                2,
+                2,
+                1
+            ],
+            "labels_contain": [
+                "two hazards",
+                "control",
+                "report"
+            ]
+        },
+        "why": "P01 nested sub-bullets GI"
+    },
+    {
+        "id": "P02 marks mid-line GI",
+        "graderinfo": "<ol><li>Identifies (2 marks) two hazards present in the warehouse</li><li>Explains (2 marks) a control for each</li><li>Names (1 mark) the person to report to</li></ol>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        },
+        "why": "P02 marks mid-line GI"
+    },
+    {
+        "id": "P03 tick boxes GI",
+        "graderinfo": "<p>Assessor to tick:</p><p>☐ Identifies the hazard</p><p>☐ Describes a control measure</p><p>☐ States who to report to</p>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        },
+        "why": "P03 tick boxes GI [5.0.4: used as written only when every criterion carries marks adding up to the question's mark; here its criteria carry no marks of their own]"
+    },
+    {
+        "id": "P04 obs checklist table",
+        "graderinfo": "<table><tr><th>Observation checklist</th><th>Yes</th><th>No</th><th>Comments</th></tr><tr><td>Did the candidate wear correct PPE?</td><td>☐</td><td>☐</td><td></td></tr><tr><td>Did the candidate isolate the machine?</td><td>☐</td><td>☐</td><td></td></tr><tr><td>Did the candidate complete the log?</td><td>☐</td><td>☐</td><td></td></tr></table>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        },
+        "why": "P04 obs checklist table [5.0.4: used as written only when every criterion carries marks adding up to the question's mark; here its criteria carry no marks of their own]"
+    },
+    {
+        "id": "P05 must include GI",
+        "graderinfo": "<p>The learner's response must include:</p><ul><li>the hazard</li><li>a control</li><li>who to report to</li></ul>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        },
+        "why": "P05 must include GI [5.0.4: used as written only when every criterion carries marks adding up to the question's mark; here its criteria carry no marks of their own]"
+    },
+    {
+        "id": "P06 at least inside criterion GI",
+        "graderinfo": "<p>Satisfactory response must address:</p><ul><li>Identifies at least 2 hazards in the scenario</li><li>Describes a control for each hazard</li><li>Explains how to report the hazards</li></ul>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        },
+        "why": "P06 at least inside criterion GI [5.0.4: used as written only when every criterion carries marks adding up to the question's mark; here it is not a list of marked criteria]"
+    },
+    {
+        "id": "P07 at least N marked GI",
+        "graderinfo": "<ol><li>Identifies at least 2 hazards (2 marks)</li><li>Describes a control for each (2 marks)</li><li>Explains reporting (1 mark)</li></ol>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 3,
+            "maxes": [
+                2,
+                2,
+                1
+            ]
+        },
+        "why": "P07 at least N marked GI"
+    },
+    {
+        "id": "P08 scenario minimum of",
+        "graderinfo": "",
+        "questiontext": "<p>The site runs a minimum of 3 forklifts per shift.</p><p>Marking criteria</p><p>1 mark: Identifies a hazard</p><p>1 mark: Describes a control</p><p>1 mark: States who to report to</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "confidence": "certain",
+            "source": "questiontext",
+            "count": 3,
+            "maxes": [
+                1,
+                1,
+                1
+            ]
+        },
+        "why": "P08 scenario minimum of"
+    },
+    {
+        "id": "P09 Thai marks GI",
+        "graderinfo": "<ol><li>ระบุอันตราย (2 คะแนน)</li><li>อธิบายมาตรการควบคุม (2 คะแนน)</li><li>Explains reporting (1 mark)</li></ol>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 3,
+            "maxes": [
+                2,
+                2,
+                1
+            ]
+        },
+        "why": "P09 Thai marks GI"
+    },
+    {
+        "id": "P10 criteria as questions GI",
+        "graderinfo": "<ul><li>Did the learner identify the hazard?</li><li>Did the learner describe a control?</li><li>Did the learner say who to report to?</li></ul>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        },
+        "why": "P10 criteria as questions GI [5.0.4: used as written only when every criterion carries marks adding up to the question's mark; here its criteria carry no marks of their own]"
+    },
+    {
+        "id": "P11 Word Symbol bullets GI",
+        "graderinfo": "<p class=\"MsoListParagraphCxSpFirst\" style=\"text-indent:-18.0pt\"><!--[if !supportLists]--><span style=\"font-family:Symbol\">·<span style=\"font:7.0pt 'Times New Roman'\">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span></span><!--[endif]--><span lang=\"EN-AU\">Identifies the hazard</span></p><p class=\"MsoListParagraphCxSpMiddle\" style=\"text-indent:-18.0pt\"><span style=\"font-family:Symbol\">·<span style=\"font:7.0pt\">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span></span><span lang=\"EN-AU\">Describes a control</span></p><p class=\"MsoListParagraphCxSpLast\" style=\"text-indent:-18.0pt\"><span style=\"font-family:Symbol\">·<span style=\"font:7.0pt\">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span></span><span lang=\"EN-AU\">Reports to supervisor</span></p>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        },
+        "why": "P11 Word Symbol bullets GI [5.0.4: used as written only when every criterion carries marks adding up to the question's mark; here its criteria carry no marks of their own]"
+    },
+    {
+        "id": "P12 Word numbered split runs GI",
+        "graderinfo": "<p class=\"MsoListParagraph\"><span>1.<span style=\"font:7.0pt\">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span></span><span lang=\"EN-AU\">Identif</span><span lang=\"EN-AU\">ies the haz</span><span lang=\"EN-AU\">ard (2 marks)</span></p><p class=\"MsoListParagraph\"><span>2.<span style=\"font:7.0pt\">&nbsp;&nbsp;&nbsp; </span></span><span>Describes a control (2&nbsp;marks)</span></p><p class=\"MsoListParagraph\"><span>3.&nbsp;&nbsp;&nbsp; </span><span>Reports it (</span><span>1</span><span> mark)</span></p>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 3,
+            "maxes": [
+                2,
+                2,
+                1
+            ],
+            "labels_contain": [
+                "Identifies the hazard",
+                "control",
+                "Reports"
+            ]
+        },
+        "why": "P12 Word numbered split runs GI"
+    },
+    {
+        "id": "P13 br lines qt",
+        "graderinfo": "",
+        "questiontext": "<p>Describe what you would do.<br>Marking criteria:<br>1 mark: Identifies the hazard<br>1 mark: Describes a control<br>1 mark: States who to report to</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "confidence": "certain",
+            "source": "questiontext",
+            "count": 3,
+            "maxes": [
+                1,
+                1,
+                1
+            ]
+        },
+        "why": "P13 br lines qt"
+    },
+    {
+        "id": "P14 marks on next line GI",
+        "graderinfo": "<ol><li>Identifies the hazard</li></ol><p>(2 marks)</p><ol start=\"2\"><li>Describes a control</li></ol><p>(2 marks)</p><ol start=\"3\"><li>Reports it</li></ol><p>(1 mark)</p>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        },
+        "why": "P14 marks on next line GI"
+    },
+    {
+        "id": "P15 Part A/B restart GI",
+        "graderinfo": "<p>Part A (3 marks)</p><ol><li>Identifies hazard (1 mark)</li><li>Explains risk (2 marks)</li></ol><p>Part B (2 marks)</p><ol><li>Describes control (1 mark)</li><li>Reports (1 mark)</li></ol>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 4,
+            "maxes": [
+                1,
+                2,
+                1,
+                1
+            ]
+        },
+        "why": "P15 Part A/B restart GI"
+    },
+    {
+        "id": "P16 Part label with total + subitems GI",
+        "graderinfo": "<p>Part A – Hazard identification (4 marks)</p><ul><li>Identifies two hazards (2 marks)</li><li>Explains the risk of each (2 marks)</li></ul><p>Part B – Controls (2 marks)</p><ul><li>Describes a control (2 marks)</li></ul>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 6,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 3,
+            "maxes": [
+                2,
+                2,
+                2
+            ]
+        },
+        "why": "P16 Part label with total + subitems GI"
+    },
+    {
+        "id": "P17 Section: name (N marks) + items GI",
+        "graderinfo": "<p>Section 1: Hazards (4 marks)</p><ol><li>Identifies two hazards (2 marks)</li><li>Explains the risk (2 marks)</li></ol><p>Section 2: Reporting (2 marks)</p><ol><li>Names the supervisor (1 mark)</li><li>Completes the form (1 mark)</li></ol>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 6,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 4,
+            "maxes": [
+                2,
+                2,
+                1,
+                1
+            ]
+        },
+        "why": "P17 Section: name (N marks) + items GI"
+    },
+    {
+        "id": "P18 percent weights GI",
+        "graderinfo": "<ol><li>Identifies hazards (30%)</li><li>Describes controls (50%)</li><li>Reporting (20%)</li></ol>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 10,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        },
+        "why": "P18 percent weights GI"
+    },
+    {
+        "id": "P18b percent weights dash GI",
+        "graderinfo": "<ul><li>Identifies hazards – 30%</li><li>Describes controls – 50%</li><li>Reporting – 20%</li></ul>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 10,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        },
+        "why": "P18b percent weights dash GI"
+    },
+    {
+        "id": "P19 unicode half GI",
+        "graderinfo": "<ol><li>Identifies hazard (½ mark)</li><li>Describes control (1½ marks)</li><li>Reports (1 mark)</li></ol>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        },
+        "why": "P19 unicode half GI"
+    },
+    {
+        "id": "P19b decimal half qt",
+        "graderinfo": "",
+        "questiontext": "<p>0.5 marks: Identifies the hazard</p><p>1.5 marks: Describes a control</p><p>1 mark: States who to report to</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "confidence": "certain",
+            "source": "questiontext",
+            "count": 3,
+            "maxes": [
+                0.5,
+                1.5,
+                1
+            ]
+        },
+        "why": "P19b decimal half qt"
+    },
+    {
+        "id": "P20 slash notation GI",
+        "graderinfo": "<ul><li>Identifies hazard /2</li><li>Describes control /2</li><li>Reports /1</li></ul>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        },
+        "why": "P20 slash notation GI"
+    },
+    {
+        "id": "P20b slash blank GI",
+        "graderinfo": "<ul><li>Identifies hazard ___/2</li><li>Describes control ___/2</li><li>Reports ___/1</li></ul>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        },
+        "why": "P20b slash blank GI"
+    },
+    {
+        "id": "P21 Marks: N GI",
+        "graderinfo": "<ol><li>Identifies hazard. Marks: 2</li><li>Describes control. Marks: 2</li><li>Reports. Marks: 1</li></ol>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        },
+        "why": "P21 Marks: N GI"
+    },
+    {
+        "id": "P22 mks GI",
+        "graderinfo": "<ol><li>Identifies hazard (2 mks)</li><li>Describes control (2 mks)</li><li>Reports (1 mk)</li></ol>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 3,
+            "maxes": [
+                2,
+                2,
+                1
+            ]
+        },
+        "why": "P22 mks GI"
+    },
+    {
+        "id": "P23 2x1 mark GI",
+        "graderinfo": "<ol><li>Identifies two hazards (2 x 1 mark)</li><li>Describes a control (2 marks)</li><li>Reports (1 mark)</li></ol>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        },
+        "why": "P23 2x1 mark GI"
+    },
+    {
+        "id": "P24 range marks GI",
+        "graderinfo": "<ol><li>Identifies hazards (1-2 marks)</li><li>Describes controls (2-3 marks)</li></ol>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        },
+        "why": "P24 range marks GI"
+    },
+    {
+        "id": "P25 descending band qt",
+        "graderinfo": "",
+        "questiontext": "<p>Explain the purpose of a toolbox talk.</p><p>Marking guide:</p><p>2 marks: Full answer that explains purpose and gives an example</p><p>1 mark: Partial answer</p><p>0 marks: No answer or incorrect</p>",
+        "generalfeedback": "",
+        "maxmark": 2,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "questiontext"
+        },
+        "why": "P25 descending band qt"
+    },
+    {
+        "id": "P25b descending band GI",
+        "graderinfo": "<p>2 marks – complete explanation with example</p><p>1 mark – partial explanation</p><p>0 marks – not attempted</p>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 2,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        },
+        "why": "P25b descending band GI"
+    },
+    {
+        "id": "P26 multilevel parts GI",
+        "graderinfo": "<ol><li>Part A<ol><li>Identifies the hazard (1 mark)</li><li>Explains the risk (2 marks)</li></ol></li><li>Part B<ol><li>Describes a control (2 marks)</li><li>Reports (1 mark)</li></ol></li></ol>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 6,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        },
+        "why": "P26 multilevel parts GI"
+    },
+    {
+        "id": "P26b criteria nested under heading li",
+        "graderinfo": "<ul><li>Marking criteria:<ol><li>Identifies the hazard (1 mark)</li><li>Explains the risk (2 marks)</li><li>Describes a control (2 marks)</li></ol></li></ul>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        },
+        "why": "P26b criteria nested under heading li"
+    },
+    {
+        "id": "P27 roman numerals GI",
+        "graderinfo": "<p>i. Identifies the hazard (1 mark)</p><p>ii. Explains the risk (1 mark)</p><p>iii. Describes a control (1 mark)</p><p>iv. Reports (1 mark)</p>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 4,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 4,
+            "maxes": [
+                1,
+                1,
+                1,
+                1
+            ],
+            "labels_contain": [
+                "Identifies the hazard",
+                "risk",
+                "control",
+                "Reports"
+            ]
+        },
+        "why": "P27 roman numerals GI"
+    },
+    {
+        "id": "P27b roman numerals unmarked GI",
+        "graderinfo": "<p>i. Identifies the hazard</p><p>ii. Explains the risk</p><p>iii. Describes a control</p>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        },
+        "why": "P27b roman numerals unmarked GI [5.0.4: used as written only when every criterion carries marks adding up to the question's mark; here its criteria carry no marks of their own]"
+    },
+    {
+        "id": "P28 1.1 numbering GI",
+        "graderinfo": "<p>1.1 Identifies workplace hazards</p><p>1.2 Assesses the risk</p><p>1.3 Selects a control</p>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        },
+        "why": "P28 1.1 numbering GI [5.0.4: used as written only when every criterion carries marks adding up to the question's mark; here its criteria carry no marks of their own]"
+    },
+    {
+        "id": "P29 identical lines GI",
+        "graderinfo": "<ol><li>Identifies a hazard (1 mark)</li><li>Identifies a hazard (1 mark)</li><li>Describes a control for each (2 marks)</li></ol>",
+        "questiontext": "<p>Identify two hazards and a control for each.</p>",
+        "generalfeedback": "",
+        "maxmark": 4,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        },
+        "why": "P29 identical lines GI [5.0.4: used as written only when every criterion carries marks adding up to the question's mark; here a criterion is written twice]"
+    },
+    {
+        "id": "P30 each..maximum criterion GI",
+        "graderinfo": "<ol><li>Identifies each hazard and the maximum safe lifting weight (2 marks)</li><li>Describes a control (2 marks)</li><li>Reports (1 mark)</li></ol>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 3,
+            "maxes": [
+                2,
+                2,
+                1
+            ],
+            "labels_contain": [
+                "each hazard",
+                "control",
+                "Reports"
+            ]
+        },
+        "why": "P30 each..maximum criterion GI"
+    },
+    {
+        "id": "P31 per-criterion max GI",
+        "graderinfo": "<ol><li>Lists hazards (1 mark each, maximum 3 marks)</li><li>Explains controls</li><li>Explains reporting</li></ol>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        },
+        "why": "P31 per-criterion max GI"
+    },
+    {
+        "id": "P32 Total-prefixed criterion GI",
+        "graderinfo": "<ol><li>Total quality management principles are explained (2 marks)</li><li>Continuous improvement is described (2 marks)</li><li>A workplace example is given (1 mark)</li></ol>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 3,
+            "maxes": [
+                2,
+                2,
+                1
+            ],
+            "labels_contain": [
+                "Total quality",
+                "Continuous",
+                "example"
+            ]
+        },
+        "why": "P32 Total-prefixed criterion GI"
+    },
+    {
+        "id": "P33 rising distinct criteria w/ band words qt",
+        "graderinfo": "",
+        "questiontext": "<p>Marking criteria</p><p>1 mark: Gives a clear description of the hazard</p><p>2 marks: Gives a detailed explanation of two controls</p><p>3 marks: Provides a thorough explanation of the reporting procedure</p>",
+        "generalfeedback": "",
+        "maxmark": 6,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "questiontext"
+        },
+        "why": "P33 rising distinct criteria w/ band words qt"
+    },
+    {
+        "id": "P34 assessor notes bullets GI",
+        "graderinfo": "<p>Marking criteria</p><ol><li>Identifies the hazard (1 mark)</li><li>Describes a control (1 mark)</li><li>States who to report to (1 mark)</li></ol><p>Notes to assessor:</p><ul><li>Accept any reasonable hazard</li><li>Learner may answer in dot points</li></ul>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 3,
+            "maxes": [
+                1,
+                1,
+                1
+            ]
+        },
+        "why": "P34 assessor notes bullets GI"
+    },
+    {
+        "id": "P35 plain lines GI",
+        "graderinfo": "<p>Identifies the hazard.</p><p>Describes a control measure.</p><p>States who to report to.</p>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        },
+        "why": "P35 plain lines GI"
+    },
+    {
+        "id": "P36 Question 1.2 heading qt",
+        "graderinfo": "",
+        "questiontext": "<p>Question 1.2 (3 marks)</p><p>Describe the hierarchy of control.</p><p>Marking criteria</p><ul><li>Names elimination (1 mark)</li><li>Names substitution (1 mark)</li><li>Explains PPE as last resort (1 mark)</li></ul>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "confidence": "certain",
+            "source": "questiontext",
+            "count": 3,
+            "maxes": [
+                1,
+                1,
+                1
+            ],
+            "labels_contain": [
+                "elimination",
+                "substitution",
+                "PPE"
+            ]
+        },
+        "why": "P36 Question 1.2 heading qt"
+    },
+    {
+        "id": "P37 Task heading named qt",
+        "graderinfo": "",
+        "questiontext": "<p>Task 2 – Case study (4 marks)</p><p>Read the case study and answer.</p><p>a) Identify two hazards (2 marks)</p><p>b) Recommend a control for each (2 marks)</p>",
+        "generalfeedback": "",
+        "maxmark": 4,
+        "expect": {
+            "confidence": "certain",
+            "source": "questiontext",
+            "count": 2,
+            "maxes": [
+                2,
+                2
+            ],
+            "labels_contain": [
+                "hazards",
+                "control"
+            ]
+        },
+        "why": "P37 Task heading named qt"
+    },
+    {
+        "id": "P38 picklist qt, criteria GF",
+        "graderinfo": "",
+        "questiontext": "<p>Describe any 2 of the following controls: elimination, substitution, isolation.</p>",
+        "generalfeedback": "<p>Marking guide</p><p>1 mark: Names a control</p><p>1 mark: Describes how it applies</p><p>1 mark: Gives a workplace example</p>",
+        "maxmark": 3,
+        "expect": {
+            "confidence": "certain",
+            "source": "generalfeedback",
+            "count": 3,
+            "maxes": [
+                1,
+                1,
+                1
+            ]
+        },
+        "why": "P38 picklist qt, criteria GF"
+    },
+    {
+        "id": "P39 may include under criteria GI",
+        "graderinfo": "<p>Criteria:</p><ol><li>Identifies a hazard (1 mark)</li><li>Describes a control (1 mark)</li></ol><p>Responses may include, but are not limited to:</p><ul><li>wet floors</li><li>poor lighting</li><li>manual handling</li></ul>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 2,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 2,
+            "maxes": [
+                1,
+                1
+            ]
+        },
+        "why": "P39 may include under criteria GI"
+    },
+    {
+        "id": "P40 Answer: list GI",
+        "graderinfo": "<p>Answer:</p><ul><li>Elimination</li><li>Substitution</li><li>Engineering controls</li><li>Administrative controls</li><li>PPE</li></ul>",
+        "questiontext": "<p>List the hierarchy of control.</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        },
+        "why": "P40 Answer: list GI"
+    },
+    {
+        "id": "P41 S/NS table GI",
+        "graderinfo": "<table><tr><th>Assessment criteria</th><th>S</th><th>NS</th></tr><tr><td>Identifies the hazard</td><td></td><td></td></tr><tr><td>Describes a control</td><td></td><td></td></tr><tr><td>Reports the hazard</td><td></td><td></td></tr></table>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        },
+        "why": "P41 S/NS table GI [5.0.4: used as written only when every criterion carries marks adding up to the question's mark; here its criteria carry no marks of their own]"
+    },
+    {
+        "id": "P42 Marks available table qt",
+        "graderinfo": "",
+        "questiontext": "<p>Explain the following.</p><table><tr><th>Criteria</th><th>Marks available</th></tr><tr><td>Identifies the hazard</td><td>2</td></tr><tr><td>Describes a control</td><td>2</td></tr><tr><td>Reports it</td><td>1</td></tr></table>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "confidence": "certain",
+            "source": "questiontext",
+            "count": 3,
+            "maxes": [
+                2,
+                2,
+                1
+            ],
+            "labels_contain": [
+                "hazard",
+                "control",
+                "Reports"
+            ]
+        },
+        "why": "P42 Marks available table qt"
+    },
+    {
+        "id": "P43 Thai heading qt",
+        "graderinfo": "",
+        "questiontext": "<p>เกณฑ์การให้คะแนน (Marking criteria)</p><ul><li>ระบุอันตราย</li><li>อธิบายมาตรการควบคุม</li><li>รายงานหัวหน้างาน</li></ul>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "questiontext"
+        },
+        "why": "P43 Thai heading qt [5.0.4: used as written only when every criterion carries marks adding up to the question's mark; here its criteria carry no marks of their own]"
+    },
+    {
+        "id": "P44 label colon long",
+        "graderinfo": "<ol><li>Hazard: identifies one hazard in the photo, e.g. a frayed lead (2 marks)</li><li>Risk: explains who could be harmed and how (2 marks)</li><li>Control: recommends a control from the hierarchy (2 marks)</li></ol>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 6,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 3,
+            "maxes": [
+                2,
+                2,
+                2
+            ],
+            "labels_contain": [
+                "Hazard",
+                "Risk",
+                "Control"
+            ]
+        },
+        "why": "P44 label colon long"
+    },
+    {
+        "id": "P45 total in table row GI",
+        "graderinfo": "<table><tr><th>Criteria</th><th>Marks</th></tr><tr><td>Identifies hazards</td><td>4</td></tr><tr><td>Describes controls</td><td>4</td></tr><tr><td>Reporting</td><td>2</td></tr><tr><td>TOTAL</td><td>10</td></tr></table>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 10,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 3,
+            "maxes": [
+                4,
+                4,
+                2
+            ]
+        },
+        "why": "P45 total in table row GI"
+    },
+    {
+        "id": "P45b total row with label first cell blank",
+        "graderinfo": "<table><tr><th>Criteria</th><th>Marks</th></tr><tr><td>Identifies hazards</td><td>4</td></tr><tr><td>Describes controls</td><td>4</td></tr><tr><td>Reporting</td><td>2</td></tr><tr><td></td><td>Total: 10</td></tr></table>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 10,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 3,
+            "maxes": [
+                4,
+                4,
+                2
+            ]
+        },
+        "why": "P45b total row with label first cell blank"
+    },
+    {
+        "id": "P45c Total marks for this question row",
+        "graderinfo": "<table><tr><th>Criteria</th><th>Marks</th></tr><tr><td>Identifies hazards</td><td>4</td></tr><tr><td>Describes controls</td><td>4</td></tr><tr><td>Reporting</td><td>2</td></tr><tr><td>Marks for this question</td><td>10</td></tr></table>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 10,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 3,
+            "maxes": [
+                4,
+                4,
+                2
+            ]
+        },
+        "why": "P45c Total marks for this question row"
+    },
+    {
+        "id": "P46 1 mark each criterion GI",
+        "graderinfo": "<ol><li>Identifies three hazards (1 mark each)</li><li>Describes a control for each</li><li>Explains reporting</li></ol>",
+        "questiontext": "<p>Q (5 marks total)</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        },
+        "why": "P46 1 mark each criterion GI"
+    },
+    {
+        "id": "P47 same short label GI",
+        "graderinfo": "<ul><li>Hazard: identifies the slip hazard (1 mark)</li><li>Hazard: identifies the trip hazard (1 mark)</li><li>Control: names a control (1 mark)</li></ul>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 3,
+            "maxes": [
+                1,
+                1,
+                1
+            ],
+            "labels_contain": [
+                "slip",
+                "trip",
+                "Control"
+            ]
+        },
+        "why": "P47 same short label GI"
+    },
+    {
+        "id": "P49 Criterion n – x – n marks",
+        "graderinfo": "<p>Criterion 1 – Identifies the hazard – 2 marks</p><p>Criterion 2 – Describes a control – 2 marks</p><p>Criterion 3 – Reports – 1 mark</p>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 3,
+            "maxes": [
+                2,
+                2,
+                1
+            ],
+            "labels_contain": [
+                "hazard",
+                "control",
+                "Reports"
+            ]
+        },
+        "why": "P49 Criterion n – x – n marks"
+    },
+    {
+        "id": "P52 out of N each heading GI",
+        "graderinfo": "<p>Grading criteria (marked out of 5 each):</p><ol><li>Hazard identification</li><li>Control selection</li><li>Reporting</li></ol>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 15,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 3,
+            "maxes": [
+                5,
+                5,
+                5
+            ]
+        },
+        "why": "P52 out of N each heading GI"
+    },
+    {
+        "id": "P53 letter cell table GI",
+        "graderinfo": "<table><tr><td>a)</td><td>Identifies the hazard</td><td>2</td></tr><tr><td>b)</td><td>Describes a control</td><td>2</td></tr><tr><td>c)</td><td>Reports</td><td>1</td></tr></table>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 3,
+            "maxes": [
+                2,
+                2,
+                1
+            ],
+            "labels_contain": [
+                "Identifies the hazard",
+                "control",
+                "Reports"
+            ]
+        },
+        "why": "P53 letter cell table GI"
+    },
+    {
+        "id": "P54 marks column first table GI",
+        "graderinfo": "<table><tr><th>Marks</th><th>Criteria</th></tr><tr><td>2</td><td>Identifies the hazard</td></tr><tr><td>2</td><td>Describes a control</td></tr><tr><td>1</td><td>Reports</td></tr></table>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 3,
+            "maxes": [
+                2,
+                2,
+                1
+            ],
+            "labels_contain": [
+                "hazard",
+                "control",
+                "Reports"
+            ]
+        },
+        "why": "P54 marks column first table GI"
+    },
+    {
+        "id": "P55 percent cells table GI",
+        "graderinfo": "<table><tr><th>Criteria</th><th>Weighting</th></tr><tr><td>Identifies the hazard</td><td>30%</td></tr><tr><td>Describes a control</td><td>50%</td></tr><tr><td>Reports</td><td>20%</td></tr></table>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 10,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        },
+        "why": "P55 percent cells table GI"
+    },
+    {
+        "id": "P59 heading without colon keeps criteria qt",
+        "graderinfo": "",
+        "questiontext": "<p>Marking criteria</p><ul><li>Identifies the hazard</li><li>Describes a control</li><li>Reports it</li></ul><p>Submission requirements</p><ul><li>Upload as a Word document</li><li>Use 12pt font</li></ul>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "questiontext"
+        },
+        "why": "P59 heading without colon keeps criteria qt [5.0.4: used as written only when every criterion carries marks adding up to the question's mark; here its criteria carry no marks of their own]"
+    },
+    {
+        "id": "P60 per correct point max",
+        "graderinfo": "<p>1 mark per correct point, maximum 3 marks.</p><ul><li>Elimination</li><li>Substitution</li><li>Isolation</li><li>Engineering</li><li>Administrative</li></ul>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        },
+        "why": "P60 per correct point max"
+    },
+    {
+        "id": "P61 GF sample answer with marks after",
+        "graderinfo": "",
+        "questiontext": "<p>Explain why consultation matters.</p>",
+        "generalfeedback": "<p>Sample answer</p><p>Consultation improves safety because workers know the hazards (1 mark). It is required under the WHS Act 2011 (1 mark). It builds trust (1 mark).</p>",
+        "maxmark": 3,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "generalfeedback"
+        },
+        "why": "P61 GF sample answer with marks after"
+    },
+    {
+        "id": "P62 GF sample answer lines marked",
+        "graderinfo": "",
+        "questiontext": "<p>Explain why consultation matters.</p>",
+        "generalfeedback": "<p>Sample answer:</p><p>Workers know the hazards best (1 mark)</p><p>It is required under the WHS Act (1 mark)</p><p>It builds trust and reporting (1 mark)</p>",
+        "maxmark": 3,
+        "expect": {
+            "not_certain": true
+        },
+        "why": "P62 GF sample answer lines marked (marked sample lines are proposed for confirmation, not used as written)"
+    },
+    {
+        "id": "P63 qt with scenario figures in kg brackets",
+        "graderinfo": "",
+        "questiontext": "<p>A worker lifts boxes (15 kg) from a pallet.</p><p>a) Identify the hazard (1 mark)</p><p>b) Recommend a control (2 marks)</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "confidence": "certain",
+            "source": "questiontext",
+            "count": 2,
+            "maxes": [
+                1,
+                2
+            ],
+            "labels_contain": [
+                "hazard",
+                "control"
+            ]
+        },
+        "why": "P63 qt with scenario figures in kg brackets"
+    },
+    {
+        "id": "P64 qt word count marks",
+        "graderinfo": "",
+        "questiontext": "<p>Answer in 100-150 words.</p><p>Marking criteria</p><ul><li>Identifies the hazard (1 mark)</li><li>Describes a control (1 mark)</li><li>States who to report to (1 mark)</li></ul>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "confidence": "certain",
+            "source": "questiontext",
+            "count": 3,
+            "maxes": [
+                1,
+                1,
+                1
+            ]
+        },
+        "why": "P64 qt word count marks"
+    },
+    {
+        "id": "P65 Marks: header line then items",
+        "graderinfo": "<p>Marks: 3</p><ol><li>Identifies the hazard</li><li>Describes a control</li><li>Reports</li></ol>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        },
+        "why": "P65 Marks: header line then items [5.0.4: used as written only when every criterion carries marks adding up to the question's mark; here its criteria carry no marks of their own]"
+    },
+    {
+        "id": "P66 weightings heading total",
+        "graderinfo": "<p>Marking criteria (10 marks total)</p><ol><li>Identifies hazards (4 marks)</li><li>Describes controls</li><li>Reporting</li></ol>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 10,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        },
+        "why": "P66 weightings heading total"
+    },
+    {
+        "id": "P67 GI points with \"1 mark each\" and total",
+        "graderinfo": "<p>Award 1 mark for each correct hazard, up to 3 marks.</p><ul><li>Wet floor</li><li>Trailing cable</li><li>Poor lighting</li><li>Blocked exit</li></ul>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        },
+        "why": "P67 GI points with \"1 mark each\" and total"
+    },
+    {
+        "id": "P68 \"Up to 2 marks\" criterion",
+        "graderinfo": "<ol><li>Identifies the hazard (up to 2 marks)</li><li>Describes a control (up to 2 marks)</li><li>Reports (1 mark)</li></ol>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 3,
+            "maxes": [
+                2,
+                2,
+                1
+            ]
+        },
+        "why": "P68 \"Up to 2 marks\" criterion"
+    },
+    {
+        "id": "P69 \"2 marks each\" criterion",
+        "graderinfo": "<ol><li>Identifies two hazards (2 marks each)</li><li>Describes a control (2 marks)</li></ol>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 6,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        },
+        "why": "P69 \"2 marks each\" criterion"
+    },
+    {
+        "id": "P70 qt 6 criteria under heading",
+        "graderinfo": "",
+        "questiontext": "<p>Explain the consultation process.</p><p>Marking criteria</p><ul><li>Names the WHS Act (1 mark)</li><li>Identifies the HSR role (1 mark)</li><li>Describes the HSC (1 mark)</li><li>Explains toolbox talks (1 mark)</li><li>Explains issue resolution (1 mark)</li><li>Gives a workplace example (1 mark)</li></ul>",
+        "generalfeedback": "",
+        "maxmark": 6,
+        "expect": {
+            "confidence": "certain",
+            "source": "questiontext",
+            "count": 6,
+            "maxes": [
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+            ]
+        },
+        "why": "P70 qt 6 criteria under heading"
+    },
+    {
+        "id": "P71 qt 4 criteria, site max 3",
+        "graderinfo": "",
+        "questiontext": "<p>Explain.</p><p>Marking criteria</p><ul><li>Names the Act (1 mark)</li><li>Identifies the HSR (1 mark)</li><li>Describes the HSC (1 mark)</li><li>Gives an example (1 mark)</li></ul>",
+        "generalfeedback": "",
+        "maxmark": 4,
+        "expect": {
+            "confidence": "certain",
+            "source": "questiontext",
+            "count": 4,
+            "maxes": [
+                1,
+                1,
+                1,
+                1
+            ]
+        },
+        "why": "P71 qt 4 criteria, site max 3"
+    },
+    {
+        "id": "P71b same in GI, site max 3",
+        "graderinfo": "<p>Explain.</p><p>Marking criteria</p><ul><li>Names the Act (1 mark)</li><li>Identifies the HSR (1 mark)</li><li>Describes the HSC (1 mark)</li><li>Gives an example (1 mark)</li></ul>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 4,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 4,
+            "maxes": [
+                1,
+                1,
+                1,
+                1
+            ]
+        },
+        "why": "P71b same in GI, site max 3"
+    },
+    {
+        "id": "P74 qt criteria (written for 4) in a 1-mark slot",
+        "graderinfo": "",
+        "questiontext": "<p>What should Sam do?</p><p>Marking criteria (4 marks total)</p><p>2 marks: Moves the pallet jack or isolates the area</p><p>1 mark: Reports it to the supervisor</p><p>1 mark: Explains the trip risk</p>",
+        "generalfeedback": "",
+        "maxmark": 1,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "questiontext"
+        },
+        "why": "P74 qt criteria (written for 4) in a 1-mark slot [5.0.4: used as written only when every criterion carries marks adding up to the question's mark; here its marks do not add up to the question's mark]"
+    },
+    {
+        "id": "P74b same, slot mark 2",
+        "graderinfo": "",
+        "questiontext": "<p>What should Sam do?</p><p>Marking criteria (4 marks total)</p><p>2 marks: Moves the pallet jack or isolates the area</p><p>1 mark: Reports it to the supervisor</p><p>1 mark: Explains the trip risk</p>",
+        "generalfeedback": "",
+        "maxmark": 2,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "questiontext"
+        },
+        "why": "P74b same, slot mark 2 [5.0.4: used as written only when every criterion carries marks adding up to the question's mark; here its marks do not add up to the question's mark]"
+    },
+    {
+        "id": "P75 GF strict w/ heading only, unmarked",
+        "graderinfo": "",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "<p>Marking criteria</p><ol><li>Identifies the hazard</li><li>Describes a control</li><li>Reports it</li></ol>",
+        "maxmark": 3,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "generalfeedback"
+        },
+        "why": "P75 GF strict w/ heading only, unmarked [5.0.4: used as written only when every criterion carries marks adding up to the question's mark; here its criteria carry no marks of their own]"
+    },
+    {
+        "id": "P76 GI criteria table with total row \"Total marks\"",
+        "graderinfo": "<table><tr><th>Criterion</th><th>Marks</th></tr><tr><td>Identifies the hazard</td><td>2</td></tr><tr><td>Describes a control</td><td>2</td></tr><tr><td>Overall total</td><td>4</td></tr></table>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 4,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 2,
+            "maxes": [
+                2,
+                2
+            ]
+        },
+        "why": "P76 GI criteria table with total row \"Total marks\""
+    },
+    {
+        "id": "P77 descending with zero first? ascending 0..2 control",
+        "graderinfo": "",
+        "questiontext": "<p>Marking guide</p><p>0 marks: No answer</p><p>1 mark: Partial answer</p><p>2 marks: Full answer</p>",
+        "generalfeedback": "",
+        "maxmark": 2,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "questiontext"
+        },
+        "why": "P77 descending with zero first? ascending 0..2 control"
+    },
+    {
+        "id": "P78 band with criterion first then band",
+        "graderinfo": "<ol><li>Identifies the hazard (1 mark)</li><li>Explanation of control: 1 mark – partial explanation; 2 marks – detailed explanation</li><li>Reports (1 mark)</li></ol>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 4,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        },
+        "why": "P78 band with criterion first then band"
+    },
+    {
+        "id": "P79 band levels for 1 criterion as list",
+        "graderinfo": "<p>Explains the control:</p><ul><li>1 mark – basic explanation</li><li>2 marks – detailed explanation</li></ul><p>Identifies the hazard (1 mark)</p><p>Reports (1 mark)</p>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 4,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        },
+        "why": "P79 band levels for 1 criterion as list"
+    },
+    {
+        "id": "P80 \"Yes/No\" assessor check list with marks",
+        "graderinfo": "<ul><li>Hazard identified? Yes/No (1 mark)</li><li>Control described? Yes/No (1 mark)</li><li>Reported? Yes/No (1 mark)</li></ul>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 3,
+            "maxes": [
+                1,
+                1,
+                1
+            ]
+        },
+        "why": "P80 \"Yes/No\" assessor check list with marks"
+    },
+    {
+        "id": "P81 GI wrapped in div with br",
+        "graderinfo": "<div>1. Identifies the hazard (1 mark)<br>2. Describes a control (1 mark)<br>3. Reports (1 mark)</div>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 3,
+            "maxes": [
+                1,
+                1,
+                1
+            ]
+        },
+        "why": "P81 GI wrapped in div with br"
+    },
+    {
+        "id": "P82 GI ordered list with \"Note:\" sub-paragraph inside li",
+        "graderinfo": "<ol><li><p>Identifies the hazard (1 mark)</p><p>Note: accept any reasonable hazard</p></li><li><p>Describes a control (1 mark)</p></li><li><p>Reports (1 mark)</p></li></ol>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 3,
+            "maxes": [
+                1,
+                1,
+                1
+            ]
+        },
+        "why": "P82 GI ordered list with \"Note:\" sub-paragraph inside li"
+    },
+    {
+        "id": "P83 GI checkmark bullets",
+        "graderinfo": "<p>✓ Identifies the hazard</p><p>✓ Describes a control</p><p>✓ Reports</p>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        },
+        "why": "P83 GI checkmark bullets [5.0.4: used as written only when every criterion carries marks adding up to the question's mark; here its criteria carry no marks of their own]"
+    },
+    {
+        "id": "P84 GI arrow / o sub bullets Word",
+        "graderinfo": "<p>o Identifies the hazard</p><p>o Describes a control</p><p>o Reports</p>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        },
+        "why": "P84 GI arrow / o sub bullets Word [5.0.4: used as written only when every criterion carries marks adding up to the question's mark; here its criteria carry no marks of their own]"
+    },
+    {
+        "id": "P85 pick-list in words GI",
+        "graderinfo": "<p>Learner must identify any two of the following (1 mark each):</p><ul><li>Wet floor</li><li>Trailing cable</li><li>Poor lighting</li><li>Blocked exit</li></ul>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 2,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        },
+        "why": "P85 pick-list in words GI"
+    },
+    {
+        "id": "P86 at least three in words GI",
+        "graderinfo": "<p>The response should identify at least three of:</p><ul><li>Elimination</li><li>Substitution</li><li>Isolation</li><li>Engineering</li><li>PPE</li></ul>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "confidence": "uncertain",
+            "source": "graderinfo"
+        },
+        "why": "P86 at least three in words GI"
+    },
+    {
+        "id": "P87 qt scenario \"at least 2\" + rubric in qt",
+        "graderinfo": "",
+        "questiontext": "<p>Your workplace has at least 2 forklifts and 10 staff.</p><p>Marking criteria</p><p>1 mark: Identifies a hazard</p><p>1 mark: Describes a control</p><p>1 mark: Names who to report to</p>",
+        "generalfeedback": "",
+        "maxmark": 3,
+        "expect": {
+            "confidence": "certain",
+            "source": "questiontext",
+            "count": 3,
+            "maxes": [
+                1,
+                1,
+                1
+            ]
+        },
+        "why": "P87 qt scenario \"at least 2\" + rubric in qt"
+    },
+    {
+        "id": "P88 GI \"Any 1 of\" inside one criterion among 4",
+        "graderinfo": "<ol><li>Names any 1 of the WHS regulators (1 mark)</li><li>Describes the duty of care (2 marks)</li><li>Explains consultation (1 mark)</li><li>Gives an example (1 mark)</li></ol>",
+        "questiontext": "<p>Q</p>",
+        "generalfeedback": "",
+        "maxmark": 5,
+        "expect": {
+            "confidence": "certain",
+            "source": "graderinfo",
+            "count": 4,
+            "maxes": [
+                1,
+                2,
+                1,
+                1
+            ]
+        },
+        "why": "P88 GI \"Any 1 of\" inside one criterion among 4"
+    }
+]

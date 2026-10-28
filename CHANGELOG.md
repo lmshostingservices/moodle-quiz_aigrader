@@ -1,5 +1,120 @@
 # Changelog
 
+## 5.0.4 - 2026-10-27
+
+Version: `2026102705`. Marking criteria are found wherever the question author put them, an
+assessor confirms them once per question, and only confirmed criteria drive the breakdown. The
+card turns criteria scores into the mark, so a wrong criterion or a wrong weight is a wrong
+mark; from this version no criterion reaches a mark without a person confirming it. Database
+changes: new table `quiz_aigrader_criteria`, and new fields
+`quiz_aigrader_decisions.criteriasource` and `quiz_aigrader_attempt_ctx.aicriteria`. New
+capability: `quiz/aigrader:confirmcriteria`.
+
+**After upgrading:** until a question's criteria are confirmed, its responses get one overall
+mark, and on sites set to **Mark by hand** they get no AI suggestion. Open the Marking criteria
+check on each quiz in progress and confirm its questions, or switch confirmation off in the
+site settings to keep the previous behaviour.
+
+- **Assessors confirm each question's criteria.** The Marking criteria check above the queue
+  proposes each question's criteria, with their marks, from its marking guidance. The assessor
+  opens **Review and confirm**, edits the wording and marks if needed, and confirms. The marks
+  must add up to the question's mark in the quiz; when guidance written for 2 marks sits on a
+  question worth 1, one click shares the mark in the same proportions. The editor recommends
+  3 to 5 criteria and allows up to 10. Questions whose criteria were read exactly can be
+  confirmed together, and are recorded as confirmed that way. Who confirmed and when is shown
+  in the panel and on every card.
+- **Confirming is setting the marking scheme,** so it has its own capability,
+  `quiz/aigrader:confirmcriteria`, given to editing teachers and managers. Non-editing teachers
+  see the panel and mark as before.
+- **Each version and each mark is confirmed separately.** Attempts keep the question version
+  they started on, and a question drawn into random slots can carry different marks; each is
+  its own row, labelled with its version or mark. Two assessors cannot overwrite each other's
+  confirmation: a save made from an out-of-date view is refused.
+- **The decision record keeps the assessor's per-criterion scores only when they are scores on
+  the criteria the suggestion was measured against.** Nothing confirmed by nobody is sent to the
+  grading service as criteria.
+- **Only confirmed criteria drive the breakdown.** A question whose criteria are not confirmed
+  gets one overall mark, and the card says why. Under **Mark by hand** it gets no suggestion
+  and uses no credit. Editing the question, its default mark or its mark in the quiz asks for
+  the criteria to be confirmed again. Every check is repeated on the server: the question must
+  have been attempted in the quiz, and the confirming user needs the approve capability.
+- **A site setting turns confirmation off** (Assessors confirm each question's criteria, on
+  by default). Off, criteria read exactly are used as written and other guidance is condensed
+  by the AI and checked, as described below.
+- **Marks follow the criteria.** The grade list steps as finely as the confirmed criteria need:
+  two criteria of 0.5 on a 1-mark question offer 0.25, 0.5 and 0.75, where before a 0.75
+  breakdown was rounded to 1.
+- **Proposals are read more carefully.** Criteria split across lines, alternatives ("Option 2",
+  "(or)", "Learners who chose Scenario B"), superseded versions, deductions ("-1 mark"),
+  instructions written as criteria ("Where the learner only names a control, give 1 mark"),
+  near-duplicate and two-language copies of a rubric, cumulative levels ("Names / Names and
+  describes / Names, describes and explains"), notes that change what criteria are worth, and
+  marked lines under a closing heading are no longer read as exact.
+- **Criteria are read from all three question fields:** Information for graders, then the
+  question text, then General feedback. Until 5.0.3 only Information for graders was read, so
+  a question with its criteria in the question text was marked with no criteria at all.
+- **One rule for using a rubric as written.** Every criterion has its marks beside it, nothing
+  in it is ambiguous, and the marks add up to the question's mark (in the quiz, or as the
+  question was written). Many ways of writing marks are read: "1 mark: ...", "(2 marks)",
+  "- 2 marks", "Knowledge (3 marks): ...", "(up to 2 marks)", "[2]", half marks and decimal
+  commas, "mks", Thai, Vietnamese and Chinese marks, marking-guide tables with a marks column
+  in any position, "Part A (3 marks)" headings over their criteria, "marked out of 5 each".
+  Lists may be numbered, lettered, roman, bulleted, ticked or pasted from Word.
+- **Everything else the assessor wrote is condensed by the AI, and checked.** Unmarked lists,
+  mark bands, pick-lists, percentages, "/2", "1 mark each", marks on their own line, nested
+  marked lists, marks that do not add up, benchmark answers in prose. The grading service is
+  asked to restate the guidance as 3 to 5 criteria, and the set is used only if every criterion
+  is found in the assessor's own text, the weights match the assessor's where every criterion
+  had one, and the breakdown agrees with the service's overall mark. One failure refuses the
+  whole set, and the response gets one overall mark.
+- **Never read as criteria:** headings that carry a total, totals in any wording, sample and
+  model answers, indicative content, examples, notes to the assessor, "do not accept" and
+  "also accept" lists, bonus and optional marks, alternatives ("OR ..."), submission
+  requirements, struck-out and hidden text, data tables and figures in a question's text.
+- **A setting for questions with no marking guidance:** derive criteria from the question,
+  labelled as AI-derived and checked the same way (default); one overall mark; or mark by
+  hand, with no AI suggestion and no credit used.
+- **3 to 5 criteria per question.** New site settings set the recommended range. Assessors are
+  told when a question has more, or fewer than its marks call for. The assessor's own criteria
+  are never trimmed or merged.
+- **The assessor's weights stand.** A score the service gives out of a different maximum is
+  scaled to the criterion's weight, and two criteria with the same name each get their own
+  score.
+- **The fifteen generic criteria are gone.** A question without criteria used to show a fixed
+  vendor list ("Hazard identified" and so on), most at zero.
+- **The card says where the criteria came from** - the field, condensed by the AI, derived by
+  the AI, or none - with any warning beneath it, including when the breakdown and the suggested
+  mark disagree.
+- **Marking criteria check** above the queue: every question, its criteria with their marks,
+  where they were found, what to fix to have them used as written, and a link to edit the
+  question.
+- **The decision record says what the mark was measured against:** `criteriasource` and a
+  fingerprint of the criteria shown (in `graderinfohash`, which was always empty), taken from
+  the server's record of that exact suggestion.
+- The question on the marking card keeps its line breaks and runs through Moodle's filters.
+  Feedback headed "Improvements" is recognised, so the full-marks policy withholds it.
+- The grading request carries `criteriaSource`, `criteriaMode` (`rubric`, `extract`, `infer`
+  or `holistic`), `criteriaCandidates`, `rubricTotal`, `criteriaLimits` and, for `extract` and
+  `infer`, `criteriaInstruction`. **The grading service must follow `criteriaInstruction` for
+  condensed and derived criteria to appear; until it does, those questions get one overall
+  mark.**
+- **Proposals are cleaner.** Acceptable points in an "any 2 of" list and levels of answer are
+  not proposed as criteria; percentage weights are proposed as shares of the question's mark; a
+  marked line under a closing heading such as "Requirements" is proposed rather than dropped;
+  assessor notes no longer hide criteria written in the question text. The panel shows one
+  short note per question, and a card for an unconfirmed question shows only why it is one
+  overall mark.
+- The feedback language list shows language names without flag emoji.
+- `db/install.xml` is in the XMLDB editor's canonical form, as Moodle's own install-file check
+  requires. The last `!important` in the stylesheet is gone.
+- Tests: 345 real-world layouts (95 written blind from the specification, 250 written by three
+  independent reviews to break the reader) and 102 more from a fourth review, a property test
+  over generated rubrics, regression tests for every defect found in review, randomised input,
+  and tests of confirmation, staleness, validation, permissions and privacy. 155 PHPUnit tests pass on
+  Moodle 5.3 after a clean upgrade from 5.0.3, the confirm, grade and approve flow was run end
+  to end in a browser, and the plugin was installed over 5.0.3 on Moodle 4.4.1 with MariaDB
+  10.11 and PHP 8.2.
+
 ## 5.0.3 - 2026-10-27
 
 Version: `2026102702`. A cleaner look for feedback, the previous attempt and the activity

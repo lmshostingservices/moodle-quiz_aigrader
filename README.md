@@ -20,8 +20,11 @@ questions. For each unmarked essay the teacher can request a suggested mark and
 feedback, review and edit both, and then approve them. Only on approval is the
 mark written to the question attempt and pushed to the gradebook.
 
-- Suggested marks against a fixed three-criterion rubric, so results are
-  comparable between students and between markers.
+- Suggested marks against each question's own marking criteria. The plugin
+  proposes them from Information for graders, the question text or General
+  feedback; an assessor confirms them once per question in the Marking criteria
+  check, and only confirmed criteria drive the per-criterion breakdown. A
+  question whose criteria are not confirmed gets one overall mark.
 - The teacher always reviews before anything is saved. Nothing is graded
   automatically.
 - Marks and feedback are written through Moodle's own manual grading APIs, so
@@ -63,24 +66,31 @@ through *Site administration > Plugins > Install plugins*, or manually:
 | API key | Key issued for this Moodle site. Stored write-only. |
 | Student notifications | Notify the student when all their essays are marked. |
 | Minimum review time | Seconds a marker must spend before approving. |
+| Assessors confirm each question's criteria | On by default. Only confirmed criteria drive the breakdown. |
+| When a question has no marking criteria | Derive criteria from the question, one overall mark, or mark by hand. |
+| Fewest / most criteria per question | The recommended range, 3 to 5 by default. |
 
 If the `local_aiconfig` plugin is installed, the site ID and API key are read
 from there and the values above are used only as a fallback.
 
 ## Capabilities
 
-The plugin defines no capabilities of its own. It uses:
-
+- `quiz/aigrader:approve` - request suggestions and approve marks. Granted to
+  teachers, editing teachers and managers; cloned from `mod/quiz:grade`.
+- `quiz/aigrader:confirmcriteria` - confirm the marking criteria a quiz's
+  questions are marked against. Granted to editing teachers and managers; cloned
+  from `mod/quiz:manage`.
 - `mod/quiz:viewreports` - view the AI Grader tab and the essay list.
-- `mod/quiz:grade` - request suggestions and approve marks.
 - `moodle/site:config` - view the site-wide grading activity report.
 
 ## Privacy
 
-The plugin stores three tables: per-student grading context, per-marker approval
-logs, and scheduled report configurations. All are exported and deleted through
-the Privacy API, and all data sent to the external service is declared in the
-plugin's privacy metadata.
+The plugin stores per-student grading context, per-marker approval logs, the
+record of each assessment decision, confirmed marking criteria with who confirmed
+them, and scheduled report configurations. All are exported and deleted through
+the Privacy API; for confirmed criteria, deletion removes who confirmed them and
+the quiz keeps the criteria. All data sent to the external service is declared in
+the plugin's privacy metadata.
 
 ## Large sites: optional database tuning
 
@@ -117,7 +127,8 @@ exposes an attach point for `quizaccess` subplugins, not for quiz report subplug
 so a report plugin has no supported way to add its data to a quiz backup.
 
 In practice this means a restored or duplicated course does not carry over the
-per-student grading context, the marker approval logs, or report schedules. Grades
+per-student grading context, the marker approval logs, confirmed marking criteria
+or report schedules: criteria are confirmed again in the restored quiz. Grades
 and feedback themselves are unaffected - those live in Moodle's own question and
 gradebook tables and restore normally.
 
