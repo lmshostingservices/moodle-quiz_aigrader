@@ -745,6 +745,21 @@ try {
                 exit;
             }
 
+            // Client Portal (when installed) bills the client: 1 credit per essay, re-grades are free.
+            if (!$regrade && method_exists('\\local_clientportal\\api', 'record_lmslabs_call')) {
+                $billcm = get_coursemodule_from_instance('quiz', $quiz->id, $quiz->course, false, IGNORE_MISSING);
+                $billctx = $billcm ? context_module::instance($billcm->id) : context_course::instance($quiz->course);
+                \local_clientportal\api::record_lmslabs_call(
+                    (int)$USER->id,
+                    (int)$billctx->id,
+                    'quiz_aigrader',
+                    $data,
+                    1,
+                    'Essay graded',
+                    ($quizattempt ? $quizattempt->id : 0) . ':' . $slot . ':' . $attemptnum
+                );
+            }
+
             // Build data for output. The grade is not saved until the teacher approves it.
             // Score format: "X/Y" where Y matches the question's max mark.
             $score = isset($data['score']) ? $data['score'] : \quiz_aigrader\local\formatter::score_label(0, $maxmark);
