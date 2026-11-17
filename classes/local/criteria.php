@@ -160,6 +160,14 @@ class criteria {
         . '\banswers?\s+(should|must)\s+(include|contain|cover)\b|\bwhat\s+to\s+look\s+for\b|^example\s+response\b/i';
 
     /**
+     * A lead in Information for graders saying what the answer must cover: "A satisfactory
+     * response addresses the following", "The learner must address:", "Answers must cover all of".
+     * What follows is what the response is marked on, even when the lead also says "satisfactory".
+     */
+    public const COVERS_LEAD = '/\b(?:address(?:es)?|covers?|demonstrates?)\s+(?:all\s+of\s+)?(?:the\s+following|all\s+of)\b|'
+        . '\b(?:must|should|needs?\s+to)\s+(?:address|cover|demonstrate)\s*:?\s*$/i';
+
+    /**
      * Words that introduce examples of an answer rather than criteria for it.
      */
     public const EXAMPLES_LEAD = '/\b(for\s+example|for\s+instance|examples?\b|such\s+as|e\.g\.|may\s+include|could\s+include|'
@@ -773,7 +781,13 @@ class criteria {
                         continue 2;
                     }
                     $line = $rec['line'];
-                    if (preg_match(self::CRITERIA_HEADING, $line) && !preg_match(self::SAMPLE_HEADING, $line)) {
+                    if (!$strict && preg_match(self::COVERS_LEAD, $line)) {
+                        // "A satisfactory response addresses the following:" in Information for
+                        // graders lists what the answer is marked on, not a sample of it.
+                        $section = 'criteria';
+                        $result['headed'] = true;
+                        $result['guidance'] = true;
+                    } else if (preg_match(self::CRITERIA_HEADING, $line) && !preg_match(self::SAMPLE_HEADING, $line)) {
                         $section = 'criteria';
                         $result['headed'] = true;
                         $result['guidance'] = true;
@@ -1320,7 +1334,7 @@ class criteria {
 
         // A list item. Numbered (1. 1) 1.1), lettered (a. a) (a)), roman (ii. iv)), or a bullet:
         // a dash, an asterisk, a bullet, Word's Symbol-font dot or "o", a tick box or a tick.
-        $markers = '(?:(?:\d+(?:\.\d+)+\.?|\d+[.)])(?!\s*' . $unit . ')|[a-h][.)]|(?:i{1,3}|iv|v|vi{1,3}|ix|x)[.)]|'
+        $markers = '(?:(?:\d+(?:\.\d+)+\.?|\d+[a-z]?[.)])(?!\s*' . $unit . ')|[a-h][.)]|(?:i{1,3}|iv|v|vi{1,3}|ix|x)[.)]|'
             . '\([a-z0-9]{1,4}\)|[-*\x{2022}\x{2013}\x{25AA}\x{25E6}\x{00B7}\x{2610}\x{2611}\x{2713}\x{2714}'
             . '\x{25BA}\x{27A2}\x{2192}\x{25B6}]|o(?=\s+\p{Lu}))';
         // A second marker after the first, as when a Word bullet "o" survives inside a list item.

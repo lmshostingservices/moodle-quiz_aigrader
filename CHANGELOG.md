@@ -1,5 +1,17 @@
 # Changelog
 
+## 5.0.6 - 2026-11-17
+
+### Fixed
+- **Marking criteria check proposed nothing for guidance written as "A satisfactory response
+  addresses the following:" over sub-numbered parts (1a., 1b., 2a. ...).** Two causes: list
+  numbers with a letter ("1a.", "2b)") were not recognised as list items, so every part was read
+  as loose prose; and the "satisfactory response" lead was read as a sample answer, whose unmarked
+  lines are skipped. Sub-numbered items are now list items, and in Information for graders a lead
+  saying what the answer must address or cover ("addresses the following", "must address:",
+  "covers all of") opens the criteria. Such guidance is still unmarked, so it is proposed for
+  confirmation, never used as written.
+
 ## 5.0.5 - 2026-11-13
 
 ### Added

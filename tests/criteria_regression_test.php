@@ -565,4 +565,20 @@ final class criteria_regression_test extends \advanced_testcase {
         $this->assertContains('ignored', $r['reasons']);
         $this->assertCount(3, $r['candidates']);
     }
+
+    /**
+     * 5.0.6: "A satisfactory response addresses the following" over sub-numbered parts ("1a.",
+     * "1b.") is what the answer is marked on, not a sample answer. Before, nothing was proposed.
+     */
+    public function test_satisfactory_addresses_subnumbered_parts(): void {
+        $r = $this->r('<h6>A satisfactory response addresses the following for each question:</h6>'
+            . '<h6>Q1. Advanced network solutions to performance and reliability issues</h6>'
+            . '<h6>1a. Network slowdown due to a large number of guests: Place guest devices on a separate guest VLAN.</h6>'
+            . '<h6>1b. Intermittent connectivity: Check cabling and interfaces, replace faulty hardware.</h6>', '', '', 2.0);
+        $this->assertSame(criteria::SOURCE_GRADERINFO, $r['source']);
+        $this->assertSame(criteria::UNCERTAIN, $r['confidence']);
+        $this->assertCount(2, $r['candidates']);
+        $this->assertStringStartsWith('Network slowdown', $r['candidates'][0]['label']);
+        $this->assertSame('Intermittent connectivity', $r['candidates'][1]['label']);
+    }
 }
