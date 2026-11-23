@@ -18,6 +18,7 @@ namespace quiz_aigrader;
 
 use quiz_aigrader\local\criteria;
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\quiz_aigrader\local\criteria::class)]
 /**
  * Tests for reading an assessor's grading criteria out of a question.
  *
@@ -30,7 +31,6 @@ use quiz_aigrader\local\criteria;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \quiz_aigrader\local\criteria
  */
-#[\PHPUnit\Framework\Attributes\CoversClass(\quiz_aigrader\local\criteria::class)]
 final class criteria_test extends \advanced_testcase {
     /**
      * A numbered rubric with a shared maximum in the heading, which is how assessors

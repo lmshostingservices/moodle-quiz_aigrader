@@ -18,6 +18,7 @@ namespace quiz_aigrader;
 
 use quiz_aigrader\local\criteria;
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\quiz_aigrader\local\criteria::class)]
 /**
  * Question layouts that a first version of the 5.0.4 reader got wrong.
  *
@@ -31,7 +32,6 @@ use quiz_aigrader\local\criteria;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \quiz_aigrader\local\criteria
  */
-#[\PHPUnit\Framework\Attributes\CoversClass(\quiz_aigrader\local\criteria::class)]
 final class criteria_regression_test extends \advanced_testcase {
     /** A question the service's derived criteria are checked against. */
     public const SAM_REFERENCE = 'Sam sees a hazard. Describe one action he should take, explain why, and link it to safety.';

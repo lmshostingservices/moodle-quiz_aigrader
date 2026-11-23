@@ -416,7 +416,11 @@ define(['jquery', 'core/str', 'core/notification', 'core/log'], function($, Str,
             // coarsest step that still fits the maximum and keeps the list whole is used.
             if (max / step > MARK_SCALE_MAX_OPTIONS - 1) {
                 const whole = MARK_STEPS.filter(s => s > step && isMultiple(max, s) && max / s <= MARK_SCALE_MAX_OPTIONS - 1);
-                step = whole.length ? whole[whole.length - 1] : (Number.isInteger(max) ? 1 : 0.5);
+                if (whole.length) {
+                    step = whole[whole.length - 1];
+                } else {
+                    step = Number.isInteger(max) ? 1 : 0.5;
+                }
             }
         }
         return step;
@@ -758,12 +762,10 @@ define(['jquery', 'core/str', 'core/notification', 'core/log'], function($, Str,
                     <div class="aigrader-crit-fill" id="critbar-${id}-${i}" style="width: ${pct}%"></div>
                 </div>
                 ${c.comment ? `<p class="aigrader-crit-comment">${escapeHtml(c.comment)}</p>` : ''}
-                ${c.improve && awarded < max
-                    ? `<p class="aigrader-crit-improve" id="critimp-${id}-${i}">${escapeHtml(c.improve)}</p>`
-                    : (c.improve
-                        ? `<p class="aigrader-crit-improve" id="critimp-${id}-${i}" hidden>`
-                            + `${escapeHtml(c.improve)}</p>`
-                        : '')}
+                ${c.improve
+                    ? `<p class="aigrader-crit-improve" id="critimp-${id}-${i}"${awarded < max ? '' : ' hidden'}>`
+                        + `${escapeHtml(c.improve)}</p>`
+                    : ''}
             </div>`;
         }).join('');
 
@@ -970,6 +972,85 @@ define(['jquery', 'core/str', 'core/notification', 'core/log'], function($, Str,
     }
 
     /**
+     * Split feedback text into its headed sections and anything written above the first heading.
+     *
+     * @param {String} text The feedback as plain text.
+     * @return {Object} {sections: Array, preamble: Array}
+     */
+    function parseFeedbackSections(text) {
+        // Parse text into sections. Any line that appears before the first recognised
+        // heading is kept as preamble rather than discarded, so notices prepended by the
+        // server (auto-lock, human review) and anything a marker types above the first
+        // heading still reach the student.
+        const sections = [];
+        const preamble = [];
+        let currentSection = null;
+
+        // Strip any bullet prefix the model or the assessor used: bullets, squares, triangles,
+        // dashes, middle dots, arrows and the coloured circle emoji the model sometimes returns,
+        // plus numbered markers such as "1." "1)" or "1:". Applied repeatedly for "* * text".
+        // eslint-disable-next-line max-len -- one regex literal; wrapping it would change the pattern.
+        const STRIP = /^(?:[*>\u2022\u2023\u2043\u25CF\u25CB\u25E6\u25AA\u25AB\u25B8\u25B9\u25BA\u25BB\u25C6\u25C7\u2010\u2011\u2012\u2013\u2014\u00B7\u2219\u22C5\u2192\u21D2\u27A4\u{1F7E0}\u{1F7E1}\u{1F7E2}\u{1F7E3}\u{1F7E4}\u{1F534}\u{1F535}\u{1F7E5}\u{1F7E6}\u{1F7E7}\u{1F7E8}\u{1F7E9}\u{1F7EA}\u{1F7EB}\u26AB\u26AA\u2B24]+\s*|\d+[.):]\s*|[-*+]\s+)/u;
+
+        const lines = text.split('\n');
+
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i].trim();
+            if (!line) {
+                continue;
+            }
+
+            const headingType = detectSectionType(line);
+            if (headingType === 'success') {
+                if (currentSection) {
+                    sections.push(currentSection);
+                }
+                const title = line.replace(/^(\[thumbs-up\]|\s)+/, '').replace(HEADING_LEAD, '').trim()
+                    || strings.feedback_strengths;
+                currentSection = {type: 'success', title: title, icon: 'success', items: []};
+            } else if (headingType === 'warning') {
+                if (currentSection) {
+                    sections.push(currentSection);
+                }
+                const title = line.replace(/^(\[chart-down\]|\s)+/, '').replace(HEADING_LEAD, '').trim()
+                    || strings.feedback_improvements;
+                currentSection = {type: 'warning', title: title, icon: 'warning', items: []};
+            } else if (headingType === 'info') {
+                if (currentSection) {
+                    sections.push(currentSection);
+                }
+                const title = line.replace(/^(\[tip\]|\u2753|\s)+/u, '').replace(HEADING_LEAD, '').trim()
+                    || strings.feedback_suggestions;
+                currentSection = {type: 'info', title: title, icon: 'info', items: []};
+            } else {
+                // Add as bullet item - strip bullets/emoji repeatedly for double bullets like "* * text"
+                let cleanText = line;
+                let prevLen = 0;
+                while (cleanText.length !== prevLen && STRIP.test(cleanText)) {
+                    prevLen = cleanText.length;
+                    cleanText = cleanText.replace(STRIP, '').trim();
+                }
+                if (cleanText) {
+                    if (currentSection) {
+                        currentSection.items.push(cleanText);
+                    } else {
+                        // No heading has been seen yet, so this is preamble. Keeping it means
+                        // nothing the marker wrote is silently dropped on its way to the student.
+                        preamble.push(cleanText);
+                    }
+                }
+            }
+        }
+
+        // Push last section
+        if (currentSection) {
+            sections.push(currentSection);
+        }
+
+        return {sections: sections, preamble: preamble};
+    }
+
+    /**
      * Render the AI's feedback as the learner will see it.
      *
      * The markup carries inline styles because this HTML is stored on the attempt and
@@ -998,77 +1079,7 @@ define(['jquery', 'core/str', 'core/notification', 'core/log'], function($, Str,
             }
         }
 
-        // Parse text into sections. Any line that appears before the first recognised
-        // heading is kept as preamble rather than discarded, so notices prepended by the
-        // server (auto-lock, human review) and anything a marker types above the first
-        // heading still reach the student.
-        const sections = [];
-        const preamble = [];
-        let currentSection = null;
-
-        // Comprehensive regex to strip all bullet prefixes consistently
-        // Covers: bullets (*****), squares (**), triangles ( >  > ), dashes (--- -  - ), middle dots (***), arrows ( ->  =>  > )
-        // Also covers the coloured circle emoji - green, orange, blue, purple, yellow,
-        // red, black and white - which the model often returns as bullet markers.
-        // Applied to handle double bullets like "* *" and numbered lists like "1." or "1)" or "1:"
-        // Uses + quantifier to strip consecutive bullet chars, and repeats if needed
-        // eslint-disable-next-line max-len -- one regex literal; wrapping it would change the pattern.
-        const STRIP = /^(?:[******* >  > >>**--- -  - *** ->  =>  > \u2022\u2023\u2043\u25CF\u25CB\u25E6\u25AA\u25AB\u25B8\u25B9\u25BA\u25BB\u25C6\u25C7\u2010\u2011\u2012\u2013\u2014\u00B7\u2219\u22C5\u2192\u21D2\u27A4\u{1F7E0}\u{1F7E1}\u{1F7E2}\u{1F7E3}\u{1F7E4}\u{1F534}\u{1F535}\u{1F7E5}\u{1F7E6}\u{1F7E7}\u{1F7E8}\u{1F7E9}\u{1F7EA}\u{1F7EB}\u26AB\u26AA\u2B24]+\s*|\d+[.):]\s*|[-*+]\s+)/u;
-
-        const lines = text.split('\n');
-
-        for (let i = 0; i < lines.length; i++) {
-            const line = lines[i].trim();
-            if (!line) {
-                continue;
-            }
-
-            const headingType = detectSectionType(line);
-            if (headingType === 'success') {
-                if (currentSection) {
-                    sections.push(currentSection);
-                }
-                const title = line.replace(/^(\[thumbs-up\]|\s)+/, '').replace(HEADING_LEAD, '').trim()
-                    || strings.feedback_strengths;
-                currentSection = { type: 'success', title: title, icon: '[thumbs-up]', items: [] };
-            } else if (headingType === 'warning') {
-                if (currentSection) {
-                    sections.push(currentSection);
-                }
-                const title = line.replace(/^(\[chart-down\]|\s)+/, '').replace(HEADING_LEAD, '').trim()
-                    || strings.feedback_improvements;
-                currentSection = { type: 'warning', title: title, icon: '[chart-down]', items: [] };
-            } else if (headingType === 'info') {
-                if (currentSection) {
-                    sections.push(currentSection);
-                }
-                const title = line.replace(/^(\[tip\]|\u2753|\s)+/u, '').replace(HEADING_LEAD, '').trim()
-                    || strings.feedback_suggestions;
-                currentSection = { type: 'info', title: title, icon: '[tip]', items: [] };
-            } else {
-                // Add as bullet item - strip bullets/emoji repeatedly for double bullets like "* * text"
-                let cleanText = line;
-                let prevLen = 0;
-                while (cleanText.length !== prevLen && STRIP.test(cleanText)) {
-                    prevLen = cleanText.length;
-                    cleanText = cleanText.replace(STRIP, '').trim();
-                }
-                if (cleanText) {
-                    if (currentSection) {
-                        currentSection.items.push(cleanText);
-                    } else {
-                        // No heading has been seen yet, so this is preamble. Keeping it means
-                        // nothing the marker wrote is silently dropped on its way to the student.
-                        preamble.push(cleanText);
-                    }
-                }
-            }
-        }
-
-        // Push last section
-        if (currentSection) {
-            sections.push(currentSection);
-        }
+        const {sections, preamble} = parseFeedbackSections(text);
 
         // SVG icons for each section type (inline SVG so they work everywhere)
         const icons = {
@@ -1231,6 +1242,85 @@ define(['jquery', 'core/str', 'core/notification', 'core/log'], function($, Str,
      * Grade ONE essay - shows editable feedback for teacher approval
      * --------------------------------------------------------- */
     /**
+     * Turn feedback that arrived as an object of sections into the plain text the card parses.
+     *
+     * @param {*} raw The feedback as the server returned it.
+     * @return {String} The feedback as text.
+     */
+    function feedbackToText(raw) {
+        if (!raw) {
+            return '';
+        }
+        if (typeof raw !== 'object') {
+            return String(raw);
+        }
+        if (raw.sections) {
+            return Object.entries(raw.sections)
+                .map(([key, val]) => `${key}:\n${Array.isArray(val) ? val.join('\n') : val}`)
+                .join('\n\n');
+        }
+        return Object.entries(raw)
+            .map(([key, val]) => {
+                const header = key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+                const content = Array.isArray(val) ? val.map(v => `- ${v}`).join('\n') : val;
+                return `${header}:\n${content}`;
+            })
+            .join('\n\n');
+    }
+
+    /**
+     * The badge saying which attempt this is, and out of how many when the quiz limits them.
+     *
+     * @param {Object} resp The suggestion response.
+     * @return {String} The badge markup.
+     */
+    function renderAttemptBadge(resp) {
+        const attemptNum = resp.attemptnum || 1;
+        const maxAttempts = resp.maxattempts || 0;
+        return maxAttempts > 0
+            ? `<span class="aigrader-attempt-badge ag-badge ag-badge-info">${escapeHtml(
+                strings.attemptnumberofmax.replace('{$a->num}', attemptNum).replace('{$a->total}', maxAttempts))}</span>`
+            : `<span class="aigrader-attempt-badge ag-badge ag-badge-info">${escapeHtml(
+                strings.attemptnumber.replace('{$a}', attemptNum))}</span>`;
+
+    }
+
+    /**
+     * The collapsible panel showing the mark and feedback the learner was given last time.
+     *
+     * @param {Object} resp The suggestion response.
+     * @return {String} The panel markup, or '' when there is no earlier attempt.
+     */
+    function renderPreviousAttempt(resp) {
+        if (!resp.previousattempt || (!resp.previousattempt.feedback && resp.previousattempt.grade === null)) {
+            return '';
+        }
+        const prevGrade = resp.previousattempt.grade;
+        const prevFeedback = resp.previousattempt.feedback || strings.feedback_notrecorded;
+        const prevGradeDisplay = prevGrade !== null && !isNaN(parseFloat(prevGrade))
+            ? `${Math.round(parseFloat(prevGrade))}%` : strings.notgraded;
+        // Learner work is never marked in red: a mark below full is shown in amber,
+        // because it says what is still to come, not that the learner failed.
+        const prevGradeNum = prevGrade === null ? null : parseFloat(prevGrade);
+        const prevGradeBadgeClass = prevGradeNum !== null && prevGradeNum >= 100
+            ? 'ag-badge-success' : 'ag-badge-warning';
+        return `
+            <div class="aigrader-previous-attempt">
+                <button type="button" class="aigrader-previous-toggle" data-expanded="false">
+                    <svg class="aigrader-chevron ag-icon-xs" xmlns="http://www.w3.org/2000/svg"
+                         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="9 18 15 12 9 6"/>
+                    </svg>
+                    <span>${escapeHtml(strings.previousattempt)}</span>
+                    <span class="aigrader-previous-grade ag-badge ${prevGradeBadgeClass}">${prevGradeDisplay}</span>
+                </button>
+                <div class="aigrader-previous-content" style="display: none;">
+                    <div class="aigrader-previous-feedback">${renderPreviousSummary(prevFeedback)}</div>
+                </div>
+            </div>`;
+    }
+
+    /**
      * Grade one response
      *
      * One implementation serves both the single AI Grade button and Grade All. They used
@@ -1297,25 +1387,8 @@ define(['jquery', 'core/str', 'core/notification', 'core/log'], function($, Str,
                 .replace('{$a->mark}', formatMark(Math.round((suggestedMark / maxMark) * 100)))
                 .replace('{$a->maxmark}', '100');
 
-            // Format feedback into cards for the preview.
-            // Handle case where OpenAI returns feedback as object instead of string
-            let feedbackRaw = resp.feedback || '';
-            if (typeof feedbackRaw === 'object') {
-                // Convert object to formatted string
-                if (feedbackRaw.sections) {
-                    feedbackRaw = Object.entries(feedbackRaw.sections || feedbackRaw)
-                        .map(([key, val]) => `${key}:\n${Array.isArray(val) ? val.join('\n') : val}`)
-                        .join('\n\n');
-                } else {
-                    feedbackRaw = Object.entries(feedbackRaw)
-                        .map(([key, val]) => {
-                            const header = key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-                            const content = Array.isArray(val) ? val.map(v => `- ${v}`).join('\n') : val;
-                            return `${header}:\n${content}`;
-                        })
-                        .join('\n\n');
-                }
-            }
+            // Feedback may arrive as an object of sections rather than a string.
+            const feedbackRaw = feedbackToText(resp.feedback);
             // The criteria breakdown the learner will see, and the unfiltered feedback the
             // card re-derives from whenever the assessor changes the mark. The preview and
             // the textarea are filled by refreshFeedbackForCard() once the card is in the
@@ -1334,42 +1407,8 @@ define(['jquery', 'core/str', 'core/notification', 'core/log'], function($, Str,
                 previousAttempt: resp.previousattempt
             });
 
-            // Build the attempt context badge.
-            const attemptNum = resp.attemptnum || 1;
-            const maxAttempts = resp.maxattempts || 0;
-            const attemptBadge = maxAttempts > 0
-                ? `<span class="aigrader-attempt-badge ag-badge ag-badge-info">${escapeHtml(
-                    strings.attemptnumberofmax.replace('{$a->num}', attemptNum).replace('{$a->total}', maxAttempts))}</span>`
-                : `<span class="aigrader-attempt-badge ag-badge ag-badge-info">${escapeHtml(
-                    strings.attemptnumber.replace('{$a}', attemptNum))}</span>`;
-
-            // Build previous attempt section if available
-            let previousAttemptHtml = '';
-            if (resp.previousattempt && (resp.previousattempt.feedback || resp.previousattempt.grade !== null)) {
-                const prevGrade = resp.previousattempt.grade;
-                const prevFeedback = resp.previousattempt.feedback || strings.feedback_notrecorded;
-                const prevGradeDisplay = prevGrade !== null && !isNaN(parseFloat(prevGrade))
-                    ? `${Math.round(parseFloat(prevGrade))}%` : strings.notgraded;
-                // Learner work is never marked in red: a mark below full is shown in amber,
-                // because it says what is still to come, not that the learner failed.
-                const prevGradeNum = prevGrade === null ? null : parseFloat(prevGrade);
-                const prevGradeBadgeClass = prevGradeNum !== null && prevGradeNum >= 100
-                    ? 'ag-badge-success' : 'ag-badge-warning';
-                previousAttemptHtml = `
-                    <div class="aigrader-previous-attempt">
-                        <button type="button" class="aigrader-previous-toggle" data-expanded="false">
-                            <svg class="aigrader-chevron ag-icon-xs" xmlns="http://www.w3.org/2000/svg"
-                                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="9 18 15 12 9 6"/>
-                            </svg>
-                            <span>${escapeHtml(strings.previousattempt)}</span>
-                            <span class="aigrader-previous-grade ag-badge ${prevGradeBadgeClass}">${prevGradeDisplay}</span>
-                        </button>
-                        <div class="aigrader-previous-content" style="display: none;">
-                            <div class="aigrader-previous-feedback">${renderPreviousSummary(prevFeedback)}</div>
-                        </div>
-                    </div>`;
-            }
+            const attemptBadge = renderAttemptBadge(resp);
+            const previousAttemptHtml = renderPreviousAttempt(resp);
 
             // Hide the initial actions row and show the feedback area
             $('#initial-actions-' + id).hide();
@@ -2000,9 +2039,9 @@ define(['jquery', 'core/str', 'core/notification', 'core/log'], function($, Str,
 
             let html = '';
             resp.documents.forEach(doc => {
-                const statusClass = 'aigrader-doc-status-' + doc.status;
+                const statusClass = 'aigrader-doc-status-' + String(doc.status || '').replace(/[^a-z_-]/gi, '');
                 const statusText = strings['document_' + doc.status] || doc.status;
-                const sizeKB = Math.round(doc.sizeBytes / 1024);
+                const sizeKB = Math.round((parseInt(doc.sizeBytes, 10) || 0) / 1024);
 
                 html += `<div class="aigrader-doc-item" data-docid="${escapeHtml(doc.id)}">
                     <div class="aigrader-doc-icon">
@@ -2016,7 +2055,7 @@ define(['jquery', 'core/str', 'core/notification', 'core/log'], function($, Str,
                         <div class="aigrader-doc-name">${escapeHtml(doc.filename)}</div>
                         <div class="aigrader-doc-meta">${sizeKB} KB</div>
                     </div>
-                    <span class="aigrader-doc-status ${statusClass}">${escapeHtml(statusText)}</span>
+                    <span class="aigrader-doc-status ${escapeHtml(statusClass)}">${escapeHtml(statusText)}</span>
                     <button class="aigrader-doc-delete" data-docid="${escapeHtml(doc.id)}"
                             title="${escapeHtml(strings.document_delete)}">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
@@ -2089,10 +2128,27 @@ define(['jquery', 'core/str', 'core/notification', 'core/log'], function($, Str,
      * @return {void}
      */
     function deleteDocument(docId) {
-        if (!confirm(strings.document_delete_confirm)) {
-            return;
-        }
+        // Moodle's own confirmation dialogue rather than the browser's confirm(): it is styled,
+        // translated and accessible. deleteCancelPromise is newer than saveCancelPromise, so the
+        // older one is the fallback on sites that do not have it yet.
+        const ask = Notification.deleteCancelPromise || Notification.saveCancelPromise;
+        ask(strings.document_delete, strings.document_delete_confirm, strings.document_delete)
+            .then(() => {
+                sendDelete(docId);
+                return true;
+            })
+            .catch(() => {
+                // Cancelled: nothing to do.
+            });
+    }
 
+    /**
+     * Ask the server to delete one reference document, once the assessor has confirmed.
+     *
+     * @param {String} docId The document to delete.
+     * @return {void}
+     */
+    function sendDelete(docId) {
         $.post(config.ajaxurl, {
             action: 'deletedoc',
             cmid: config.cmid,
@@ -2296,90 +2352,29 @@ define(['jquery', 'core/str', 'core/notification', 'core/log'], function($, Str,
             {key: 'grading_complete_message', component: 'quiz_aigrader'},
             {key: 'learner_preview', component: 'quiz_aigrader'}
         ]).then(result => {
+            // Assigned by name: the keys match the language strings, which are snake_case.
             [
-                strings.processing,
-                strings.grading,
-                strings.success,
-                strings.error,
-                strings.error_connection,
-                strings.error_fetching_credits,
-                strings.error_grading,
-                strings.no_essays,
-                strings.no_essays_message,
-                strings.grading_complete,
-                strings.feedback,
-                strings.show_more,
-                strings.show_less,
-                strings.show_all_responses,
-                strings.show_ungraded_only,
-                strings.loading,
-                strings.extracting_text,
-                strings.no_documents,
-                strings.document_ready,
-                strings.document_processing,
-                strings.document_failed,
-                strings.document_delete,
-                strings.document_delete_confirm,
-                strings.document_uploaded,
-                strings.document_upload_error,
-                strings.document_deleted,
-                strings.ai_grade,
-                strings.pending_approval,
-                strings.approve_save,
-                strings.saving,
-                strings.saved_to_gradebook,
-                strings.grade_saved,
-                strings.grade_label,
-                strings.grade_0,
-                strings.grade_1,
-                strings.grade_2,
-                strings.grade_3,
-                strings.instructions_saved,
-                strings.regrading,
-                strings.regrading_complete,
-                strings.no_graded_essays,
-                strings.no_graded_essays_message,
-                strings.confirm_regrade,
-                strings.feedback_strengths,
-                strings.feedback_improvements,
-                strings.feedback_suggestions,
-                strings.feedback_other,
-                strings.feedback_none,
-                strings.feedback_notrecorded,
-                strings.notgraded,
-                strings.previousattempt,
-                strings.edit_feedback,
-                strings.update_preview,
-                strings.review_countdown,
-                strings.no_grading_data,
-                strings.attemptnumber,
-                strings.attemptnumberofmax,
-                strings.all_graded,
-                strings.all_graded_message,
-                strings.error_nomaxmark,
-                strings.error_nomarkselected,
-                strings.criteria_heading,
-                strings.criteria_heading_inferred,
-                strings.criteria_heading_extracted,
-                strings.policy_withheld,
-                strings.policy_not_applied,
-                strings.suggested_grade,
-                strings.feedback_to_learner,
-                strings.edit,
-                strings.save_changes,
-                strings.cancel,
-                strings.changes_saved,
-                strings.savedtogradebook,
-                strings.read_answer_first,
-                strings.status_pending,
-                strings.status_grading,
-                strings.status_graded,
-                strings.status_approved,
-                strings.status_manual,
-                strings.criteria_total,
-                strings.grading_complete_message,
-                strings.learner_preview
-            ] = result;
+                'processing', 'grading', 'success', 'error', 'error_connection', 'error_fetching_credits',
+                'error_grading', 'no_essays', 'no_essays_message', 'grading_complete', 'feedback',
+                'show_more', 'show_less', 'show_all_responses', 'show_ungraded_only', 'loading',
+                'extracting_text', 'no_documents', 'document_ready', 'document_processing',
+                'document_failed', 'document_delete', 'document_delete_confirm', 'document_uploaded',
+                'document_upload_error', 'document_deleted', 'ai_grade', 'pending_approval', 'approve_save',
+                'saving', 'saved_to_gradebook', 'grade_saved', 'grade_label', 'grade_0', 'grade_1',
+                'grade_2', 'grade_3', 'instructions_saved', 'regrading', 'regrading_complete',
+                'no_graded_essays', 'no_graded_essays_message', 'confirm_regrade', 'feedback_strengths',
+                'feedback_improvements', 'feedback_suggestions', 'feedback_other', 'feedback_none',
+                'feedback_notrecorded', 'notgraded', 'previousattempt', 'edit_feedback', 'update_preview',
+                'review_countdown', 'no_grading_data', 'attemptnumber', 'attemptnumberofmax', 'all_graded',
+                'all_graded_message', 'error_nomaxmark', 'error_nomarkselected', 'criteria_heading',
+                'criteria_heading_inferred', 'criteria_heading_extracted', 'policy_withheld',
+                'policy_not_applied', 'suggested_grade', 'feedback_to_learner', 'edit', 'save_changes',
+                'cancel', 'changes_saved', 'savedtogradebook', 'read_answer_first', 'status_pending',
+                'status_grading', 'status_graded', 'status_approved', 'status_manual', 'criteria_total',
+                'grading_complete_message', 'learner_preview'
+            ].forEach((name, index) => {
+                strings[name] = result[index];
+            });
 
             return true;
         });
@@ -2790,14 +2785,12 @@ define(['jquery', 'core/str', 'core/notification', 'core/log'], function($, Str,
                 if (container && container.dataset.ajaxurl) {
                     config.ajaxurl = container.dataset.ajaxurl;
                     log('Got ajaxurl from data attribute:', config.ajaxurl);
-                }
-                // Source 2: M.cfg.wwwroot
-                else if (typeof M !== 'undefined' && M.cfg && M.cfg.wwwroot) {
+                } else if (typeof M !== 'undefined' && M.cfg && M.cfg.wwwroot) {
+                    // Source 2: M.cfg.wwwroot, which is right for a Moodle in a subdirectory too.
                     config.ajaxurl = M.cfg.wwwroot + '/mod/quiz/report/aigrader/ajax.php';
                     log('Built ajaxurl from M.cfg.wwwroot:', config.ajaxurl);
-                }
-                // Source 3: Current page URL
-                else {
+                } else {
+                    // Source 3: the current page's origin, the last resort.
                     config.ajaxurl = window.location.origin + '/mod/quiz/report/aigrader/ajax.php';
                     log('Built ajaxurl from origin:', config.ajaxurl);
                 }
@@ -2823,7 +2816,9 @@ define(['jquery', 'core/str', 'core/notification', 'core/log'], function($, Str,
                     loadDocuments();
                     loadSettings();
                     registerHandlers();
-                    updateEssayCount(); // Initialize essay count on page load
+                    // Initialise the essay count on page load.
+                    updateEssayCount();
+                    return true;
                 })
                 .catch(Notification.exception);
         }

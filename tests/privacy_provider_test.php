@@ -32,6 +32,7 @@ use core_privacy\local\request\userlist;
 use core_privacy\local\request\writer;
 use quiz_aigrader\privacy\provider;
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\quiz_aigrader\privacy\provider::class)]
 /**
  * Unit tests for the quiz_aigrader privacy provider.
  *
@@ -40,7 +41,6 @@ use quiz_aigrader\privacy\provider;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \quiz_aigrader\privacy\provider
  */
-#[\PHPUnit\Framework\Attributes\CoversClass(\quiz_aigrader\privacy\provider::class)]
 final class privacy_provider_test extends \core_privacy\tests\provider_testcase {
     /** @var \stdClass The course used by the fixture. */
     protected $course;
@@ -309,6 +309,82 @@ final class privacy_provider_test extends \core_privacy\tests\provider_testcase 
         provider::delete_data_for_user($contextlist);
 
         $this->assertEquals(0, $DB->count_records('quiz_aigrader_schedules'));
+    }
+
+    /**
+     * A learner whose only record here is an assessment decision is still found, exported and erased.
+     *
+     * Until 5.1.0 the decisions table was declared in the metadata and deleted with the other
+     * tables, but never used to find a user's contexts nor exported. A learner marked by hand,
+     * with no AI suggestion and so no attempt context row, could not be found at all.
+     *
+     * @return void
+     */
+    public function test_decision_only_learner_is_found_exported_and_erased(): void {
+        global $DB;
+
+        $context = \context_module::instance($this->cm->id);
+        $learner = $this->getDataGenerator()->create_user();
+        $DB->insert_record('quiz_aigrader_decisions', (object) [
+            'quizid' => $this->quiz->id,
+            'courseid' => $this->course->id,
+            'userid' => $learner->id,
+            'graderid' => $this->teacher->id,
+            'qubaid' => 2,
+            'slot' => 1,
+            'questionid' => 1,
+            'attemptnum' => 1,
+            'maxmark' => 10,
+            'aimark' => null,
+            'finalmark' => 9,
+            'markchanged' => 1,
+            'feedbackchanged' => 0,
+            'aifeedback' => '',
+            'finalfeedback' => 'A thorough risk assessment.',
+            'criteriamet' => '[]',
+            'humanreview' => 0,
+            'autolocked' => 0,
+            'timecreated' => time(),
+        ]);
+
+        $contextlist = provider::get_contexts_for_userid($learner->id);
+        $this->assertContains((int)$context->id, array_map('intval', $contextlist->get_contextids()));
+
+        $userlist = new \core_privacy\local\request\userlist($context, 'quiz_aigrader');
+        provider::get_users_in_context($userlist);
+        $this->assertContains((int)$learner->id, array_map('intval', $userlist->get_userids()));
+
+        $approved = new \core_privacy\local\request\approved_contextlist($learner, 'quiz_aigrader', [$context->id]);
+        provider::export_user_data($approved);
+        $writer = \core_privacy\local\request\writer::with_context($context);
+        $exported = $writer->get_data([
+            get_string('privacy:path:decisions', 'quiz_aigrader'),
+            get_string('privacy:path:decisions_aslearner', 'quiz_aigrader'),
+        ]);
+        $this->assertNotEmpty($exported);
+        $this->assertSame('A thorough risk assessment.', $exported->decisions[0]->finalfeedback);
+
+        provider::delete_data_for_user($approved);
+        $this->assertFalse($DB->record_exists('quiz_aigrader_decisions', ['userid' => $learner->id]));
+        // The fixture's own decision, about another learner, is untouched.
+        $this->assertTrue($DB->record_exists('quiz_aigrader_decisions', ['userid' => $this->student->id]));
+    }
+
+    /**
+     * The assessor's decisions are exported under their own heading.
+     *
+     * @return void
+     */
+    public function test_assessor_decisions_are_exported(): void {
+        $context = \context_module::instance($this->cm->id);
+        $approved = new \core_privacy\local\request\approved_contextlist($this->teacher, 'quiz_aigrader', [$context->id]);
+        provider::export_user_data($approved);
+        $exported = \core_privacy\local\request\writer::with_context($context)->get_data([
+            get_string('privacy:path:decisions', 'quiz_aigrader'),
+            get_string('privacy:path:decisions_asassessor', 'quiz_aigrader'),
+        ]);
+        $this->assertNotEmpty($exported);
+        $this->assertEquals(7, $exported->decisions[0]->finalmark);
     }
 
     /**

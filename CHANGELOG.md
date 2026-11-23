@@ -1,5 +1,47 @@
 # Changelog
 
+## 5.1.0 - 2026-11-23
+
+Version: `2026112300`. Production readiness release for Moodle partner review: a line-by-line
+security, privacy and standards audit, with every finding fixed or documented. No database changes.
+
+### Security
+- **The grading endpoint now enforces the same access rules as the report page.** Suggesting or
+  approving a mark is refused for an attempt that is not finished, for a learner outside every
+  group the assessor can access under separate groups, and for any question that is not an essay.
+  Before, a direct request could mark an in-progress attempt or a learner in another group.
+- **A reference document can only be deleted from the quiz it belongs to.** The service identifies
+  documents by site, so an assessor could delete another course's marking guide by its id.
+- A grading service reply outside the question's scale (for example "7/5") is clamped before it is
+  offered to the assessor. Redirects on service calls are capped at three.
+- The learner's name is escaped in the HTML body of the "marking complete" notification.
+- The document list escapes the status the service returns before it reaches a class attribute.
+
+### Privacy
+- **Assessment decisions are now found, exported and erased for both the learner and the
+  assessor.** The decisions table was declared and deleted, but never used to find a user's
+  contexts nor exported, so a learner marked by hand (no AI suggestion) could not be found.
+- The attempt context export now includes the AI's suggested mark, feedback and criteria.
+- Email addresses on the marking queue respect the site's identity fields and
+  `moodle/site:viewuseridentity`, as core reports do.
+
+### Fixed
+- The "Processing..." loading overlay had no style that reached it and showed permanently under
+  the report. It is now a proper full-page overlay, hidden until grading runs, and announced to
+  screen readers.
+- Names containing "&" were escaped twice on the marking queue.
+- Essay Guard alerts were hard-coded English; every string is now in the language pack.
+- Learner responses are formatted in the quiz context, so filters run as on the review page.
+- Reference document deletion uses Moodle's confirmation dialogue instead of the browser's.
+
+### Changed
+- Each queue row shows which question it is (Q1, Q2...), so three rows for one learner can be
+  told apart. The submission date filter is aligned on one line with a styled Apply button.
+  Long criterion labels wrap beside a score box that stays pinned to the right.
+- CI is green again: phpcs, PHPDoc and ESLint warnings fixed (84 ESLint warnings to 0), and a
+  corrupted character class in the feedback bullet pattern rewritten with explicit escapes.
+- New `\quiz_aigrader\local\access` class with unit tests; 150 tests in total.
+
 ## 5.0.6 - 2026-11-17
 
 ### Fixed

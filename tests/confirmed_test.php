@@ -19,6 +19,7 @@ namespace quiz_aigrader;
 use quiz_aigrader\local\confirmed;
 use quiz_aigrader\local\criteria;
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\quiz_aigrader\local\confirmed::class)]
 /**
  * Tests for criteria an assessor confirms per question (5.0.4).
  *
@@ -27,7 +28,6 @@ use quiz_aigrader\local\criteria;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \quiz_aigrader\local\confirmed
  */
-#[\PHPUnit\Framework\Attributes\CoversClass(\quiz_aigrader\local\confirmed::class)]
 final class confirmed_test extends \advanced_testcase {
     /** The question that exposed the problem. */
     public const SAM_TEXT = '<p>Sam notices a hazard on site. Describe one action he should take and explain why.</p>'

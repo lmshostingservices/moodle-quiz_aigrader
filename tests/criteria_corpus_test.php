@@ -18,6 +18,7 @@ namespace quiz_aigrader;
 
 use quiz_aigrader\local\criteria;
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\quiz_aigrader\local\criteria::class)]
 /**
  * Real-world RTO question layouts and the outcome an assessor would expect.
  *
@@ -32,7 +33,6 @@ use quiz_aigrader\local\criteria;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \quiz_aigrader\local\criteria
  */
-#[\PHPUnit\Framework\Attributes\CoversClass(\quiz_aigrader\local\criteria::class)]
 final class criteria_corpus_test extends \advanced_testcase {
     /**
      * Every case resolves to the outcome, source, count, marks, labels and warnings it expects.

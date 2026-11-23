@@ -23,6 +23,7 @@ require_once($CFG->dirroot . '/mod/quiz/report/aigrader/report.php');
 require_once($CFG->dirroot . '/mod/quiz/locallib.php');
 require_once($CFG->libdir . '/questionlib.php');
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\quiz_aigrader_report::class)]
 /**
  * Renders the marking queue against real data and asserts on the markup.
  *
@@ -36,7 +37,6 @@ require_once($CFG->libdir . '/questionlib.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \quiz_aigrader_report
  */
-#[\PHPUnit\Framework\Attributes\CoversClass(\quiz_aigrader_report::class)]
 final class report_render_test extends \advanced_testcase {
     /** @var \stdClass The course. */
     private $course;

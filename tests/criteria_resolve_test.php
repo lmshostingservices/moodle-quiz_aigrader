@@ -19,6 +19,7 @@ namespace quiz_aigrader;
 use quiz_aigrader\local\criteria;
 use quiz_aigrader\local\formatter;
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\quiz_aigrader\local\criteria::class)]
 /**
  * Tests for finding a question's criteria wherever its author put them (5.0.4).
  *
@@ -31,7 +32,6 @@ use quiz_aigrader\local\formatter;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \quiz_aigrader\local\criteria
  */
-#[\PHPUnit\Framework\Attributes\CoversClass(\quiz_aigrader\local\criteria::class)]
 final class criteria_resolve_test extends \advanced_testcase {
     /** @var array The recommended range used throughout. */
     public const LIMITS = ['min' => 3, 'max' => 5];

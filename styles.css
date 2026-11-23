@@ -1283,14 +1283,17 @@
 
 .aigrader-container .aigrader-crit-head {
     display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
+    align-items: flex-start;
     justify-content: space-between;
-    gap: 10px;
+    gap: 14px;
     margin: 0 0 9px;
 }
 
+/* The label takes the room and wraps; the score box stays pinned top right on every row, so a
+   long criterion no longer pushes its score onto a line of its own. */
 .aigrader-container .aigrader-crit-label {
+    flex: 1 1 auto;
+    min-width: 0;
     margin: 0;
     font-size: 0.90625rem;
     font-weight: 600;
@@ -1298,6 +1301,7 @@
 }
 
 .aigrader-container .aigrader-crit-score {
+    flex: 0 0 auto;
     display: inline-flex;
     align-items: baseline;
     gap: 6px;
@@ -1751,9 +1755,50 @@
 }
 
 .aigrader-container .aigrader-filter-action,
-.aigrader-container .aigrader-date-filter-apply,
 .aigrader-container .aigrader-date-filter-clear {
     align-self: flex-end;
+}
+
+/* The submission date filter reads as one line: label, field, label, field, Apply. */
+.aigrader-container .aigrader-date-filter {
+    align-items: center;
+}
+
+.aigrader-container .aigrader-date-filter .aigrader-date-filter-label {
+    margin: 0;
+}
+
+.aigrader-container .aigrader-date-filter-apply {
+    align-self: center;
+    padding: 8px 16px;
+    font: inherit;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #fff;
+    background: var(--ag-blue);
+    border: 1px solid var(--ag-blue);
+    border-radius: var(--ag-radius);
+    cursor: pointer;
+}
+
+.aigrader-container .aigrader-date-filter-apply:hover,
+.aigrader-container .aigrader-date-filter-apply:focus-visible {
+    background: #1557b0;
+    border-color: #1557b0;
+}
+
+/* Which question a row is, so three rows for one learner can be told apart at a glance. */
+.aigrader-container .aigrader-q-badge {
+    display: inline-block;
+    min-width: 28px;
+    margin-right: 8px;
+    padding: 1px 7px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-align: center;
+    color: var(--ag-blue);
+    background: #e8f0fe;
+    border-radius: 999px;
 }
 
 .aigrader-container .aigrader-col-feedback {
@@ -1941,12 +1986,55 @@
     color: var(--ag-ink-2);
 }
 
-.aigrader-container .aigrader-loading,
-.aigrader-container .aigrader-loading-overlay {
+.aigrader-container .aigrader-loading {
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 28px;
+}
+
+/* The full-page overlay sits outside .aigrader-container, after it, so it is styled by its own
+   id. Hidden until the module adds is-visible; until 5.1.0 it had no rule that reached it and
+   its "Processing..." text showed permanently under the report. */
+#aigrader-loading.aigrader-loading-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 1050;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(2px);
+}
+
+#aigrader-loading.aigrader-loading-overlay.is-visible {
+    display: flex;
+}
+
+#aigrader-loading .aigrader-loading-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 22px;
+    border-radius: 14px;
+    background: #fff;
+    border: 1px solid #e3e8ef;
+    box-shadow: 0 18px 40px -24px rgba(15, 23, 42, 0.45);
+}
+
+#aigrader-loading .aigrader-loading-spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #d2d9e3;
+    border-top-color: #1a73e8;
+    border-radius: 50%;
+    animation: aigrader-spin 0.7s linear infinite;
+}
+
+#aigrader-loading .aigrader-loading-text {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: #202124;
 }
 
 .aigrader-container .aigrader-loading-content {

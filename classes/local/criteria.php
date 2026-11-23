@@ -515,6 +515,7 @@ class criteria {
      * @param string $text The guidance, as plain text.
      * @param array $reasons Why the guidance is uncertain.
      * @param array $warnings Warnings.
+     * @param bool $weighted Whether the criteria carry their own marks rather than an even split.
      * @return array
      */
     private static function outcome(
@@ -782,8 +783,8 @@ class criteria {
                     }
                     $line = $rec['line'];
                     if (!$strict && preg_match(self::COVERS_LEAD, $line)) {
-                        // "A satisfactory response addresses the following:" in Information for
-                        // graders lists what the answer is marked on, not a sample of it.
+                        // A line such as "A satisfactory response addresses the following:" in
+                        // Information for graders lists what the answer is marked on, not a sample of it.
                         $section = 'criteria';
                         $result['headed'] = true;
                         $result['guidance'] = true;

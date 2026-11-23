@@ -18,6 +18,7 @@ namespace quiz_aigrader;
 
 use quiz_aigrader\local\formatter;
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\quiz_aigrader\local\formatter::class)]
 /**
  * Tests for the formatting helpers behind the grading screens.
  *
@@ -26,7 +27,6 @@ use quiz_aigrader\local\formatter;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \quiz_aigrader\local\formatter
  */
-#[\PHPUnit\Framework\Attributes\CoversClass(\quiz_aigrader\local\formatter::class)]
 final class formatter_test extends \advanced_testcase {
     /**
      * A score label never truncates the mark. Before 4.4.0 these were cast with intval(),

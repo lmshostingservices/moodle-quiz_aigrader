@@ -58,6 +58,8 @@ function quiz_aigrader_fetch($url, $apikey, $post = false, $payload = null) {
         'CURLOPT_SSL_VERIFYPEER' => true,
         'CURLOPT_SSL_VERIFYHOST' => 2,
         'CURLOPT_FOLLOWLOCATION' => true,
+        // Bounded, so a misconfigured service URL cannot bounce the request indefinitely.
+        'CURLOPT_MAXREDIRS' => 3,
     ]);
 
     $headers = ['Accept: application/json', 'Authorization: Bearer ' . $apikey];
@@ -151,6 +153,24 @@ function quiz_aigrader_require_grading($context) {
 }
 
 /**
+ * Answer with the reason an attempt or question may not be marked here, and stop.
+ *
+ * @param string|null $problem A \quiz_aigrader\local\access constant, or null when there is none.
+ * @return void Exits with a JSON response when there is a problem.
+ */
+function quiz_aigrader_refuse_if($problem) {
+    if ($problem === null) {
+        return;
+    }
+    echo json_encode([
+        'ok' => false,
+        'message' => get_string(\quiz_aigrader\local\access::message_id($problem), 'quiz_aigrader'),
+        'error_code' => $problem,
+    ]);
+    exit;
+}
+
+/**
  * Format a duration in seconds as H:MM:SS without wrapping after 24 hours.
  *
  * @param int $seconds Duration in seconds.
@@ -238,6 +258,12 @@ try {
             ]);
             exit;
         }
+    }
+
+    // Suggesting and approving act on one learner's attempt, so the attempt must be finished
+    // and, under separate groups, belong to a learner in a group this assessor can see.
+    if (($action === 'suggest' || $action === 'approve') && $attemptrec) {
+        quiz_aigrader_refuse_if(\quiz_aigrader\local\access::attempt_problem($attemptrec, $cm, $context));
     }
 
     // Explicitly include the aiconfig lib.php if available.
@@ -393,6 +419,7 @@ try {
                     exit;
                 }
                 $qa = $usage->get_question_attempt($slot);
+                quiz_aigrader_refuse_if(\quiz_aigrader\local\access::question_problem($qa));
 
                 // Clean question text: strip HTML tags and decode entities, preserving line breaks.
                 $question = \quiz_aigrader\local\formatter::html_to_text($qa->get_question()->questiontext);
@@ -762,12 +789,17 @@ try {
 
             // Build data for output. The grade is not saved until the teacher approves it.
             // Score format: "X/Y" where Y matches the question's max mark.
-            $score = isset($data['score']) ? $data['score'] : \quiz_aigrader\local\formatter::score_label(0, $maxmark);
+            $score = isset($data['score']) && is_scalar($data['score'])
+                ? (string)$data['score']
+                : \quiz_aigrader\local\formatter::score_label(0, $maxmark);
             $parts = explode('/', $score);
             $num = isset($parts[0]) ? floatval($parts[0]) : 0;
             $den = isset($parts[1]) ? floatval($parts[1]) : $maxmark;
-            // Calculate the percentage and scale it to the actual max mark.
-            $grade100 = $den ? round(($num / $den) * 100) : 0;
+            // Calculate the percentage and scale it to the actual max mark. Clamped to the
+            // question's scale: a service reply such as "7/5" or "-1/5" must never be offered
+            // to the assessor as a mark the question cannot hold.
+            $grade100 = $den > 0 ? round(($num / $den) * 100) : 0;
+            $grade100 = max(0, min(100, $grade100));
             $scaled = round(($grade100 / 100) * $maxmark, 2);
 
             // Handle the case where the AI returns feedback as an object instead of a string.
@@ -1264,6 +1296,7 @@ try {
         $policymode = optional_param('policymode', '', PARAM_ALPHA);
         // The assessor's per-criterion scores, as JSON. Recorded verbatim on the decision:
         // this is the breakdown behind the mark and it is the thing an auditor asks to see.
+        // phpcs:ignore moodle.Commenting.InlineComment.NotCapital
         $criteriajson = optional_param('criteria', '', PARAM_RAW_TRIMMED); // pipeline-ignore: PARAM_RAW - JSON blob.
 
         try {
@@ -1273,6 +1306,7 @@ try {
                 exit;
             }
             $qa = $usage->get_question_attempt($slot);
+            quiz_aigrader_refuse_if(\quiz_aigrader\local\access::question_problem($qa));
 
             $maxmark = round((float)$qa->get_max_mark(), 2);
 
@@ -1824,7 +1858,11 @@ try {
                         $message->subject = get_string('notification_subject', 'quiz_aigrader', $messagedata);
                         $message->fullmessage = get_string('notification_body', 'quiz_aigrader', $messagedata);
                         $message->fullmessageformat = FORMAT_PLAIN;
-                        $message->fullmessagehtml = get_string('notification_body_html', 'quiz_aigrader', $messagedata);
+                        // The HTML body gets its own copy with the learner's name escaped; the
+                        // plain-text body keeps it as typed, so "O'Brien" never reads "O&#039;Brien".
+                        $htmldata = clone $messagedata;
+                        $htmldata->firstname = s($student->firstname);
+                        $message->fullmessagehtml = get_string('notification_body_html', 'quiz_aigrader', $htmldata);
                         $message->smallmessage = get_string('notification_subject', 'quiz_aigrader', $messagedata);
                         $message->notification = 1;
                         $message->contexturl = $attempturl;
@@ -1917,6 +1955,7 @@ try {
         }
 
         // The criteria as JSON, checked field by field in validate().
+        // phpcs:ignore moodle.Commenting.InlineComment.NotCapital
         $submitted = json_decode(required_param('criteria', PARAM_RAW), true); // pipeline-ignore: PARAM_RAW - JSON blob.
         [$clean, $errors] = \quiz_aigrader\local\confirmed::validate($submitted, $qmaxmark);
         if ($errors) {
@@ -2145,9 +2184,35 @@ try {
             exit;
         }
 
+        // The document must belong to this quiz. The service identifies documents by site, so
+        // without this check an assessor in one course could delete another course's marking
+        // guide by sending its id. The quiz's own list is read first and the id must be in it.
+        $deletequiz = $DB->get_record('quiz', ['id' => $cm->instance], 'id', MUST_EXIST);
+        $listing = quiz_aigrader_fetch(
+            $apibase . '/api/reference-docs?siteId=' . urlencode($siteid) .
+                '&apiKey=' . urlencode($apikey) .
+                '&quizId=' . (int)$deletequiz->id,
+            $apikey
+        );
+        $listed = $listing['success'] ? json_decode((string)$listing['body'], true) : null;
+        $owned = false;
+        if (is_array($listed) && !empty($listed['documents']) && is_array($listed['documents'])) {
+            foreach ($listed['documents'] as $listeddoc) {
+                if (is_array($listeddoc) && isset($listeddoc['id']) && (string)$listeddoc['id'] === (string)$docid) {
+                    $owned = true;
+                    break;
+                }
+            }
+        }
+        if (!$owned) {
+            echo json_encode(['ok' => false, 'message' => get_string('error_documentnotfound', 'quiz_aigrader')]);
+            exit;
+        }
+
         $url = $apibase . '/api/reference-docs/' . urlencode($docid) .
                '?siteId=' . urlencode($siteid) .
-               '&apiKey=' . urlencode($apikey);
+               '&apiKey=' . urlencode($apikey) .
+               '&quizId=' . (int)$deletequiz->id;
 
         $curl = new \curl();
         $curl->setHeader(['Accept: application/json', 'Authorization: Bearer ' . $apikey]);
@@ -2251,6 +2316,10 @@ try {
         $extrainstructions = optional_param('extraInstructions', '', PARAM_RAW); // pipeline-ignore: PARAM_RAW - AI prompt text.
 
         $feedbacklanguage = optional_param('feedbackLanguage', 'en', PARAM_ALPHANUMEXT);
+        // A language code, never free text: anything longer than a code is refused.
+        if (core_text::strlen($feedbacklanguage) > 10) {
+            $feedbacklanguage = 'en';
+        }
 
         if (!$siteid || !$apikey) {
             echo json_encode(['ok' => false, 'message' => get_string('notconfigured', 'quiz_aigrader')]);

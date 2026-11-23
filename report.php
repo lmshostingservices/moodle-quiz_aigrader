@@ -21,6 +21,7 @@
  * @copyright  2025 Essay Grader AI
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir . '/questionlib.php');
@@ -596,6 +597,7 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
             'aigclearfilter' => optional_param('aigclearfilter', 0, PARAM_INT),
             'datefrom' => optional_param('datefrom', '', PARAM_TEXT),
             'dateto' => optional_param('dateto', '', PARAM_TEXT),
+            // phpcs:ignore moodle.Commenting.InlineComment.NotCapital
             'sesskey' => optional_param('sesskey', '', PARAM_RAW), // pipeline-ignore: PARAM_RAW - sesskey token.
         ];
     }
@@ -1028,7 +1030,7 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
                    AND qas.state = 'needsgrading'
                 $groupjoin
                 WHERE qza.quiz = :quizid
-                  AND qza.state IN ('finished','complete','gradedright','gradedwrong','gradedpartial')
+                  AND qza.state = 'finished'
                   AND q.qtype = 'essay'
                   AND NOT EXISTS (
                           SELECT 1
@@ -1045,6 +1047,10 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
             $this->render_empty_state($datefrom, $dateto);
             return;
         }
+
+        // Email addresses appear only where the site's identity fields include them and the
+        // assessor may see identity fields in this context.
+        $showemail = in_array('email', \core_user\fields::get_identity_fields($context), true);
 
         // RC5 fix: bulk-load users in one query instead of one get_user() call per student.
         $userids = array_unique(array_column(array_values($needsgrading), 'userid'));
@@ -1169,8 +1175,13 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
             $rows[] = [
                 'rowid'        => $record->qubaid . '-' . $record->slot,
                 'userid'       => $record->userid,
-                'fullname'     => format_string(fullname($user), true, ['context' => $context]),
-                'email'        => $user->email,
+                // Plain text here and escaped once with s() where it is printed. Passing it
+                // through format_string() as well escaped it twice, so "Smith & Jones"
+                // showed as "Smith &amp; Jones".
+                'fullname'     => fullname($user),
+                // Only where the site shows email addresses to this assessor: the user
+                // identity setting and moodle/site:viewuseridentity, as on core reports.
+                'email'        => $showemail ? $user->email : '',
                 'initials'     => core_text::strtoupper($initials),
                 'questionnum'  => 'Q' . $record->slot,
                 'questiontext' => $this->truncate($questiontext),
@@ -1280,8 +1291,17 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
             $egscore = $eg ? (int) round((float) ($eg->riskscore ?? 0) * 100) : 0;
             $egpastes = $eg ? (int) ($eg->paste_events ?? 0) : 0;
             $eglevel = null;
+            $eglabel = '';
+            $egtitle = '';
             if ($eg && $essayguardavailable) {
                 $eglevel = \plagiarism_essayguard\local\service\analyser::risk_level($egscore);
+                $eglabel = get_string_manager()->string_exists('essayguard_level_' . $eglevel, 'quiz_aigrader')
+                    ? get_string('essayguard_level_' . $eglevel, 'quiz_aigrader')
+                    : ucfirst((string)$eglevel);
+                $egtitle = get_string('essayguard_badge_title', 'quiz_aigrader', (object)[
+                    'level' => $eglabel,
+                    'score' => $egscore,
+                ]);
             }
 
             // One tbody per response, holding the summary row and the detail row. The
@@ -1309,7 +1329,8 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
             echo '<td class="aigrader-q-student" title="' . s($r['email']) . '">'
                 . s($r['fullname']) . '</td>';
 
-            echo '<td class="aigrader-q-preview">' . s($r['truncated']) . '</td>';
+            echo '<td class="aigrader-q-preview"><span class="aigrader-q-badge">' . s($r['questionnum']) . '</span>'
+                . s($r['truncated']) . '</td>';
 
             echo '<td class="aigrader-q-grade">'
                 . '<span class="aigrader-grade aigrader-grade-pending" id="grade-'
@@ -1327,13 +1348,13 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
                         'cmid'   => $r['cmid'],
                         'userid' => $r['userid'],
                     ]);
-                    echo '<a href="' . $detailurl->out(false) . '" target="_blank"'
+                    echo '<a href="' . $detailurl->out() . '" target="_blank" rel="noopener"'
                         . ' class="ag-eg-badge ag-eg-badge-' . s($eglevel) . '"'
-                        . ' title="Essay Guard: ' . s(ucfirst($eglevel)) . ' (' . $egscore . '/100)">'
+                        . ' title="' . s($egtitle) . '">'
                         . '<svg class="aigrader-eg-badge-icon" width="11" height="11" viewBox="0 0 24 24"'
                         . ' fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"'
                         . ' stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>'
-                        . s(ucfirst($eglevel)) . ' ' . $egscore
+                        . s($eglabel) . ' ' . $egscore
                         . '</a>';
                 } else {
                     echo '<span class="ag-eg-badge ag-eg-badge-nodata">'
@@ -1360,13 +1381,13 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
                     'cmid'   => $r['cmid'],
                     'userid' => $r['userid'],
                 ]);
-                echo '<a href="' . $detailurl->out(false) . '" target="_blank"'
+                echo '<a href="' . $detailurl->out() . '" target="_blank" rel="noopener"'
                     . ' class="ag-eg-badge ag-eg-badge-' . s($eglevel) . '"'
-                    . ' title="Essay Guard: ' . s(ucfirst($eglevel)) . ' (' . $egscore . '/100)">'
+                    . ' title="' . s($egtitle) . '">'
                     . '<svg class="aigrader-eg-badge-icon" width="11" height="11" viewBox="0 0 24 24" fill="none"'
                     . ' stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">'
                     . '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>'
-                    . s(ucfirst($eglevel))
+                    . s($eglabel)
                     . '</a>';
             }
             echo '</div>';
@@ -1381,21 +1402,22 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
                     'cmid'   => $r['cmid'],
                     'userid' => $r['userid'],
                 ]);
-                $pastenote = $egpastes > 0
-                    ? ' ' . $egpastes . ' paste event' . ($egpastes === 1 ? '' : 's') . ' detected.'
-                    : '';
+                $pastenote = '';
+                if ($egpastes === 1) {
+                    $pastenote = ' ' . get_string('essayguard_paste', 'quiz_aigrader');
+                } else if ($egpastes > 1) {
+                    $pastenote = ' ' . get_string('essayguard_pastes', 'quiz_aigrader', $egpastes);
+                }
                 echo '<div class="ag-eg-advisory ag-eg-advisory-high">'
                     . '<svg class="aigrader-eg-advisory-icon" width="15" height="15" viewBox="0 0 24 24" fill="none"'
                     . ' stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
                     . '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>'
                     . '<line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
-                    . '<span><strong>Writing integrity alert (High ' . $egscore . '/100).</strong>'
-                    . $pastenote
-                    . ' This student\'s answer shows high authenticity risk. If you have concerns,'
-                    . ' consider overriding the AI grade and leaving a comment asking the student'
-                    . ' to rephrase the answer in their own words. &nbsp;'
-                    . '<a href="' . $detailurl->out(false) . '" target="_blank" class="aigrader-eg-link">'
-                    . 'View Essay Guard detail &rarr;</a>'
+                    . '<span><strong>' . get_string('essayguard_high', 'quiz_aigrader', $egscore) . '</strong>'
+                    . s($pastenote)
+                    . ' ' . get_string('essayguard_high_advice', 'quiz_aigrader') . ' &nbsp;'
+                    . '<a href="' . $detailurl->out() . '" target="_blank" rel="noopener" class="aigrader-eg-link">'
+                    . get_string('essayguard_detail_link', 'quiz_aigrader') . ' &rarr;</a>'
                     . '</span>'
                     . '</div>';
             } else if ($eglevel === 'medium') {
@@ -1408,10 +1430,10 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
                     . ' stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
                     . '<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>'
                     . '<line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>'
-                    . '<span><strong>Writing integrity note (Medium ' . $egscore . '/100).</strong>'
-                    . ' Elevated authenticity risk indicators detected. Review before accepting the AI grade. &nbsp;'
-                    . '<a href="' . $detailurl->out(false) . '" target="_blank" class="aigrader-eg-link">'
-                    . 'View Essay Guard detail &rarr;</a>'
+                    . '<span><strong>' . get_string('essayguard_medium', 'quiz_aigrader', $egscore) . '</strong>'
+                    . ' ' . get_string('essayguard_medium_advice', 'quiz_aigrader') . ' &nbsp;'
+                    . '<a href="' . $detailurl->out() . '" target="_blank" rel="noopener" class="aigrader-eg-link">'
+                    . get_string('essayguard_detail_link', 'quiz_aigrader') . ' &rarr;</a>'
                     . '</span>'
                     . '</div>';
             }
@@ -1433,7 +1455,7 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
             echo '<div class="aigrader-card-section aigrader-answer-section">';
             echo '<div class="aigrader-section-label">'
                 . get_string('learners_response', 'quiz_aigrader') . '</div>';
-            $formattedanswer = $this->format_student_answer($r['rawanswer']);
+            $formattedanswer = $this->format_student_answer($r['rawanswer'], $context);
             echo '<div class="aigrader-answer-text" data-raw="' . s($r['rawanswer']) . '">'
                 . $formattedanswer . '</div>';
             echo '</div>';
@@ -1489,10 +1511,11 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
      * Format student answer - just use Moodle's format_text, no other processing.
      *
      * @param string $rawanswer The raw answer HTML.
+     * @param context $context The quiz context, so filters run as they do on the review page.
      * @return string The formatted HTML.
      */
-    private function format_student_answer($rawanswer) {
-        return format_text($rawanswer, FORMAT_HTML);
+    private function format_student_answer($rawanswer, $context) {
+        return format_text($rawanswer, FORMAT_HTML, ['context' => $context]);
     }
 
     /**
@@ -1931,7 +1954,11 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
      * @return void
      */
     private function render_loading_overlay() {
-        echo html_writer::start_div('aigrader-loading-overlay', ['id' => 'aigrader-loading']);
+        echo html_writer::start_div('aigrader-loading-overlay', [
+            'id' => 'aigrader-loading',
+            'role' => 'status',
+            'aria-live' => 'polite',
+        ]);
         echo html_writer::start_div('aigrader-loading-content');
         echo html_writer::tag('div', '', ['class' => 'aigrader-loading-spinner']);
         echo html_writer::tag(

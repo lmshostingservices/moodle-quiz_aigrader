@@ -479,7 +479,7 @@ define([], function() {
                     message.textContent = (resp && resp.message) || str('critedit_failed');
                     save.textContent = str('critedit_save');
                     save.disabled = false;
-                    return;
+                    return false;
                 }
                 closeEditor(row);
                 showState(row, 'confirmed', resp.criteria, resp.confirmedtext, resp.since);
@@ -487,6 +487,7 @@ define([], function() {
                 if (button) {
                     button.focus();
                 }
+                return true;
             }).catch(() => {
                 message.textContent = str('critedit_failed');
                 save.textContent = str('critedit_save');
@@ -506,10 +507,11 @@ define([], function() {
                     if (!resp || !resp.ok) {
                         message.textContent = (resp && resp.message) || str('critedit_failed');
                         reset.disabled = false;
-                        return;
+                        return false;
                     }
                     closeEditor(row);
                     showState(row, 'required', [], '', 0);
+                    return true;
                 }).catch(() => {
                     message.textContent = str('critedit_failed');
                     reset.disabled = false;
@@ -537,7 +539,7 @@ define([], function() {
             .filter(r => r.dataset.exact === '1' && r.dataset.state !== 'confirmed');
         button.disabled = true;
         const failures = [];
-        const next = () => {
+        const confirmNext = () => {
             const row = rows.shift();
             if (!row) {
                 updateSummary();
@@ -569,10 +571,10 @@ define([], function() {
                     row.dataset.exact = '0';
                     failures.push([row, (resp && resp.message) || str('critedit_failed')]);
                 }
-                return next();
+                return confirmNext();
             });
         };
-        next().catch(() => {
+        confirmNext().catch(() => {
             button.disabled = false;
         });
     }

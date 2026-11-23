@@ -26,6 +26,7 @@ namespace quiz_aigrader;
 
 use ReflectionMethod;
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\quiz_aigrader_report::class)]
 /**
  * Unit tests for the saved submission date filter on the grading screen.
  *
@@ -34,7 +35,6 @@ use ReflectionMethod;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \quiz_aigrader_report
  */
-#[\PHPUnit\Framework\Attributes\CoversClass(\quiz_aigrader_report::class)]
 final class date_filter_test extends \advanced_testcase {
     /** @var \quiz_aigrader_report The report under test. */
     protected $report;

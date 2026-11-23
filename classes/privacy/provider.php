@@ -215,6 +215,22 @@ class provider implements
             'graderid' => $userid,
         ]);
 
+        // A decision record names the learner assessed and the assessor who decided it, and
+        // either of them may hold the only record of that quiz in this plugin.
+        $sql = "SELECT ctx.id
+                  FROM {quiz_aigrader_decisions} d
+                  JOIN {quiz} q ON q.id = d.quizid
+                  JOIN {course_modules} cm ON cm.instance = q.id
+                  JOIN {modules} m ON m.id = cm.module AND m.name = :modname
+                  JOIN {context} ctx ON ctx.instanceid = cm.id AND ctx.contextlevel = :contextlevel
+                 WHERE d.userid = :learnerid OR d.graderid = :assessorid";
+        $contextlist->add_from_sql($sql, [
+            'modname' => 'quiz',
+            'contextlevel' => CONTEXT_MODULE,
+            'learnerid' => $userid,
+            'assessorid' => $userid,
+        ]);
+
         $sql = "SELECT ctx.id
                   FROM {quiz_aigrader_criteria} cr
                   JOIN {quiz} q ON q.id = cr.quizid
@@ -258,6 +274,22 @@ class provider implements
             $sql = "SELECT gl.graderid
                       FROM {quiz_aigrader_grading_logs} gl
                       JOIN {quiz} q ON q.id = gl.quizid
+                      JOIN {course_modules} cm ON cm.instance = q.id
+                      JOIN {modules} m ON m.id = cm.module AND m.name = :modname
+                     WHERE cm.id = :cmid";
+            $userlist->add_from_sql('graderid', $sql, $params);
+
+            $sql = "SELECT d.userid
+                      FROM {quiz_aigrader_decisions} d
+                      JOIN {quiz} q ON q.id = d.quizid
+                      JOIN {course_modules} cm ON cm.instance = q.id
+                      JOIN {modules} m ON m.id = cm.module AND m.name = :modname
+                     WHERE cm.id = :cmid";
+            $userlist->add_from_sql('userid', $sql, $params);
+
+            $sql = "SELECT d.graderid
+                      FROM {quiz_aigrader_decisions} d
+                      JOIN {quiz} q ON q.id = d.quizid
                       JOIN {course_modules} cm ON cm.instance = q.id
                       JOIN {modules} m ON m.id = cm.module AND m.name = :modname
                      WHERE cm.id = :cmid";
@@ -309,6 +341,11 @@ class provider implements
                             'feedbacksummary' => $record->feedbacksummary,
                             'aicriteria' => $record->aicriteria ?? null,
                             'lastgrade' => $record->lastgrade,
+                            'aigrade' => $record->aigrade ?? null,
+                            'aicriteriamet' => $record->aicriteriamet ?? null,
+                            'aifeedback' => $record->aifeedback ?? null,
+                            'suggestedtime' => !empty($record->suggestedtime)
+                                ? transform::datetime($record->suggestedtime) : null,
                             'humanreview' => transform::yesno($record->humanreview),
                             'autolocked' => transform::yesno($record->autolocked),
                             'timecreated' => transform::datetime($record->timecreated),
@@ -337,6 +374,46 @@ class provider implements
                     writer::with_context($context)->export_data(
                         [get_string('privacy:path:gradinglogs', 'quiz_aigrader')],
                         (object) ['gradinglogs' => $data]
+                    );
+                }
+
+                // Assessment decisions: those about this user as the learner, and those this
+                // user made as the assessor. Exported separately so each reads plainly.
+                $decisionsets = [
+                    'aslearner' => ['quizid' => $cm->instance, 'userid' => $userid],
+                    'asassessor' => ['quizid' => $cm->instance, 'graderid' => $userid],
+                ];
+                foreach ($decisionsets as $role => $conditions) {
+                    $decisions = $DB->get_records('quiz_aigrader_decisions', $conditions, 'timecreated ASC');
+                    if (!$decisions) {
+                        continue;
+                    }
+                    $data = [];
+                    foreach ($decisions as $decision) {
+                        $data[] = (object) [
+                            'questionid' => $decision->questionid,
+                            'slot' => $decision->slot,
+                            'attemptnum' => $decision->attemptnum,
+                            'maxmark' => $decision->maxmark,
+                            'aimark' => $decision->aimark,
+                            'finalmark' => $decision->finalmark,
+                            'markchanged' => transform::yesno($decision->markchanged),
+                            'feedbackchanged' => transform::yesno($decision->feedbackchanged),
+                            'aifeedback' => $decision->aifeedback,
+                            'finalfeedback' => $decision->finalfeedback,
+                            'criteriamet' => $decision->criteriamet,
+                            'humanreview' => transform::yesno($decision->humanreview),
+                            'acknowledgement' => $decision->acknowledgement,
+                            'reviewseconds' => $decision->reviewseconds,
+                            'timecreated' => transform::datetime($decision->timecreated),
+                        ];
+                    }
+                    writer::with_context($context)->export_data(
+                        [
+                            get_string('privacy:path:decisions', 'quiz_aigrader'),
+                            get_string('privacy:path:decisions_' . $role, 'quiz_aigrader'),
+                        ],
+                        (object) ['decisions' => $data]
                     );
                 }
 
