@@ -24,7 +24,7 @@
  * grading time statistics.
  *
  * @package    quiz_aigrader
- * @copyright  2026 LMS-Labs
+ * @copyright  2026 LMS Hosting Services
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -35,12 +35,12 @@ require_once($CFG->libdir . '/questionlib.php');
 require_once($CFG->libdir . '/filelib.php');
 
 /**
- * Perform an HTTP request against the Essay Grader AI service.
+ * Perform an HTTP request against the LMS Labs grading service.
  *
  * Uses Moodle's curl wrapper so proxy settings and security checks are honoured.
- * The API key is sent in an Authorization header. It is also still sent as an apiKey
- * query parameter or payload field, because that is what the service reads today;
- * once the service accepts the header the query parameter can be dropped.
+ * The API key is sent only in an Authorization: Bearer header, never in a URL or a body,
+ * so it cannot end up in proxy or server access logs (5.2.0; the service accepts the header
+ * on every Essay Grader endpoint since 23 November 2026).
  *
  * @param string $url Absolute URL of the endpoint to call.
  * @param string $apikey API key sent as a bearer token.
@@ -311,13 +311,12 @@ try {
             exit;
         }
 
-        $url = $apibase . '/api/credits?siteId=' . urlencode($siteid) .
-                '&apiKey=' . urlencode($apikey);
+        $url = $apibase . '/api/credits?siteId=' . urlencode($siteid);
 
         $res = quiz_aigrader_fetch($url, $apikey);
 
         if (!$res['success']) {
-            debugging('AI Grader: credits request failed: ' . $res['error'], DEBUG_DEVELOPER);
+            debugging('AI Essay Grader: credits request failed: ' . $res['error'], DEBUG_DEVELOPER);
             echo json_encode([
                 'ok' => false,
                 'credits' => null,
@@ -329,7 +328,7 @@ try {
         $data = json_decode($res['body'], true);
 
         if (!$data) {
-            debugging('AI Grader: credits response could not be decoded (HTTP ' . $res['httpcode'] . ')', DEBUG_DEVELOPER);
+            debugging('AI Essay Grader: credits response could not be decoded (HTTP ' . $res['httpcode'] . ')', DEBUG_DEVELOPER);
             echo json_encode([
                 'ok' => false,
                 'credits' => null,
@@ -339,7 +338,7 @@ try {
         }
 
         if (isset($data['error'])) {
-            debugging('AI Grader: credits endpoint returned an error (HTTP ' . $res['httpcode'] . ')', DEBUG_DEVELOPER);
+            debugging('AI Essay Grader: credits endpoint returned an error (HTTP ' . $res['httpcode'] . ')', DEBUG_DEVELOPER);
             echo json_encode([
                 'ok' => false,
                 'credits' => null,
@@ -377,7 +376,7 @@ try {
         }
 
         if ($credits === null) {
-            debugging('AI Grader: credits field missing from response', DEBUG_DEVELOPER);
+            debugging('AI Essay Grader: credits field missing from response', DEBUG_DEVELOPER);
             echo json_encode([
                 'ok' => false,
                 'credits' => null,
@@ -522,7 +521,7 @@ try {
                 } catch (Exception $e) {
                     // Table might not exist yet - continue without attempt context.
                     $attemptcontext = null;
-                    debugging('AI Grader: attempt_ctx table not found: ' . $e->getMessage(), DEBUG_DEVELOPER);
+                    debugging('AI Essay Grader: attempt_ctx table not found: ' . $e->getMessage(), DEBUG_DEVELOPER);
                 }
 
                 if ($attemptcontext) {
@@ -662,7 +661,6 @@ try {
             // attempts. graderInfo carries the assessor rubric and sample answers.
             $payload = [
                 'siteId' => $siteid,
-                'apiKey' => $apikey,
                 'questionText' => $question,
                 'studentAnswer' => $answer,
                 'quizId' => intval($quiz->id),
@@ -728,7 +726,7 @@ try {
             $res = quiz_aigrader_fetch($apibase . '/api/grade-essay', $apikey, true, $payload);
 
             if (!$res['success']) {
-                debugging('AI Grader: grading request failed: ' . $res['error'], DEBUG_DEVELOPER);
+                debugging('AI Essay Grader: grading request failed: ' . $res['error'], DEBUG_DEVELOPER);
                 echo json_encode([
                     'ok' => false,
                     'message' => get_string('connectionfailed', 'quiz_aigrader'),
@@ -739,7 +737,10 @@ try {
             $data = json_decode($res['body'], true);
 
             if (!$data) {
-                debugging('AI Grader: grading response could not be decoded (HTTP ' . $res['httpcode'] . ')', DEBUG_DEVELOPER);
+                debugging(
+                    'AI Essay Grader: grading response could not be decoded (HTTP ' . $res['httpcode'] . ')',
+                    DEBUG_DEVELOPER
+                );
                 echo json_encode([
                     'ok' => false,
                     'message' => get_string('invalidresponse', 'quiz_aigrader'),
@@ -763,7 +764,7 @@ try {
                     exit;
                 }
 
-                debugging('AI Grader: grading API returned error code ' . $errorcode, DEBUG_DEVELOPER);
+                debugging('AI Essay Grader: grading API returned error code ' . $errorcode, DEBUG_DEVELOPER);
                 echo json_encode([
                     'ok' => false,
                     'message' => get_string('error_grading', 'quiz_aigrader'),
@@ -875,7 +876,7 @@ try {
 
             if (!empty($rejectedcriteria)) {
                 debugging(
-                    'AI Grader: Rejected invalid criteria IDs: '
+                    'AI Essay Grader: Rejected invalid criteria IDs: '
                         . implode(', ', $rejectedcriteria)
                         . ' for question ' . $questionid . ' user ' . $studentid,
                     DEBUG_DEVELOPER
@@ -1023,13 +1024,13 @@ try {
                             $DB->update_record('quiz_aigrader_attempt_ctx', $existing);
                         }
                     } catch (Exception $retryerror) {
-                        debugging('AI Grader: attempt_ctx retry failed: ' . $retryerror->getMessage(), DEBUG_DEVELOPER);
+                        debugging('AI Essay Grader: attempt_ctx retry failed: ' . $retryerror->getMessage(), DEBUG_DEVELOPER);
                     }
                 } catch (Exception $e) {
                     // Attempt context save failed - log it but do not abort grading. This happens
                     // if the quiz_aigrader_attempt_ctx table does not exist yet (for example the
                     // plugin upgrade has not run). The grading result is still returned below.
-                    debugging('AI Grader: attempt_ctx write failed: ' . $e->getMessage(), DEBUG_DEVELOPER);
+                    debugging('AI Essay Grader: attempt_ctx write failed: ' . $e->getMessage(), DEBUG_DEVELOPER);
                 }
             }
 
@@ -1135,7 +1136,7 @@ try {
                         ['quizid' => $quiz->id, 'userid' => $studentid, 'questionid' => $questionid, 'slot' => $slot]
                     );
                 } catch (Exception $e) {
-                    debugging('AI Grader: suggestion criteria not stored: ' . $e->getMessage(), DEBUG_DEVELOPER);
+                    debugging('AI Essay Grader: suggestion criteria not stored: ' . $e->getMessage(), DEBUG_DEVELOPER);
                 }
             }
 
@@ -1299,604 +1300,19 @@ try {
         // phpcs:ignore moodle.Commenting.InlineComment.NotCapital
         $criteriajson = optional_param('criteria', '', PARAM_RAW_TRIMMED); // pipeline-ignore: PARAM_RAW - JSON blob.
 
-        try {
-            $usage = question_engine::load_questions_usage_by_activity($qubaid);
-            if (!in_array((int)$slot, array_map('intval', $usage->get_slots()), true)) {
-                echo json_encode(['ok' => false, 'message' => get_string('error_invalidslot', 'quiz_aigrader')]);
-                exit;
-            }
-            $qa = $usage->get_question_attempt($slot);
-            quiz_aigrader_refuse_if(\quiz_aigrader\local\access::question_problem($qa));
-
-            $maxmark = round((float)$qa->get_max_mark(), 2);
-
-            // The criteria in force at the moment of the decision, for the record. Resolved
-            // again here rather than taken from the browser, which is not evidence.
-            $decisioncriteria = null;
-            try {
-                $qobj = $qa->get_question();
-                $decisioncriteria = \quiz_aigrader\local\criteria::for_fields(
-                    isset($qobj->graderinfo) ? (string)$qobj->graderinfo : '',
-                    (string)$qobj->questiontext,
-                    isset($qobj->generalfeedback) ? (string)$qobj->generalfeedback : '',
-                    (float)$maxmark,
-                    isset($qobj->defaultmark) ? (float)$qobj->defaultmark : 0.0
-                );
-                $decisioncriteria = \quiz_aigrader\local\confirmed::apply(
-                    $decisioncriteria,
-                    \quiz_aigrader\local\confirmed::state(
-                        (int)$cm->instance,
-                        (int)$qobj->id,
-                        \quiz_aigrader\local\confirmed::fields_hash(
-                            isset($qobj->graderinfo) ? (string)$qobj->graderinfo : '',
-                            (string)$qobj->questiontext,
-                            isset($qobj->generalfeedback) ? (string)$qobj->generalfeedback : '',
-                            isset($qobj->defaultmark) ? (float)$qobj->defaultmark : 0.0
-                        ),
-                        (float)$maxmark
-                    )
-                );
-            } catch (Throwable $criteriaerror) {
-                debugging('AI Grader: criteria could not be resolved for the record: '
-                    . $criteriaerror->getMessage(), DEBUG_DEVELOPER);
-            }
-
-            if ($marksupplied !== '') {
-                if (!is_numeric($marksupplied)) {
-                    echo json_encode([
-                        'ok' => false,
-                        'message' => get_string('error_markinvalid', 'quiz_aigrader'),
-                    ]);
-                    exit;
-                }
-                $mark = round((float)$marksupplied, 2);
-            } else if ($legacygrade100 !== null) {
-                $mark = round(($maxmark * $legacygrade100) / 100, 2);
-            } else {
-                echo json_encode([
-                    'ok' => false,
-                    'message' => get_string('error_missingparams', 'quiz_aigrader'),
-                ]);
-                exit;
-            }
-
-            // Reject an out-of-range mark rather than clamping it. A mark outside the
-            // question's scale means the request did not come from the grading UI, and
-            // quietly storing a clamped value would hide that from the assessor and from
-            // the decision record.
-            if ($mark < 0 || $mark > $maxmark) {
-                echo json_encode([
-                    'ok' => false,
-                    'message' => get_string('error_markoutofrange', 'quiz_aigrader', (object)[
-                        'mark' => format_float($mark, -1),
-                        'maxmark' => format_float($maxmark, -1),
-                    ]),
-                ]);
-                exit;
-            }
-
-            // Derived for display and for the decision record only. Nothing is reconstructed
-            // from this value.
-            $grade100 = $maxmark > 0 ? round(($mark / $maxmark) * 100) : 0;
-
-            // The server's own record of the suggestion being approved. Read here rather
-            // than taken from the browser, so the decision record compares the assessor's
-            // mark against what the grading service actually returned.
-            $approvequiz = $DB->get_record('quiz', ['id' => $cm->instance], '*', MUST_EXIST);
-            $approveuserid = $attemptrec ? (int)$attemptrec->userid : 0;
-            $approvectx = null;
-            try {
-                $approvectx = $DB->get_record('quiz_aigrader_attempt_ctx', [
-                    'quizid' => $approvequiz->id,
-                    'userid' => $approveuserid,
-                    'questionid' => $qa->get_question_id(),
-                    'slot' => $slot,
-                ]);
-            } catch (Exception $ctxerror) {
-                debugging('AI Grader: attempt_ctx read failed: ' . $ctxerror->getMessage(), DEBUG_DEVELOPER);
-            }
-
-            // Minimum review time, enforced here and not only in the browser.
-            //
-            // Until 4.3.0 this was a client-side countdown that disabled one button. A POST
-            // was accepted the instant the suggestion returned, and after a bulk grade every
-            // countdown ran concurrently so all the buttons unlocked together. The setting
-            // promised assessors "will be required to wait" and nothing required it.
-            $minreviewtime = (int)get_config('quiz_aigrader', 'min_review_time');
-            $reviewseconds = null;
-            if ($approvectx && !empty($approvectx->suggestedtime)) {
-                $reviewseconds = max(0, time() - (int)$approvectx->suggestedtime);
-                if ($minreviewtime > 0 && $reviewseconds < $minreviewtime) {
-                    echo json_encode([
-                        'ok' => false,
-                        'message' => get_string('review_too_soon', 'quiz_aigrader', (object)[
-                            'required' => $minreviewtime,
-                            'actual' => $reviewseconds,
-                        ]),
-                        'error_code' => 'REVIEW_TOO_SOON',
-                        'retryafter' => $minreviewtime - $reviewseconds,
-                    ]);
-                    exit;
-                }
-            }
-
-            // Human review: refuse the approval until the assessor acknowledges it and says
-            // why. Previously this flag was written as a literal 0, never read, and surfaced
-            // only as a sentence in a textarea the assessor could delete.
-            $underhumanreview = $approvectx ? (bool)$approvectx->humanreview : false;
-            if ($underhumanreview && trim($acknowledgement) === '') {
-                echo json_encode([
-                    'ok' => false,
-                    'message' => get_string('humanreview_acknowledgement_required', 'quiz_aigrader'),
-                    'error_code' => 'ACKNOWLEDGEMENT_REQUIRED',
-                    'needsacknowledgement' => true,
-                ]);
-                exit;
-            }
-
-            // Calculate the score label using the actual max mark.
-            // number_format(), not format_float(): this string is parsed back with floatval()
-            // elsewhere, and format_float() would use the site's decimal separator.
-            $scorelabel = \quiz_aigrader\local\formatter::score_label($mark, $maxmark);
-
-            // Save the grade and feedback into the question engine.
-            $qa->manual_grade($feedbacktext, $mark, FORMAT_HTML);
-            question_engine::save_questions_usage_by_activity($usage);
-
-            // Update the quiz attempt's total grade. The attempt owning this usage has already
-            // been validated as belonging to this course module.
-            $attempt = $attemptrec;
-            if ($attempt) {
-                require_once($CFG->dirroot . '/mod/quiz/locallib.php');
-
-                // Recalculate and save the attempt's sumgrades.
-                //
-                // Two faults are fixed here. The reload and write are serialised on a lock
-                // keyed to the attempt: the delegated transaction that used to wrap them took
-                // no row lock, so two approvals on different slots of the same attempt each
-                // computed a total from their own reload and the later write won, losing one
-                // essay's contribution. And only the sumgrades column is written: $attempt was
-                // loaded before the question engine wrote, so update_record() on the whole row
-                // put stale values back over state, timemodified and timefinish if anything
-                // else had touched the attempt in the meantime.
-                $sumlock = null;
-                try {
-                    $lockfactory = \core\lock\lock_config::get_lock_factory('quiz_aigrader_sumgrades');
-                    $sumlock = $lockfactory->get_lock((string)$attempt->id, 10);
-                } catch (\Throwable $lockerror) {
-                    debugging(
-                        'AI Grader: could not acquire sumgrades lock: '
-                            . $lockerror->getMessage(),
-                        DEBUG_DEVELOPER
-                    );
-                }
-                try {
-                    $usagereloaded = question_engine::load_questions_usage_by_activity($qubaid);
-                    $attempttotal = $usagereloaded->get_total_mark();
-                    $DB->set_field('quiz_attempts', 'sumgrades', $attempttotal, ['id' => $attempt->id]);
-                    $attempt->sumgrades = $attempttotal;
-                } finally {
-                    if ($sumlock) {
-                        $sumlock->release();
-                    }
-                }
-
-                // Update the user's best grade in the gradebook. The quiz record was already
-                // loaded for the approval gates above.
-                $quiz = $approvequiz;
-
-                // Notify the rest of Moodle that a question was graded by hand, using the
-                // same parameters core uses in mod/quiz/comment.php. Logging is a courtesy,
-                // never a reason to fail a save that has already been committed, so any
-                // problem here is recorded and swallowed rather than aborting the approval.
-                try {
-                    \mod_quiz\event\question_manually_graded::create([
-                        'objectid' => $qa->get_question_id(),
-                        'courseid' => $cm->course,
-                        'context' => $context,
-                        'other' => [
-                            'quizid' => $quiz->id,
-                            'attemptid' => $attempt->id,
-                            'slot' => $slot,
-                        ],
-                    ])->trigger();
-                } catch (\Throwable $eventerror) {
-                    debugging(
-                        'AI Grader could not log the manual grading event: '
-                            . $eventerror->getMessage(),
-                        DEBUG_DEVELOPER
-                    );
-                }
-
-                // Prefer the Moodle 4.2+ grade_calculator API and fall back to the legacy call
-                // for older sites. quiz_save_best_grade() was deprecated in MDL-76897
-                // (Moodle 4.2) and triggers a deprecation error even where it still exists.
-                //
-                // The userid MUST be passed explicitly:
-                // grade_calculator::recompute_final_grade(?int $userid = null) does NOT read
-                // the userid from the quiz_settings object it was constructed with. Calling it
-                // with no argument recomputes the grade of the logged-in teacher (who has no
-                // attempts, so the student's quiz_grades and grade_grades rows are never
-                // written and the gradebook shows a permanent "-").
-                if (method_exists('\mod_quiz\grade_calculator', 'recompute_final_grade')) {
-                    $quizobj = \mod_quiz\quiz_settings::create($quiz->id, $attempt->userid);
-                    \mod_quiz\grade_calculator::create($quizobj)->recompute_final_grade($attempt->userid);
-                } else {
-                    quiz_save_best_grade($quiz, $attempt->userid);
-                }
-
-                // Gradebook write verification.
-                // Read the grade back so a failed push can never present to the teacher as a
-                // success. Non-fatal: the question mark and feedback are already committed, so
-                // a verification failure is reported as a warning rather than an abort.
-                $gradebookverified = false;
-                $gradebookwarning = null;
-                try {
-                    $gradeitem = $DB->get_record('grade_items', [
-                        'itemtype'     => 'mod',
-                        'itemmodule'   => 'quiz',
-                        'iteminstance' => $quiz->id,
-                        'courseid'     => $quiz->course,
-                    ]);
-                    if (!$gradeitem) {
-                        $gradebookwarning = get_string('gradebookwarning_noitem', 'quiz_aigrader');
-                    } else if ($gradeitem->needsupdate) {
-                        $gradebookwarning = get_string('gradebookwarning_needsupdate', 'quiz_aigrader');
-                    } else {
-                        $gradegrade = $DB->get_record('grade_grades', [
-                            'itemid' => $gradeitem->id,
-                            'userid' => $attempt->userid,
-                        ]);
-                        if (!$gradegrade || $gradegrade->finalgrade === null) {
-                            $gradebookwarning = get_string('gradebookwarning_nograde', 'quiz_aigrader');
-                        } else {
-                            $gradebookverified = true;
-                        }
-                    }
-                } catch (\Throwable $verifyerr) {
-                    debugging($verifyerr->getMessage(), DEBUG_DEVELOPER);
-                    $gradebookwarning = get_string('gradebookwarning_verifyfailed', 'quiz_aigrader');
-                }
-                if (!$gradebookverified) {
-                    debugging(
-                        'AI Grader: gradebook verification failed for userid '
-                        . $attempt->userid . ' on quiz ' . $quiz->id . ' - ' . $gradebookwarning,
-                        DEBUG_DEVELOPER
-                    );
-                }
-
-                // Completion engine trigger.
-                // recompute_final_grade and quiz_save_best_grade update the gradebook row but
-                // do NOT notify Moodle's activity completion subsystem, which only re-runs when
-                // update_state() is called explicitly. Without this the student never appears
-                // as complete in the course completion report and "passing grade" completion
-                // conditions are never evaluated, even after the teacher approves the grade.
-                //
-                // COMPLETION_UNKNOWN forces a full re-evaluation of all completion conditions
-                // rather than hard-coding COMPLETE or INCOMPLETE, so any combination of
-                // teacher-configured completion criteria is honoured correctly.
-                try {
-                    require_once($CFG->libdir . '/completionlib.php');
-                    $completioncourse = $DB->get_record('course', ['id' => $quiz->course], '*', MUST_EXIST);
-                    $completion = new completion_info($completioncourse);
-                    if ($completion->is_enabled($cm)) {
-                        $completion->update_state($cm, COMPLETION_UNKNOWN, $attempt->userid);
-                    }
-                } catch (\Throwable $completionerr) {
-                    // A completion update failure must never abort the approve response, since
-                    // the grade is already saved. Log for debugging only.
-                    debugging('AI Grader: completion update failed: ' . $completionerr->getMessage(), DEBUG_DEVELOPER);
-                }
-
-                // Log the grading event for time tracking (upsert - update if it already exists).
-                // Wrapped in try/catch to handle the case where the table does not exist yet.
-                try {
-                    $now = time();
-                    $existing = $DB->get_record('quiz_aigrader_grading_logs', [
-                        'quizid' => $quiz->id,
-                        'qubaid' => $qubaid,
-                        'slot' => $slot,
-                    ]);
-                    if ($existing) {
-                        $existing->graderid = $USER->id;
-                        $existing->timegraded = $now;
-                        $DB->update_record('quiz_aigrader_grading_logs', $existing);
-                    } else {
-                        $logrecord = new stdClass();
-                        $logrecord->quizid = $quiz->id;
-                        $logrecord->courseid = $quiz->course;
-                        $logrecord->graderid = $USER->id;
-                        $logrecord->qubaid = $qubaid;
-                        $logrecord->slot = $slot;
-                        $logrecord->timegraded = $now;
-                        $DB->insert_record('quiz_aigrader_grading_logs', $logrecord);
-                    }
-                } catch (Exception $e) {
-                    // Table might not exist yet - continue without logging.
-                    debugging('AI Grader: grading_logs table not found: ' . $e->getMessage(), DEBUG_DEVELOPER);
-                }
-
-                // The assessment decision record.
-                //
-                // This is the evidence that a human made this decision. Before 4.4.0 the only
-                // trace of an approval was one row saying who and when, overwritten whenever
-                // the mark was revisited, so the record could not show what the AI suggested,
-                // whether the assessor agreed with it, or who had approved it first. The table
-                // is append-only: a re-approval adds a row rather than replacing one, and the
-                // history of a mark can be reconstructed from it.
-                $autolocked = $approvectx ? (bool)$approvectx->autolocked : false;
-                $humanreview = $underhumanreview;
-                try {
-                    $aigrade100 = ($approvectx && $approvectx->aigrade !== null)
-                        ? (float)$approvectx->aigrade : null;
-                    $aimark = $aigrade100 === null ? null : round(($maxmark * $aigrade100) / 100, 5);
-                    $aifeedback = $approvectx ? (string)$approvectx->aifeedback : '';
-
-                    // Compare on the text, not the markup: the assessor edits plain text in
-                    // the textarea and the browser re-renders it to HTML on save, so comparing
-                    // HTML would report every approval as edited.
-                    $aiplain = trim(html_to_text($aifeedback, 0, false));
-                    $finalplain = trim(html_to_text($feedbacktext, 0, false));
-
-                    $decision = new stdClass();
-                    $decision->quizid = $quiz->id;
-                    $decision->courseid = $quiz->course;
-                    $decision->userid = $attempt->userid;
-                    $decision->graderid = $USER->id;
-                    $decision->qubaid = $qubaid;
-                    $decision->slot = $slot;
-                    $decision->questionid = $qa->get_question_id();
-                    $decision->attemptnum = (int)$attempt->attempt;
-                    $decision->maxmark = $maxmark;
-                    $decision->aimark = $aimark;
-                    $decision->finalmark = $mark;
-                    $decision->markchanged = ($aimark === null || abs($aimark - $mark) > 0.0001) ? 1 : 0;
-                    $decision->feedbackchanged = ($aiplain !== '' && $aiplain !== $finalplain) ? 1 : 0;
-                    $decision->aifeedback = $aifeedback;
-                    $decision->finalfeedback = $feedbacktext;
-                    // Prefer the assessor's scored criteria over the AI's met/not-met list.
-                    // Validated as JSON before storing so a malformed post cannot put
-                    // unparseable text into the record.
-                    $decision->criteriamet = $approvectx ? $approvectx->aicriteriamet : null;
-                    $posted = $criteriajson !== '' ? json_decode($criteriajson, true) : null;
-                    $decision->policymode = $policymode !== '' ? $policymode : null;
-                    // Where the criteria came from and a fingerprint of them, so an auditor can
-                    // see what this mark was measured against.
-                    $decision->criteriasource = null;
-                    $decision->graderinfohash = null;
-                    // The suggestion's own record first: what the assessor was shown for this exact
-                    // response. Without one (marked by hand, or recorded before 5.0.4), the
-                    // question's criteria as they stand, when certain; otherwise one overall mark.
-                    $stored = $approvectx && !empty($approvectx->aicriteria) ? json_decode($approvectx->aicriteria, true) : null;
-                    if (
-                        is_array($stored)
-                        && (int)($stored['qubaid'] ?? 0) === (int)$qubaid
-                        && (int)($stored['slot'] ?? 0) === (int)$slot
-                        && (int)($stored['attempt'] ?? 0) === (int)$attempt->attempt
-                    ) {
-                        $decision->criteriasource = clean_param((string)($stored['source'] ?? ''), PARAM_ALPHA) ?: null;
-                        $decision->graderinfohash = !empty($stored['fingerprint'])
-                            ? clean_param((string)$stored['fingerprint'], PARAM_ALPHANUM)
-                            : null;
-                        // The assessor's per-criterion scores, recorded only when they are scores
-                        // on exactly the criteria this suggestion was measured against: same
-                        // criteria, same order, same weights, each score within its weight. The
-                        // browser is not evidence of what the criteria were.
-                        $shown = is_array($stored['criteria'] ?? null) ? $stored['criteria'] : [];
-                        if (is_array($posted) && $posted && count($posted) === count($shown)) {
-                            $scores = [];
-                            foreach (array_values($posted) as $i => $item) {
-                                $want = $shown[$i];
-                                $awarded = is_array($item) && isset($item['awarded']) && is_numeric($item['awarded'])
-                                    ? (float)$item['awarded'] : null;
-                                if (
-                                    !is_array($item) || $awarded === null
-                                    || (string)($item['label'] ?? '') !== (string)($want['label'] ?? '')
-                                    || abs((float)($item['max'] ?? -1) - (float)($want['max'] ?? 0)) > 0.005
-                                    || $awarded < -0.005 || $awarded > (float)$want['max'] + 0.005
-                                ) {
-                                    $scores = null;
-                                    break;
-                                }
-                                $scores[] = $item;
-                            }
-                            if ($scores !== null) {
-                                $decision->criteriamet = json_encode($scores, JSON_UNESCAPED_UNICODE);
-                            } else {
-                                debugging('AI Grader: posted criteria do not match the suggestion; not recorded.', DEBUG_DEVELOPER);
-                            }
-                        }
-                    } else if ($decisioncriteria !== null) {
-                        $certain = $decisioncriteria['confidence'] === \quiz_aigrader\local\criteria::CERTAIN;
-                        $decision->criteriasource = $certain
-                            ? $decisioncriteria['source']
-                            : \quiz_aigrader\local\criteria::SOURCE_NONE;
-                        $decision->graderinfohash = $certain
-                            ? \quiz_aigrader\local\criteria::fingerprint($decisioncriteria)
-                            : null;
-                    }
-                    $decision->instructionshash = null;
-                    $decision->modelversion = null;
-                    $decision->requestid = null;
-                    $decision->reviewseconds = $reviewseconds;
-                    $decision->humanreview = $humanreview ? 1 : 0;
-                    $decision->autolocked = $autolocked ? 1 : 0;
-                    $decision->acknowledgement = trim($acknowledgement) !== '' ? trim($acknowledgement) : null;
-                    $decision->timecreated = time();
-                    $DB->insert_record('quiz_aigrader_decisions', $decision);
-
-                    // The stored criteria belonged to the suggestion just decided. Cleared, so a
-                    // later decision on this response can never be recorded against them.
-                    // The context record is written back in full below, so it is cleared on the
-                    // object as well as in the table.
-                    if ($approvectx && !empty($approvectx->aicriteria)) {
-                        $DB->set_field('quiz_aigrader_attempt_ctx', 'aicriteria', null, ['id' => $approvectx->id]);
-                        $approvectx->aicriteria = null;
-                    }
-                } catch (Exception $decisionerror) {
-                    // The mark is already committed, so a failure to write the record must not
-                    // abort the response. It is logged loudly because the record is the point.
-                    debugging(
-                        'AI Grader: decision record write failed: '
-                            . $decisionerror->getMessage(),
-                        DEBUG_DEVELOPER
-                    );
-                }
-
-                // Update the attempt context from the APPROVED decision, so the next attempt
-                // is graded against what the assessor decided rather than what the AI
-                // suggested, and the "previous attempt" panel shows a mark that was awarded.
-                try {
-                    if ($approvectx) {
-                        $approvectx->lastgrade = $grade100;
-                        $approvectx->criteriamet = $approvectx->aicriteriamet;
-                        $approvectx->feedbacksummary = \quiz_aigrader\local\formatter::previous_summary(
-                            \quiz_aigrader\local\formatter::html_to_text($feedbacktext)
-                        );
-                        $approvectx->humanreview = 0;
-                        $approvectx->suggestedtime = null;
-                        $approvectx->timemodified = time();
-                        $DB->update_record('quiz_aigrader_attempt_ctx', $approvectx);
-                    }
-                } catch (Exception $ctxwriteerror) {
-                    debugging(
-                        'AI Grader: attempt_ctx approve write failed: '
-                            . $ctxwriteerror->getMessage(),
-                        DEBUG_DEVELOPER
-                    );
-                }
-            }
-
-            // Notification fired after the FIRST teacher Approve click.
-            //
-            // Root cause: the AI pre-grades all essay questions in batch via "AI Suggest".
-            // Each AI-graded question moves from needsgrading to graded state immediately, so
-            // requires_grading() returns false for ALL questions before any teacher review.
-            // The old state-based check therefore set the all-graded flag on the very first
-            // Approve click, and students received one email per question instead of a single
-            // email when the entire quiz was done.
-            //
-            // Fix: switch from a question-STATE check to a grading-LOGS check.
-            // quiz_aigrader_grading_logs gets one row per (qubaid, slot) only when a teacher
-            // clicks Approve & Save (inserted or updated above using an upsert, so there are no
-            // duplicates). We count how many manually gradeable slots exist in this usage versus
-            // how many have been teacher-logged, and notify only when every essay is approved.
-            $allquestionsgraded = false;
-            $notificationsent = false;
-            if (isset($usagereloaded) && isset($attempt)) {
-                try {
-                    // Count only the slots this report can actually approve.
-                    //
-                    // Counting every manually graded slot meant the notification could never
-                    // fire for a learner who left one essay blank, or for a quiz that mixed
-                    // essay with any other manually graded question type: those slots are not
-                    // listed in this report, so they never gain a log row and the approved
-                    // count could never catch up. The learner was simply never told their work
-                    // had been marked.
-                    $manualslotcount = 0;
-                    foreach ($usagereloaded->get_slots() as $checkslot) {
-                        $checkqa = $usagereloaded->get_question_attempt($checkslot);
-                        if ($checkqa->get_question()->qtype->name() !== 'essay') {
-                            continue;
-                        }
-                        if (trim((string)$checkqa->get_response_summary()) === '') {
-                            continue;
-                        }
-                        $manualslotcount++;
-                    }
-
-                    if ($manualslotcount > 0) {
-                        // DISTINCT slot, so a re-approval of the same question cannot push the
-                        // count past the number of slots and fire the notification early.
-                        $approvedcount = (int) $DB->count_records_sql(
-                            "SELECT COUNT(DISTINCT slot)
-                               FROM {quiz_aigrader_grading_logs}
-                              WHERE qubaid = ?",
-                            [$qubaid]
-                        );
-                        $allquestionsgraded = ($approvedcount >= $manualslotcount);
-                    }
-                } catch (Exception $checkex) {
-                    // The table may not exist on pre-upgrade installs - do not notify.
-                    debugging('AI Grader: all-graded check failed: ' . $checkex->getMessage(), DEBUG_DEVELOPER);
-                    $allquestionsgraded = false;
-                }
-            }
-
-            // Send a notification to the student if enabled and all questions are graded.
-            if (
-                $allquestionsgraded && isset($attempt)
-                    && get_config('quiz_aigrader', 'enable_student_notifications')
-            ) {
-                try {
-                    $student = $DB->get_record('user', ['id' => $attempt->userid]);
-                    $course = $DB->get_record('course', ['id' => $quiz->course]);
-
-                    if ($student && $course) {
-                        $coursecontext = context_course::instance($course->id);
-
-                        // Build the attempt URL so the student can view their feedback.
-                        $attempturl = new moodle_url('/mod/quiz/review.php', [
-                            'attempt' => $attempt->id,
-                        ]);
-
-                        // Prepare the message data.
-                        $messagedata = new stdClass();
-                        $messagedata->firstname = $student->firstname;
-                        $messagedata->quizname = format_string($quiz->name, true, ['context' => $coursecontext]);
-                        $messagedata->coursename = format_string($course->fullname, true, ['context' => $coursecontext]);
-                        $messagedata->score = $scorelabel;
-                        $messagedata->attempturl = $attempturl->out(false);
-                        $messagedata->sitename = format_string($SITE->fullname);
-
-                        // Create the message.
-                        $message = new \core\message\message();
-                        $message->component = 'quiz_aigrader';
-                        $message->name = 'grading_complete';
-                        $message->userfrom = \core_user::get_noreply_user();
-                        $message->userto = $student;
-                        $message->subject = get_string('notification_subject', 'quiz_aigrader', $messagedata);
-                        $message->fullmessage = get_string('notification_body', 'quiz_aigrader', $messagedata);
-                        $message->fullmessageformat = FORMAT_PLAIN;
-                        // The HTML body gets its own copy with the learner's name escaped; the
-                        // plain-text body keeps it as typed, so "O'Brien" never reads "O&#039;Brien".
-                        $htmldata = clone $messagedata;
-                        $htmldata->firstname = s($student->firstname);
-                        $message->fullmessagehtml = get_string('notification_body_html', 'quiz_aigrader', $htmldata);
-                        $message->smallmessage = get_string('notification_subject', 'quiz_aigrader', $messagedata);
-                        $message->notification = 1;
-                        $message->contexturl = $attempturl;
-                        $message->contexturlname = $messagedata->quizname;
-
-                        // Send the message.
-                        message_send($message);
-                        $notificationsent = true;
-                    }
-                } catch (Exception $notifyerror) {
-                    // A notification failure should not break the grading response.
-                    debugging('AI Grader notification error: ' . $notifyerror->getMessage(), DEBUG_DEVELOPER);
-                }
-            }
-
-            echo json_encode([
-                'ok' => true,
-                'gradedtime' => time(),
-                'gradedhuman' => userdate(time()),
-                'mark' => $mark,
-                'maxmark' => $maxmark,
-                'notificationsent' => $notificationsent,
-                // The gradebookverified flag is true only when the grade was read back from
-                // grade_grades after the push. If it is false, gradebookwarning explains why.
-                // The mark and feedback are saved either way - this reports on the gradebook
-                // write specifically, so a silent failure is never presented as a success.
-                'gradebookverified' => isset($gradebookverified) ? (bool) $gradebookverified : null,
-                'gradebookwarning'  => isset($gradebookwarning) ? $gradebookwarning : null,
-            ]);
-        } catch (\Throwable $e) {
-            // Catch both Exception and Error (e.g. removed Moodle functions in newer versions).
-            debugging($e->getMessage(), DEBUG_DEVELOPER);
-            echo json_encode(['ok' => false, 'message' => get_string('error_savefailed', 'quiz_aigrader')]);
-        }
+        echo json_encode(\quiz_aigrader\local\approval::approve(
+            $cm,
+            $context,
+            $attemptrec,
+            (int)$qubaid,
+            (int)$slot,
+            (string)$marksupplied,
+            $legacygrade100,
+            (string)$feedbacktext,
+            (string)$acknowledgement,
+            (string)$policymode,
+            (string)$criteriajson
+        ));
 
         exit;
     }
@@ -2030,13 +1446,12 @@ try {
         }
 
         $url = $apibase . '/api/reference-docs?siteId=' . urlencode($siteid) .
-                '&apiKey=' . urlencode($apikey) .
                 '&quizId=' . intval($quiz->id);
 
         $res = quiz_aigrader_fetch($url, $apikey);
 
         if (!$res['success']) {
-            debugging('AI Grader: reference-docs request failed: ' . $res['error'], DEBUG_DEVELOPER);
+            debugging('AI Essay Grader: reference-docs request failed: ' . $res['error'], DEBUG_DEVELOPER);
             echo json_encode([
                 'ok' => false,
                 'documents' => [],
@@ -2134,7 +1549,6 @@ try {
 
         $postdata = [
             'siteId' => $siteid,
-            'apiKey' => $apikey,
             'quizId' => strval($quiz->id),
             'file' => new \CURLFile($file['tmp_name'], $mimetype, $filename),
         ];
@@ -2145,7 +1559,7 @@ try {
         $httpcode = isset($info['http_code']) ? $info['http_code'] : 0;
 
         if ($body === false || $httpcode === 0) {
-            debugging('AI Grader: document upload failed: ' . $curl->error, DEBUG_DEVELOPER);
+            debugging('AI Essay Grader: document upload failed: ' . $curl->error, DEBUG_DEVELOPER);
             echo json_encode(['ok' => false, 'message' => get_string('connectionfailed', 'quiz_aigrader')]);
             exit;
         }
@@ -2153,7 +1567,7 @@ try {
         $data = json_decode($body, true);
 
         if (!$data) {
-            debugging('AI Grader: upload response could not be decoded (HTTP ' . $httpcode . ')', DEBUG_DEVELOPER);
+            debugging('AI Essay Grader: upload response could not be decoded (HTTP ' . $httpcode . ')', DEBUG_DEVELOPER);
             echo json_encode(['ok' => false, 'message' => get_string('invalidresponse', 'quiz_aigrader')]);
             exit;
         }
@@ -2190,7 +1604,6 @@ try {
         $deletequiz = $DB->get_record('quiz', ['id' => $cm->instance], 'id', MUST_EXIST);
         $listing = quiz_aigrader_fetch(
             $apibase . '/api/reference-docs?siteId=' . urlencode($siteid) .
-                '&apiKey=' . urlencode($apikey) .
                 '&quizId=' . (int)$deletequiz->id,
             $apikey
         );
@@ -2211,7 +1624,6 @@ try {
 
         $url = $apibase . '/api/reference-docs/' . urlencode($docid) .
                '?siteId=' . urlencode($siteid) .
-               '&apiKey=' . urlencode($apikey) .
                '&quizId=' . (int)$deletequiz->id;
 
         $curl = new \curl();
@@ -2229,7 +1641,7 @@ try {
         $httpcode = isset($info['http_code']) ? $info['http_code'] : 0;
 
         if ($body === false || $httpcode === 0) {
-            debugging('AI Grader: document delete failed: ' . $curl->error, DEBUG_DEVELOPER);
+            debugging('AI Essay Grader: document delete failed: ' . $curl->error, DEBUG_DEVELOPER);
             echo json_encode(['ok' => false, 'message' => get_string('connectionfailed', 'quiz_aigrader')]);
             exit;
         }
@@ -2237,7 +1649,7 @@ try {
         $data = json_decode($body, true);
 
         if (!$data) {
-            debugging('AI Grader: delete response could not be decoded (HTTP ' . $httpcode . ')', DEBUG_DEVELOPER);
+            debugging('AI Essay Grader: delete response could not be decoded (HTTP ' . $httpcode . ')', DEBUG_DEVELOPER);
             echo json_encode(['ok' => false, 'message' => get_string('invalidresponse', 'quiz_aigrader')]);
             exit;
         }
@@ -2262,13 +1674,12 @@ try {
         }
 
         $url = $apibase . '/api/quiz-settings?siteId=' . urlencode($siteid) .
-                '&apiKey=' . urlencode($apikey) .
                 '&quizId=' . intval($quiz->id);
 
         $res = quiz_aigrader_fetch($url, $apikey);
 
         if (!$res['success']) {
-            debugging('AI Grader: quiz-settings request failed: ' . $res['error'], DEBUG_DEVELOPER);
+            debugging('AI Essay Grader: quiz-settings request failed: ' . $res['error'], DEBUG_DEVELOPER);
             echo json_encode([
                 'ok' => false,
                 'settings' => $defaultsettings,
@@ -2328,7 +1739,6 @@ try {
 
         $payload = [
             'siteId' => $siteid,
-            'apiKey' => $apikey,
             'quizId' => intval($quiz->id),
             'extraInstructions' => $extrainstructions,
             'feedbackLanguage' => $feedbacklanguage,
@@ -2337,7 +1747,7 @@ try {
         $res = quiz_aigrader_fetch($apibase . '/api/quiz-settings', $apikey, true, $payload);
 
         if (!$res['success']) {
-            debugging('AI Grader: quiz-settings save failed: ' . $res['error'], DEBUG_DEVELOPER);
+            debugging('AI Essay Grader: quiz-settings save failed: ' . $res['error'], DEBUG_DEVELOPER);
             echo json_encode(['ok' => false, 'message' => get_string('connectionfailed', 'quiz_aigrader')]);
             exit;
         }
@@ -2345,7 +1755,7 @@ try {
         $data = json_decode($res['body'], true);
 
         if (!$data) {
-            debugging('AI Grader: save-settings response could not be decoded', DEBUG_DEVELOPER);
+            debugging('AI Essay Grader: save-settings response could not be decoded', DEBUG_DEVELOPER);
             echo json_encode(['ok' => false, 'message' => get_string('invalidresponse', 'quiz_aigrader')]);
             exit;
         }

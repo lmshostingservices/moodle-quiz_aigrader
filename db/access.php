@@ -18,7 +18,7 @@
  * Capability definitions for the AI Essay Grader quiz report.
  *
  * @package   quiz_aigrader
- * @copyright 2026 LMS Labs
+ * @copyright 2026 LMS Hosting Services
  * @license   https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 

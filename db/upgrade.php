@@ -15,15 +15,15 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Database upgrade steps for AI Grader quiz report.
+ * Database upgrade steps for AI Essay Grader quiz report.
  *
  * @package    quiz_aigrader
- * @copyright  2025 Essay Grader AI
+ * @copyright  2026 LMS Hosting Services
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 /**
- * Upgrade the AI Grader quiz report plugin.
+ * Upgrade the AI Essay Grader quiz report plugin.
  *
  * @param int $oldversion The old version of the plugin.
  * @return bool

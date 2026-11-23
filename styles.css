@@ -2898,3 +2898,58 @@
         padding: 0 0 12px;
     }
 }
+
+/* Setup and statistics, folded under one line above the queue (5.2.0). */
+.aigrader-container .aigrader-setup {
+    margin: 0 0 16px;
+    background: var(--ag-surface);
+    border: 1px solid var(--ag-line);
+    border-radius: var(--ag-radius);
+}
+
+.aigrader-container .aigrader-setup-summary {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px 14px;
+    padding: 12px 16px;
+    cursor: pointer;
+    list-style: none;
+}
+
+.aigrader-container .aigrader-setup-title {
+    font-weight: 700;
+    color: var(--ag-ink);
+}
+
+.aigrader-container .aigrader-setup-hint {
+    font-size: 0.8125rem;
+    color: var(--ag-ink-2);
+}
+
+.aigrader-container .aigrader-setup-body {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 0 16px 16px;
+}
+
+.aigrader-container .aigrader-setup-summary::-webkit-details-marker {
+    display: none;
+}
+
+.aigrader-container .aigrader-setup-summary::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    margin-right: 4px;
+    border-right: 2px solid var(--ag-ink-2);
+    border-bottom: 2px solid var(--ag-ink-2);
+    transform: rotate(-45deg);
+    transition: transform 0.15s ease;
+    align-self: center;
+}
+
+.aigrader-container .aigrader-setup[open] > .aigrader-setup-summary::before {
+    transform: rotate(45deg);
+}

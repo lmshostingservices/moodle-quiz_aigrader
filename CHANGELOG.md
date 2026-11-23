@@ -1,5 +1,42 @@
 # Changelog
 
+## 5.2.0 - 2026-11-24
+
+Version: `2026112400`. Every recommendation from the 5.1.0 production readiness audit, built and
+tested on Moodle 5.1 and 5.3. No database changes. **Needs the LMS Labs grading service from
+23 November 2026 or later**, which accepts the API key as a Bearer header.
+
+### Security
+- **The API key never travels in a URL or a request body.** It is sent only as an
+  `Authorization: Bearer` header, so proxy and server access logs cannot keep it.
+- **Approving a mark is a Moodle web service** (`quiz_aigrader_approve_mark`), called through
+  `core/ajax`. Moodle checks the session, the login and every parameter's type before the
+  plugin's own capability, group and attempt checks run. The approval logic moved out of
+  `ajax.php` into `\quiz_aigrader\local\approval`, shared by both paths.
+
+### Added
+- Behat features: the marking queue for an editing teacher, separate groups for an assessor,
+  and the folded setup panel.
+- End-to-end PHPUnit tests for approval: gradebook, decision record, out-of-range marks, other
+  groups, unfinished attempts and learners. 157 tests in total.
+- CI runs on Moodle 5.3 (PostgreSQL 17 and MariaDB 11.4) as well as 4.4 to 5.2 and main.
+
+### Changed
+- **The marking queue comes first.** Grading statistics, reference documents and extra AI
+  instructions fold under one "Grading setup and statistics" line, remembered per browser.
+- The marking queue is rendered from a Mustache template (`quiz_aigrader/queue`), so themes can
+  override it. The hidden copy of every raw answer was dropped, halving the page for large cohorts.
+- **One feedback language list** for the site default and every quiz (58 languages), named in the
+  viewer's own language from Moodle's language and country lists. The language pill on a
+  suggestion now names the quiz's feedback language, not the assessor's interface language.
+- One product name (AI Essay Grader) and one copyright holder (LMS Hosting Services) throughout.
+- CI workflow no longer carries jobs for another plugin. The unused `quiz_aigrader.php` stub is gone.
+
+### Fixed
+- Images and files a learner embedded in an essay now show on the marking card instead of a
+  broken placeholder.
+- A second element with the same id on each card (`grade-<row>`) was removed.
+
 ## 5.1.0 - 2026-11-23
 
 Version: `2026112300`. Production readiness release for Moodle partner review: a line-by-line

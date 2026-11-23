@@ -338,11 +338,103 @@ class formatter {
         if ($code === '') {
             return '';
         }
-        $base = core_text::strtolower(explode('-', str_replace('_', '-', $code))[0]);
-        $known = ['en', 'es', 'fr', 'ar', 'zh', 'ja', 'th', 'vi', 'hi', 'id', 'pt'];
-        if (in_array($base, $known, true)) {
-            return get_string('language_' . $base, 'quiz_aigrader');
+        $languages = self::feedback_languages();
+        $normalised = str_replace('_', '-', $code);
+        foreach ($languages as $known => $name) {
+            if (core_text::strtolower($known) === core_text::strtolower($normalised)) {
+                return $name;
+            }
         }
-        return core_text::strtoupper($code);
+        // A regional code the list does not hold: name its base language rather than guessing.
+        $base = core_text::strtolower(explode('-', $normalised)[0]);
+        return $languages[$base] ?? core_text::strtoupper($code);
+    }
+
+    /** @var string[] Languages the grading service writes feedback in, base codes and regional English. */
+    public const FEEDBACK_LANGUAGES = [
+        'en',
+        'en-AU',
+        'en-GB',
+        'en-US',
+        'en-NZ',
+        'en-CA',
+        'en-IE',
+        'en-ZA',
+        'es',
+        'fr',
+        'de',
+        'it',
+        'pt',
+        'nl',
+        'ru',
+        'zh',
+        'ja',
+        'ko',
+        'ar',
+        'hi',
+        'bn',
+        'pa',
+        'te',
+        'ta',
+        'mr',
+        'gu',
+        'kn',
+        'ml',
+        'th',
+        'vi',
+        'id',
+        'ms',
+        'fil',
+        'tr',
+        'pl',
+        'uk',
+        'cs',
+        'ro',
+        'hu',
+        'el',
+        'sv',
+        'da',
+        'fi',
+        'no',
+        'he',
+        'fa',
+        'ur',
+        'sw',
+        'zu',
+        'af',
+        'am',
+        'bg',
+        'hr',
+        'sk',
+        'sl',
+        'lt',
+        'lv',
+        'et',
+    ];
+
+    /**
+     * Every feedback language the plugin offers, named in the viewer's language.
+     *
+     * One list serves the site default on the settings page and the per-quiz choice on the grading
+     * screen. Until 5.2.0 the two lists differed: the site offered 12 languages and each quiz 58.
+     * Names come from Moodle's own language and country lists, so they are translated with the site.
+     *
+     * @return array<string, string> Language code => display name, in the list's order.
+     */
+    public static function feedback_languages(): array {
+        $sm = get_string_manager();
+        $names = $sm->get_list_of_languages();
+        $countries = $sm->get_list_of_countries(true);
+        $out = [];
+        foreach (self::FEEDBACK_LANGUAGES as $code) {
+            $parts = explode('-', $code);
+            $base = $parts[0];
+            $name = $names[$base] ?? core_text::strtoupper($base);
+            if (isset($parts[1])) {
+                $name .= ' (' . ($countries[$parts[1]] ?? $parts[1]) . ')';
+            }
+            $out[$code] = $name;
+        }
+        return $out;
     }
 }

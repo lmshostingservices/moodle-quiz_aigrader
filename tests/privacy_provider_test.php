@@ -18,7 +18,7 @@
  * Unit tests for the quiz_aigrader privacy provider.
  *
  * @package    quiz_aigrader
- * @copyright  2026 LMS Labs
+ * @copyright  2026 LMS Hosting Services
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -37,7 +37,7 @@ use quiz_aigrader\privacy\provider;
  * Unit tests for the quiz_aigrader privacy provider.
  *
  * @package    quiz_aigrader
- * @copyright  2026 LMS Labs
+ * @copyright  2026 LMS Hosting Services
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \quiz_aigrader\privacy\provider
  */

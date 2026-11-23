@@ -21,7 +21,7 @@
  * server checks everything again: this editor only makes a mistake visible before saving.
  *
  * @module     quiz_aigrader/criteria_editor
- * @copyright  2026 LMS Labs
+ * @copyright  2026 LMS Hosting Services
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 define([], function() {

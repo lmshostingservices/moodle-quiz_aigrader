@@ -1,0 +1,140 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template quiz_aigrader/queue
+
+    The marking queue: one summary row per response, each expanding in place to its marking card.
+
+    Classes required for JS:
+    * aigrader-card, aigrader-expand-btn, aigrader-grade-btn, aigrader-feedback
+
+    Data attributes required for JS:
+    * data-rowid, data-qubaid, data-slot, data-studentname, data-questiontext, data-answer on each tbody
+
+    Context variables required for this template:
+    * essayguard - Whether the Essay Guard column is shown
+    * colcount - Number of columns in the table
+    * rows - Array of responses
+
+    Example context (json):
+    {
+        "essayguard": false,
+        "colcount": 5,
+        "rows": [{
+            "rowid": "9-1", "qubaid": 9, "slot": 1, "cmid": 1, "maxmark": "4.0000000",
+            "fullname": "Priya Sharma", "email": "priya@example.com",
+            "studentname_lc": "priya sharma", "questiontext_lc": "explain consultation", "answer_lc": "consultation means",
+            "questionnum": "Q1", "questionfull": "Explain consultation", "truncated": "Consultation means...",
+            "slotlabel": "Essay question 1", "questionhtml": "<p>Explain consultation.</p>",
+            "answerhtml": "<p>Consultation means sharing information.</p>",
+            "attachmentonly": false, "eg": null
+        }]
+    }
+}}
+<div class="aigrader-cards">
+    <div class="aigrader-table-wrapper">
+        <table class="aigrader-queue">
+            <thead>
+                <tr>
+                    <th scope="col" class="aigrader-q-expand"><span class="accesshide aigrader-sr-only">{{#str}}expandrow, quiz_aigrader{{/str}}</span></th>
+                    <th scope="col">{{#str}}student, quiz_aigrader{{/str}}</th>
+                    <th scope="col">{{#str}}responsepreview, quiz_aigrader{{/str}}</th>
+                    <th scope="col">{{#str}}grade, quiz_aigrader{{/str}}</th>
+                    <th scope="col">{{#str}}status, quiz_aigrader{{/str}}</th>
+                    {{#essayguard}}<th scope="col">{{#str}}essayguard_column, quiz_aigrader{{/str}}</th>{{/essayguard}}
+                </tr>
+            </thead>
+            {{#rows}}
+            <tbody class="aigrader-card" data-rowid="{{rowid}}" data-qubaid="{{qubaid}}" data-slot="{{slot}}"
+                data-studentname="{{studentname_lc}}" data-questiontext="{{questiontext_lc}}" data-answer="{{answer_lc}}">
+                <tr class="aigrader-qrow">
+                    <td class="aigrader-q-expand">
+                        <button type="button" class="aigrader-expand-btn" aria-expanded="false" aria-controls="detail-{{rowid}}" data-rowid="{{rowid}}">
+                            <svg class="aigrader-chevron" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+                            <span class="accesshide aigrader-sr-only">{{fullname}}</span>
+                        </button>
+                    </td>
+                    <td class="aigrader-q-student"{{#email}} title="{{email}}"{{/email}}>{{fullname}}</td>
+                    <td class="aigrader-q-preview"><span class="aigrader-q-badge">{{questionnum}}</span>{{truncated}}</td>
+                    <td class="aigrader-q-grade"><span class="aigrader-grade aigrader-grade-pending" id="grade-{{rowid}}">&mdash;</span></td>
+                    <td class="aigrader-q-status"><span class="aigrader-status aigrader-status-pending" id="status-{{rowid}}">{{#str}}status_pending, quiz_aigrader{{/str}}</span></td>
+                    {{#essayguard}}
+                    <td class="aigrader-q-eg">
+                        {{#eg}}
+                        <a href="{{url}}" target="_blank" rel="noopener" class="ag-eg-badge ag-eg-badge-{{level}}" title="{{title}}">
+                            <svg class="aigrader-eg-badge-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>{{label}} {{score}}
+                        </a>
+                        {{/eg}}
+                        {{^eg}}<span class="ag-eg-badge ag-eg-badge-nodata">{{#str}}essayguard_notassessed, quiz_aigrader{{/str}}</span>{{/eg}}
+                    </td>
+                    {{/essayguard}}
+                </tr>
+                <tr class="aigrader-qdetail" id="detail-{{rowid}}" hidden>
+                    <td colspan="{{colcount}}">
+                        <div class="aigrader-card-header ag-flex-between ag-flex-wrap ag-gap-sm">
+                            <div class="aigrader-student-inline ag-flex-center ag-gap-sm">
+                                <span class="aigrader-card-title"{{#email}} title="{{email}}"{{/email}}>{{fullname}} &middot; {{slotlabel}}</span>
+                                {{#eg}}
+                                <a href="{{url}}" target="_blank" rel="noopener" class="ag-eg-badge ag-eg-badge-{{level}}" title="{{title}}">
+                                    <svg class="aigrader-eg-badge-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>{{label}}
+                                </a>
+                                {{/eg}}
+                            </div>
+                            <span class="aigrader-suggested-slot" id="suggested-{{rowid}}"></span>
+                        </div>
+                        {{#eg}}{{#advisory}}
+                        <div class="ag-eg-advisory ag-eg-advisory-{{level}}">
+                            <svg class="aigrader-eg-advisory-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                            <span><strong>{{heading}}</strong> {{advice}} &nbsp;<a href="{{url}}" target="_blank" rel="noopener" class="aigrader-eg-link">{{#str}}essayguard_detail_link, quiz_aigrader{{/str}} &rarr;</a></span>
+                        </div>
+                        {{/advisory}}{{/eg}}
+                        <div class="aigrader-card-body">
+                            <div class="aigrader-card-col aigrader-col-response">
+                                <div class="aigrader-card-section aigrader-question-section">
+                                    <div class="aigrader-section-label">{{#str}}question, quiz_aigrader{{/str}}</div>
+                                    <div class="aigrader-question-text">{{{questionhtml}}}</div>
+                                </div>
+                                <div class="aigrader-card-section aigrader-answer-section">
+                                    <div class="aigrader-section-label">{{#str}}learners_response, quiz_aigrader{{/str}}</div>
+                                    <div class="aigrader-answer-text">{{{answerhtml}}}</div>
+                                </div>
+                            </div>
+                            <div class="aigrader-card-col aigrader-col-feedback">
+                                <div class="aigrader-card-section aigrader-feedback-section">
+                                    <div class="aigrader-initial-actions ag-flex-between ag-flex-wrap ag-gap-md" id="initial-actions-{{rowid}}">
+                                        {{#attachmentonly}}<span class="aigrader-attachment-note">{{#str}}error_attachmentonly, quiz_aigrader{{/str}}</span>{{/attachmentonly}}
+                                        {{^attachmentonly}}<span class="ag-text-muted">{{#str}}not_yet_graded, quiz_aigrader{{/str}}</span>{{/attachmentonly}}
+                                        <div class="aigrader-card-actions ag-flex-center ag-gap-md">
+                                            <span class="aigrader-grade aigrader-grade-pending">&mdash;</span>
+                                            {{^attachmentonly}}
+                                            <button class="aigrader-btn aigrader-btn-sm aigrader-btn-success aigrader-grade-btn ag-btn-base ag-btn-success"
+                                                data-qubaid="{{qubaid}}" data-slot="{{slot}}" data-cmid="{{cmid}}" data-maxmark="{{maxmark}}"
+                                                data-questiontext="{{questionfull}}">{{#str}}ai_grade, quiz_aigrader{{/str}}</button>
+                                            {{/attachmentonly}}
+                                        </div>
+                                    </div>
+                                    <div class="aigrader-feedback aigrader-feedback-hidden" id="feedback-{{rowid}}"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+            {{/rows}}
+        </table>
+    </div>
+</div>

@@ -15,10 +15,10 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * AI Grader Activity Report - Shows grader approval statistics.
+ * AI Essay Grader activity report - Shows grader approval statistics.
  *
  * @package    quiz_aigrader
- * @copyright  2025 Essay Grader AI
+ * @copyright  2026 LMS Hosting Services
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 

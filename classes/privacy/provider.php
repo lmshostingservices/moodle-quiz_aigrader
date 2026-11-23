@@ -18,7 +18,7 @@
  * Privacy Subsystem implementation for quiz_aigrader.
  *
  * @package    quiz_aigrader
- * @copyright  2026 LMS Labs
+ * @copyright  2026 LMS Hosting Services
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -43,7 +43,7 @@ use core_privacy\local\request\writer;
  * and student answers to an external grading service.
  *
  * @package    quiz_aigrader
- * @copyright  2026 LMS Labs
+ * @copyright  2026 LMS Hosting Services
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class provider implements

@@ -18,7 +18,7 @@
  * Message provider definitions for AI Essay Grader.
  *
  * @package    quiz_aigrader
- * @copyright  2026 AI Grader
+ * @copyright  2026 LMS Hosting Services
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 

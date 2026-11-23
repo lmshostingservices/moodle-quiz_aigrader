@@ -15,23 +15,23 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Client for the external Essay Grader AI service.
+ * Client for the external LMS Labs grading service.
  *
  * @package    quiz_aigrader
- * @copyright  2026 LMS Labs
+ * @copyright  2026 LMS Hosting Services
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 namespace quiz_aigrader;
 
 /**
- * Client for the external Essay Grader AI service.
+ * Client for the external LMS Labs grading service.
  *
  * Resolves the site credentials, preferring the local_aiconfig plugin when it is
  * installed and falling back to this plugin's own settings.
  *
  * @package    quiz_aigrader
- * @copyright  2026 LMS Labs
+ * @copyright  2026 LMS Hosting Services
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class api_client {

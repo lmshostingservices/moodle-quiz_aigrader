@@ -20,7 +20,7 @@ namespace quiz_aigrader\report;
  * Report service for generating grader activity reports.
  *
  * @package    quiz_aigrader
- * @copyright  2025 Essay Grader AI
+ * @copyright  2026 LMS Hosting Services
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class service {

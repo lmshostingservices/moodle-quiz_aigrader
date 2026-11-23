@@ -15,10 +15,10 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * AI Grader quiz report display class.
+ * AI Essay Grader quiz report display class.
  *
  * @package    quiz_aigrader
- * @copyright  2025 Essay Grader AI
+ * @copyright  2026 LMS Hosting Services
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -38,11 +38,11 @@ if (class_exists('\mod_quiz\local\reports\report_base')) {
 }
 
 /**
- * Main AI Grader quiz report class.
+ * Main AI Essay Grader quiz report class.
  */
 class quiz_aigrader_report extends quiz_aigrader_report_base {
     /**
-     * Display the AI Grader report.
+     * Display the AI Essay Grader report.
      *
      * @param stdClass $quiz The quiz record.
      * @param stdClass $cm The course module record.
@@ -139,8 +139,20 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
 
         $this->render_container_start();
         $this->render_header($quiz, $context);
+        // Setup and statistics fold away under one line, so the marking queue is the first thing
+        // an assessor sees. Until 5.2.0 three open panels sat above the first essay.
+        echo html_writer::start_tag('details', ['class' => 'aigrader-setup', 'id' => 'aigrader-setup']);
+        echo html_writer::tag(
+            'summary',
+            html_writer::span(get_string('setup_heading', 'quiz_aigrader'), 'aigrader-setup-title')
+                . html_writer::span(get_string('setup_hint', 'quiz_aigrader'), 'aigrader-setup-hint'),
+            ['class' => 'aigrader-setup-summary']
+        );
+        echo html_writer::start_div('aigrader-setup-body');
         $this->render_grading_stats();
         $this->render_document_section($quiz);
+        echo html_writer::end_div();
+        echo html_writer::end_tag('details');
         $this->render_action_buttons();
         $this->render_filter_bar($cm, $groupmode, $datefrom, $dateto);
         $this->render_essay_table($quiz, $cm, $context, $groupid, $forcegroupjoin, $datefrom, $dateto);
@@ -325,73 +337,14 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
             get_string('feedback_language', 'quiz_aigrader'),
             ['for' => 'aigrader-feedback-language', 'class' => 'aigrader-language-label']
         );
-        $languages = [
-            'en' => ['flag' => "\xF0\x9F\x87\xAC\xF0\x9F\x87\xA7", 'name' => 'English'],
-            'en-AU' => ['flag' => "\xF0\x9F\x87\xA6\xF0\x9F\x87\xBA", 'name' => 'English (Australian)'],
-            'en-GB' => ['flag' => "\xF0\x9F\x87\xAC\xF0\x9F\x87\xA7", 'name' => 'English (British)'],
-            'en-US' => ['flag' => "\xF0\x9F\x87\xBA\xF0\x9F\x87\xB8", 'name' => 'English (American)'],
-            'en-NZ' => ['flag' => "\xF0\x9F\x87\xB3\xF0\x9F\x87\xBF", 'name' => 'English (New Zealand)'],
-            'en-CA' => ['flag' => "\xF0\x9F\x87\xA8\xF0\x9F\x87\xA6", 'name' => 'English (Canadian)'],
-            'en-IE' => ['flag' => "\xF0\x9F\x87\xAE\xF0\x9F\x87\xAA", 'name' => 'English (Irish)'],
-            'en-ZA' => ['flag' => "\xF0\x9F\x87\xBF\xF0\x9F\x87\xA6", 'name' => 'English (South African)'],
-            'es' => ['flag' => "\xF0\x9F\x87\xAA\xF0\x9F\x87\xB8", 'name' => 'Spanish (Espanol)'],
-            'fr' => ['flag' => "\xF0\x9F\x87\xAB\xF0\x9F\x87\xB7", 'name' => 'French (Francais)'],
-            'de' => ['flag' => "\xF0\x9F\x87\xA9\xF0\x9F\x87\xAA", 'name' => 'German (Deutsch)'],
-            'it' => ['flag' => "\xF0\x9F\x87\xAE\xF0\x9F\x87\xB9", 'name' => 'Italian (Italiano)'],
-            'pt' => ['flag' => "\xF0\x9F\x87\xB5\xF0\x9F\x87\xB9", 'name' => 'Portuguese (Portugues)'],
-            'nl' => ['flag' => "\xF0\x9F\x87\xB3\xF0\x9F\x87\xB1", 'name' => 'Dutch (Nederlands)'],
-            'ru' => ['flag' => "\xF0\x9F\x87\xB7\xF0\x9F\x87\xBA", 'name' => 'Russian'],
-            'zh' => ['flag' => "\xF0\x9F\x87\xA8\xF0\x9F\x87\xB3", 'name' => 'Chinese'],
-            'ja' => ['flag' => "\xF0\x9F\x87\xAF\xF0\x9F\x87\xB5", 'name' => 'Japanese'],
-            'ko' => ['flag' => "\xF0\x9F\x87\xB0\xF0\x9F\x87\xB7", 'name' => 'Korean'],
-            'ar' => ['flag' => "\xF0\x9F\x87\xB8\xF0\x9F\x87\xA6", 'name' => 'Arabic'],
-            'hi' => ['flag' => "\xF0\x9F\x87\xAE\xF0\x9F\x87\xB3", 'name' => 'Hindi'],
-            'bn' => ['flag' => "\xF0\x9F\x87\xA7\xF0\x9F\x87\xA9", 'name' => 'Bengali'],
-            'pa' => ['flag' => "\xF0\x9F\x87\xAE\xF0\x9F\x87\xB3", 'name' => 'Punjabi'],
-            'te' => ['flag' => "\xF0\x9F\x87\xAE\xF0\x9F\x87\xB3", 'name' => 'Telugu'],
-            'ta' => ['flag' => "\xF0\x9F\x87\xAE\xF0\x9F\x87\xB3", 'name' => 'Tamil'],
-            'mr' => ['flag' => "\xF0\x9F\x87\xAE\xF0\x9F\x87\xB3", 'name' => 'Marathi'],
-            'gu' => ['flag' => "\xF0\x9F\x87\xAE\xF0\x9F\x87\xB3", 'name' => 'Gujarati'],
-            'kn' => ['flag' => "\xF0\x9F\x87\xAE\xF0\x9F\x87\xB3", 'name' => 'Kannada'],
-            'ml' => ['flag' => "\xF0\x9F\x87\xAE\xF0\x9F\x87\xB3", 'name' => 'Malayalam'],
-            'th' => ['flag' => "\xF0\x9F\x87\xB9\xF0\x9F\x87\xAD", 'name' => 'Thai'],
-            'vi' => ['flag' => "\xF0\x9F\x87\xBB\xF0\x9F\x87\xB3", 'name' => 'Vietnamese'],
-            'id' => ['flag' => "\xF0\x9F\x87\xAE\xF0\x9F\x87\xA9", 'name' => 'Indonesian (Bahasa Indonesia)'],
-            'ms' => ['flag' => "\xF0\x9F\x87\xB2\xF0\x9F\x87\xBE", 'name' => 'Malay (Bahasa Melayu)'],
-            'fil' => ['flag' => "\xF0\x9F\x87\xB5\xF0\x9F\x87\xAD", 'name' => 'Filipino (Tagalog)'],
-            'tr' => ['flag' => "\xF0\x9F\x87\xB9\xF0\x9F\x87\xB7", 'name' => 'Turkish (Turkce)'],
-            'pl' => ['flag' => "\xF0\x9F\x87\xB5\xF0\x9F\x87\xB1", 'name' => 'Polish (Polski)'],
-            'uk' => ['flag' => "\xF0\x9F\x87\xBA\xF0\x9F\x87\xA6", 'name' => 'Ukrainian'],
-            'cs' => ['flag' => "\xF0\x9F\x87\xA8\xF0\x9F\x87\xBF", 'name' => 'Czech (Cestina)'],
-            'ro' => ['flag' => "\xF0\x9F\x87\xB7\xF0\x9F\x87\xB4", 'name' => 'Romanian (Romana)'],
-            'hu' => ['flag' => "\xF0\x9F\x87\xAD\xF0\x9F\x87\xBA", 'name' => 'Hungarian (Magyar)'],
-            'el' => ['flag' => "\xF0\x9F\x87\xAC\xF0\x9F\x87\xB7", 'name' => 'Greek'],
-            'sv' => ['flag' => "\xF0\x9F\x87\xB8\xF0\x9F\x87\xAA", 'name' => 'Swedish (Svenska)'],
-            'da' => ['flag' => "\xF0\x9F\x87\xA9\xF0\x9F\x87\xB0", 'name' => 'Danish (Dansk)'],
-            'fi' => ['flag' => "\xF0\x9F\x87\xAB\xF0\x9F\x87\xAE", 'name' => 'Finnish (Suomi)'],
-            'no' => ['flag' => "\xF0\x9F\x87\xB3\xF0\x9F\x87\xB4", 'name' => 'Norwegian (Norsk)'],
-            'he' => ['flag' => "\xF0\x9F\x87\xAE\xF0\x9F\x87\xB1", 'name' => 'Hebrew'],
-            'fa' => ['flag' => "\xF0\x9F\x87\xAE\xF0\x9F\x87\xB7", 'name' => 'Persian'],
-            'ur' => ['flag' => "\xF0\x9F\x87\xB5\xF0\x9F\x87\xB0", 'name' => 'Urdu'],
-            'sw' => ['flag' => "\xF0\x9F\x87\xB0\xF0\x9F\x87\xAA", 'name' => 'Swahili (Kiswahili)'],
-            'zu' => ['flag' => "\xF0\x9F\x87\xBF\xF0\x9F\x87\xA6", 'name' => 'Zulu (isiZulu)'],
-            'af' => ['flag' => "\xF0\x9F\x87\xBF\xF0\x9F\x87\xA6", 'name' => 'Afrikaans'],
-            'am' => ['flag' => "\xF0\x9F\x87\xAA\xF0\x9F\x87\xB9", 'name' => 'Amharic'],
-            'bg' => ['flag' => "\xF0\x9F\x87\xA7\xF0\x9F\x87\xAC", 'name' => 'Bulgarian'],
-            'hr' => ['flag' => "\xF0\x9F\x87\xAD\xF0\x9F\x87\xB7", 'name' => 'Croatian (Hrvatski)'],
-            'sk' => ['flag' => "\xF0\x9F\x87\xB8\xF0\x9F\x87\xB0", 'name' => 'Slovak (Slovencina)'],
-            'sl' => ['flag' => "\xF0\x9F\x87\xB8\xF0\x9F\x87\xAE", 'name' => 'Slovenian (Slovenscina)'],
-            'lt' => ['flag' => "\xF0\x9F\x87\xB1\xF0\x9F\x87\xB9", 'name' => 'Lithuanian (Lietuviu)'],
-            'lv' => ['flag' => "\xF0\x9F\x87\xB1\xF0\x9F\x87\xBB", 'name' => 'Latvian (Latviesu)'],
-            'et' => ['flag' => "\xF0\x9F\x87\xAA\xF0\x9F\x87\xAA", 'name' => 'Estonian (Eesti)'],
-        ];
+        // One list for the site default and every quiz, named in the viewer's own language.
+        $languages = \quiz_aigrader\local\formatter::feedback_languages();
         echo html_writer::start_tag(
             'select',
             ['id' => 'aigrader-feedback-language', 'class' => 'aigrader-language-select']
         );
-        foreach ($languages as $code => $lang) {
-            // The language name only: flag emoji read as dated and render inconsistently across systems.
-            echo html_writer::tag('option', $lang['name'], ['value' => $code]);
+        foreach ($languages as $code => $name) {
+            echo html_writer::tag('option', s($name), ['value' => $code]);
         }
         echo html_writer::end_tag('select');
         echo html_writer::end_div();
@@ -1170,7 +1123,6 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
                     'maxmark' => (float)$record->maxmark,
                 ];
             }
-            $initials = core_text::substr($user->firstname, 0, 1) . core_text::substr($user->lastname, 0, 1);
 
             $rows[] = [
                 'rowid'        => $record->qubaid . '-' . $record->slot,
@@ -1182,7 +1134,6 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
                 // Only where the site shows email addresses to this assessor: the user
                 // identity setting and moodle/site:viewuseridentity, as on core reports.
                 'email'        => $showemail ? $user->email : '',
-                'initials'     => core_text::strtoupper($initials),
                 'questionnum'  => 'Q' . $record->slot,
                 'questiontext' => $this->truncate($questiontext),
                 'questionfull' => strip_tags($questiontext),
@@ -1202,9 +1153,6 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
                 'slot'         => $record->slot,
                 'cmid'         => $cm->id,
                 'maxmark'      => $record->maxmark,
-                'isgraded'     => false,
-                'gradelabel'   => '&mdash;',
-                'feedback'     => '',
                 // Marked so the row can say plainly that AI grading is unavailable and the
                 // response must be read and marked by hand.
                 'hasattachments'  => $hasattachments,
@@ -1257,254 +1205,114 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
         }
         $this->render_criteria_check($criteriaquestions, $cm, $context);
 
-        echo '<div class="aigrader-cards">';
-        echo html_writer::start_div('aigrader-table-wrapper');
-        echo '<table class="aigrader-queue">';
-        echo '<thead><tr>';
-        // Moodle's own accesshide, not Bootstrap's sr-only. Both hide the label today, on
-        // 4.4 through 5.3, but sr-only is a Bootstrap 4 class that Moodle 5.1 moved into a
-        // deprecated compatibility layer: it is marked "Deprecated style in use" to anyone
-        // viewing in theme-designer mode and will be dropped when that layer goes.
-        // accesshide is Moodle's own and is current in every supported version. The
-        // plugin's own stylesheet also defines it, so it holds in a theme that does not.
-        echo '<th scope="col" class="aigrader-q-expand">'
-            . '<span class="accesshide aigrader-sr-only">'
-            . get_string('expandrow', 'quiz_aigrader') . '</span></th>';
-        echo '<th scope="col">' . get_string('student', 'quiz_aigrader') . '</th>';
-        echo '<th scope="col">' . get_string('responsepreview', 'quiz_aigrader') . '</th>';
-        echo '<th scope="col">' . get_string('grade', 'quiz_aigrader') . '</th>';
-        echo '<th scope="col">' . get_string('status', 'quiz_aigrader') . '</th>';
-        if ($egcolumn) {
-            echo '<th scope="col">' . get_string('essayguard_column', 'quiz_aigrader') . '</th>';
-        }
-        echo '</tr></thead>';
-        // No outer tbody: each response opens its own below, so one here would nest.
+        global $OUTPUT;
 
+        $templaterows = [];
         foreach ($rows as $r) {
-            // Look up the Essay Guard score for this student (null if not installed or no data).
+            // The Essay Guard score for this learner, null if the plugin is absent or has no data.
+            // The level is derived from the stored score by the analyser, not read from the stored
+            // risklevel column, which may have been written under older thresholds.
             $eg = $essayguardscores[$r['userid']] ?? null;
-            // FIX-EG-LEVEL-COMPUTE (v1.2.103): derive the level from the stored score, not the
-            // stored risklevel column. The stored column may have been written under old
-            // thresholds (e.g. HIGH at 41), causing confusing labels like "HIGH 44/100".
-            // analyser::risk_level() is the single source of truth - consistent with
-            // student.php and lib.php which already use this approach.
-            $egscore = $eg ? (int) round((float) ($eg->riskscore ?? 0) * 100) : 0;
-            $egpastes = $eg ? (int) ($eg->paste_events ?? 0) : 0;
-            $eglevel = null;
-            $eglabel = '';
-            $egtitle = '';
+            $egcontext = null;
             if ($eg && $essayguardavailable) {
-                $eglevel = \plagiarism_essayguard\local\service\analyser::risk_level($egscore);
+                $egscore = (int) round((float) ($eg->riskscore ?? 0) * 100);
+                $egpastes = (int) ($eg->paste_events ?? 0);
+                $eglevel = (string) \plagiarism_essayguard\local\service\analyser::risk_level($egscore);
                 $eglabel = get_string_manager()->string_exists('essayguard_level_' . $eglevel, 'quiz_aigrader')
                     ? get_string('essayguard_level_' . $eglevel, 'quiz_aigrader')
-                    : ucfirst((string)$eglevel);
-                $egtitle = get_string('essayguard_badge_title', 'quiz_aigrader', (object)[
-                    'level' => $eglabel,
+                    : ucfirst($eglevel);
+                $egurl = (new moodle_url('/plagiarism/essayguard/student.php', [
+                    'cmid' => $r['cmid'],
+                    'userid' => $r['userid'],
+                ]))->out(false);
+                $advisory = null;
+                if ($eglevel === 'high' || $eglevel === 'medium') {
+                    $advice = get_string('essayguard_' . $eglevel . '_advice', 'quiz_aigrader');
+                    if ($eglevel === 'high' && $egpastes === 1) {
+                        $advice = get_string('essayguard_paste', 'quiz_aigrader') . ' ' . $advice;
+                    } else if ($eglevel === 'high' && $egpastes > 1) {
+                        $advice = get_string('essayguard_pastes', 'quiz_aigrader', $egpastes) . ' ' . $advice;
+                    }
+                    $advisory = [
+                        'level' => $eglevel,
+                        'heading' => get_string('essayguard_' . $eglevel, 'quiz_aigrader', $egscore),
+                        'advice' => $advice,
+                        'url' => $egurl,
+                    ];
+                }
+                $egcontext = [
+                    'level' => $eglevel,
+                    'label' => $eglabel,
                     'score' => $egscore,
-                ]);
+                    'url' => $egurl,
+                    'title' => get_string('essayguard_badge_title', 'quiz_aigrader', (object) [
+                        'level' => $eglabel,
+                        'score' => $egscore,
+                    ]),
+                    'advisory' => $advisory,
+                ];
             }
 
-            // One tbody per response, holding the summary row and the detail row. The
-            // class and data attributes stay exactly as they were so the search filter,
-            // the bulk grade and the remove-on-approve all keep working untouched.
-            echo '<tbody class="aigrader-card" data-rowid="' . s($r['rowid']) . '"'
-                . ' data-qubaid="' . s($r['qubaid']) . '" data-slot="' . s($r['slot']) . '"'
-                . ' data-studentname="' . s(core_text::strtolower($r['fullname'])) . '"'
-                . ' data-questiontext="' . s(core_text::strtolower($r['questionfull'])) . '"'
-                . ' data-answer="' . s(core_text::strtolower($r['full'])) . '">';
-
-            // The summary row: one line per response, always visible.
-            echo '<tr class="aigrader-qrow">';
-            echo '<td class="aigrader-q-expand">';
-            echo '<button type="button" class="aigrader-expand-btn" aria-expanded="false"'
-                . ' aria-controls="detail-' . s($r['rowid']) . '"'
-                . ' data-rowid="' . s($r['rowid']) . '">'
-                . '<svg class="aigrader-chevron" width="15" height="15" viewBox="0 0 24 24"'
-                . ' fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"'
-                . ' stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>'
-                . '<span class="accesshide aigrader-sr-only">' . s($r['fullname']) . '</span>'
-                . '</button>';
-            echo '</td>';
-
-            echo '<td class="aigrader-q-student" title="' . s($r['email']) . '">'
-                . s($r['fullname']) . '</td>';
-
-            echo '<td class="aigrader-q-preview"><span class="aigrader-q-badge">' . s($r['questionnum']) . '</span>'
-                . s($r['truncated']) . '</td>';
-
-            echo '<td class="aigrader-q-grade">'
-                . '<span class="aigrader-grade aigrader-grade-pending" id="grade-'
-                . s($r['rowid']) . '">&mdash;</span></td>';
-
-            echo '<td class="aigrader-q-status">'
-                . '<span class="aigrader-status aigrader-status-pending" id="status-'
-                . s($r['rowid']) . '">' . get_string('status_pending', 'quiz_aigrader')
-                . '</span></td>';
-
-            if ($egcolumn) {
-                echo '<td class="aigrader-q-eg">';
-                if ($eglevel !== null) {
-                    $detailurl = new moodle_url('/plagiarism/essayguard/student.php', [
-                        'cmid'   => $r['cmid'],
-                        'userid' => $r['userid'],
-                    ]);
-                    echo '<a href="' . $detailurl->out() . '" target="_blank" rel="noopener"'
-                        . ' class="ag-eg-badge ag-eg-badge-' . s($eglevel) . '"'
-                        . ' title="' . s($egtitle) . '">'
-                        . '<svg class="aigrader-eg-badge-icon" width="11" height="11" viewBox="0 0 24 24"'
-                        . ' fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"'
-                        . ' stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>'
-                        . s($eglabel) . ' ' . $egscore
-                        . '</a>';
-                } else {
-                    echo '<span class="ag-eg-badge ag-eg-badge-nodata">'
-                        . get_string('essayguard_notassessed', 'quiz_aigrader') . '</span>';
-                }
-                echo '</td>';
-            }
-            echo '</tr>';
-
-            // The detail row: the marking card, revealed when the assessor expands.
-            echo '<tr class="aigrader-qdetail" id="detail-' . s($r['rowid']) . '" hidden>';
-            echo '<td colspan="' . $colcount . '">';
-
-            // Student header.
-            echo '<div class="aigrader-card-header ag-flex-between ag-flex-wrap ag-gap-sm">';
-            echo '<div class="aigrader-student-inline ag-flex-center ag-gap-sm">';
-            echo '<span class="aigrader-card-title" title="' . s($r['email']) . '">'
-                . s($r['fullname']) . ' &middot; '
-                . get_string('essay_question_n', 'quiz_aigrader', $r['slot']) . '</span>';
-
-            // Essay Guard inline badge - only if data exists.
-            if ($eglevel !== null) {
-                $detailurl = new moodle_url('/plagiarism/essayguard/student.php', [
-                    'cmid'   => $r['cmid'],
-                    'userid' => $r['userid'],
-                ]);
-                echo '<a href="' . $detailurl->out() . '" target="_blank" rel="noopener"'
-                    . ' class="ag-eg-badge ag-eg-badge-' . s($eglevel) . '"'
-                    . ' title="' . s($egtitle) . '">'
-                    . '<svg class="aigrader-eg-badge-icon" width="11" height="11" viewBox="0 0 24 24" fill="none"'
-                    . ' stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">'
-                    . '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>'
-                    . s($eglabel)
-                    . '</a>';
-            }
-            echo '</div>';
-            // Filled by the grader module once a suggestion arrives; the reference shows the
-            // headline figure here, at the top right of the card.
-            echo '<span class="aigrader-suggested-slot" id="suggested-' . $r['rowid'] . '"></span>';
-            echo '</div>';
-
-            // Essay Guard advisory panel - medium and high get a visible warning.
-            if ($eglevel === 'high') {
-                $detailurl = new moodle_url('/plagiarism/essayguard/student.php', [
-                    'cmid'   => $r['cmid'],
-                    'userid' => $r['userid'],
-                ]);
-                $pastenote = '';
-                if ($egpastes === 1) {
-                    $pastenote = ' ' . get_string('essayguard_paste', 'quiz_aigrader');
-                } else if ($egpastes > 1) {
-                    $pastenote = ' ' . get_string('essayguard_pastes', 'quiz_aigrader', $egpastes);
-                }
-                echo '<div class="ag-eg-advisory ag-eg-advisory-high">'
-                    . '<svg class="aigrader-eg-advisory-icon" width="15" height="15" viewBox="0 0 24 24" fill="none"'
-                    . ' stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
-                    . '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>'
-                    . '<line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
-                    . '<span><strong>' . get_string('essayguard_high', 'quiz_aigrader', $egscore) . '</strong>'
-                    . s($pastenote)
-                    . ' ' . get_string('essayguard_high_advice', 'quiz_aigrader') . ' &nbsp;'
-                    . '<a href="' . $detailurl->out() . '" target="_blank" rel="noopener" class="aigrader-eg-link">'
-                    . get_string('essayguard_detail_link', 'quiz_aigrader') . ' &rarr;</a>'
-                    . '</span>'
-                    . '</div>';
-            } else if ($eglevel === 'medium') {
-                $detailurl = new moodle_url('/plagiarism/essayguard/student.php', [
-                    'cmid'   => $r['cmid'],
-                    'userid' => $r['userid'],
-                ]);
-                echo '<div class="ag-eg-advisory ag-eg-advisory-medium">'
-                    . '<svg class="aigrader-eg-advisory-icon" width="15" height="15" viewBox="0 0 24 24" fill="none"'
-                    . ' stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
-                    . '<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>'
-                    . '<line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>'
-                    . '<span><strong>' . get_string('essayguard_medium', 'quiz_aigrader', $egscore) . '</strong>'
-                    . ' ' . get_string('essayguard_medium_advice', 'quiz_aigrader') . ' &nbsp;'
-                    . '<a href="' . $detailurl->out() . '" target="_blank" rel="noopener" class="aigrader-eg-link">'
-                    . get_string('essayguard_detail_link', 'quiz_aigrader') . ' &rarr;</a>'
-                    . '</span>'
-                    . '</div>';
-            }
-
-            // Two-column body: the learner's work on the left, the assessment on the right,
-            // so the assessor reads the response and the criteria side by side instead of
-            // scrolling between them. Collapses to one column on a narrow screen.
-            echo '<div class="aigrader-card-body">';
-            echo '<div class="aigrader-card-col aigrader-col-response">';
-
-            // Question section.
-            echo '<div class="aigrader-card-section aigrader-question-section">';
-            echo '<div class="aigrader-section-label">' . get_string('question', 'quiz_aigrader') . '</div>';
-            $formattedquestion = $r['questiondisplay'];
-            echo '<div class="aigrader-question-text">' . $formattedquestion . '</div>';
-            echo '</div>';
-
-            // Answer section.
-            echo '<div class="aigrader-card-section aigrader-answer-section">';
-            echo '<div class="aigrader-section-label">'
-                . get_string('learners_response', 'quiz_aigrader') . '</div>';
-            $formattedanswer = $this->format_student_answer($r['rawanswer'], $context);
-            echo '<div class="aigrader-answer-text" data-raw="' . s($r['rawanswer']) . '">'
-                . $formattedanswer . '</div>';
-            echo '</div>';
-
-            echo '</div>';
-
-            // Feedback and actions section - all essays are ungraded.
-            echo '<div class="aigrader-card-col aigrader-col-feedback">';
-            echo '<div class="aigrader-card-section aigrader-feedback-section">';
-            echo '<div class="aigrader-initial-actions ag-flex-between ag-flex-wrap ag-gap-md"'
-                . ' id="initial-actions-' . $r['rowid'] . '">';
-            if (!empty($r['attachmentonly'])) {
-                echo '<span class="aigrader-attachment-note">'
-                    . get_string('error_attachmentonly', 'quiz_aigrader') . '</span>';
-            } else {
-                echo '<span class="ag-text-muted">' . get_string('not_yet_graded', 'quiz_aigrader') . '</span>';
-            }
-            echo '<div class="aigrader-card-actions ag-flex-center ag-gap-md">';
-            echo '<span class="aigrader-grade aigrader-grade-pending" id="grade-' . $r['rowid'] . '">&mdash;</span>';
-            // An attachment-only response has no text for the AI to read, so the button is
-            // not offered at all rather than spending a credit to grade a filename.
-            if (empty($r['attachmentonly'])) {
-                echo '<button class="aigrader-btn aigrader-btn-sm aigrader-btn-success aigrader-grade-btn'
-                    . ' ag-btn-base ag-btn-success"
-                        data-qubaid="' . $r['qubaid'] . '"
-                        data-slot="' . $r['slot'] . '"
-                        data-cmid="' . $r['cmid'] . '"
-                        data-maxmark="' . $r['maxmark'] . '"
-                        data-questiontext="' . s($r['questionfull']) . '">'
-                    . get_string('ai_grade', 'quiz_aigrader') . '</button>';
-            }
-            echo '</div>';
-            echo '</div>';
-            echo '<div class="aigrader-feedback aigrader-feedback-hidden" id="feedback-' . $r['rowid'] . '"></div>';
-            echo '</div>';
-            echo '</div>';
-
-            // End card body.
-            echo '</div>';
-
-            // End detail row and this response's tbody.
-            echo '</td></tr>';
-            echo '</tbody>';
+            $templaterows[] = [
+                'rowid' => $r['rowid'],
+                'qubaid' => (int) $r['qubaid'],
+                'slot' => (int) $r['slot'],
+                'cmid' => (int) $r['cmid'],
+                'maxmark' => (string) $r['maxmark'],
+                'fullname' => $r['fullname'],
+                'email' => $r['email'],
+                'studentname_lc' => core_text::strtolower($r['fullname']),
+                'questiontext_lc' => core_text::strtolower($r['questionfull']),
+                'answer_lc' => core_text::strtolower($r['full']),
+                'questionnum' => $r['questionnum'],
+                'questionfull' => $r['questionfull'],
+                'truncated' => $r['truncated'],
+                'slotlabel' => get_string('essay_question_n', 'quiz_aigrader', $r['slot']),
+                // Both already passed through format_text(), which cleans them.
+                'questionhtml' => $r['questiondisplay'],
+                'answerhtml' => $this->format_student_answer(
+                    $this->answer_with_file_urls($r['rawanswer'], (int) $r['qubaid'], (int) $r['slot'], $context),
+                    $context
+                ),
+                'attachmentonly' => !empty($r['attachmentonly']),
+                'eg' => $egcontext,
+            ];
         }
 
-        echo '</table>';
-        echo html_writer::end_div();
-        // End cards container.
-        echo '</div>';
+        // Rendered from a template so a theme can override the queue (5.2.0).
+        echo $OUTPUT->render_from_template('quiz_aigrader/queue', [
+            'essayguard' => $egcolumn,
+            'colcount' => $colcount,
+            'rows' => $templaterows,
+        ]);
+    }
+
+    /**
+     * Turn the stored @@PLUGINFILE@@ placeholders in a learner's answer into real file URLs.
+     *
+     * An image or file the learner embedded in their essay is stored against the response step,
+     * and the stored text holds only a placeholder. Until 5.2.0 the marking card printed the
+     * placeholder, so the image showed as broken. The question usage is loaded only for an
+     * answer that actually holds one, so the queue stays one query for every other response.
+     *
+     * @param string $rawanswer The answer as stored.
+     * @param int $qubaid The question usage id.
+     * @param int $slot The slot in that usage.
+     * @param context $context The quiz context the files belong to.
+     * @return string The answer with working file URLs.
+     */
+    private function answer_with_file_urls(string $rawanswer, int $qubaid, int $slot, $context): string {
+        if (strpos($rawanswer, '@@PLUGINFILE@@') === false) {
+            return $rawanswer;
+        }
+        try {
+            $qa = question_engine::load_questions_usage_by_activity($qubaid)->get_question_attempt($slot);
+            $step = $qa->get_last_step_with_qt_var('answer');
+            return $qa->rewrite_response_pluginfile_urls($rawanswer, $context->id, 'answer', $step);
+        } catch (\Throwable $e) {
+            debugging('AI Essay Grader: response file URLs not rewritten: ' . $e->getMessage(), DEBUG_DEVELOPER);
+            return $rawanswer;
+        }
     }
 
     /**
@@ -1658,7 +1466,7 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
                     $q['maxmark']
                 );
             } catch (\Throwable $e) {
-                debugging('AI Grader: criteria check failed for question ' . $q['questionid'] . ': '
+                debugging('AI Essay Grader: criteria check failed for question ' . $q['questionid'] . ': '
                     . $e->getMessage(), DEBUG_DEVELOPER);
                 continue;
             }

@@ -15,13 +15,13 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Library callbacks for the AI Grader quiz report plugin.
+ * Library callbacks for the AI Essay Grader quiz report plugin.
  *
  * Quiz report plugins generally do not require lib.php callbacks.
  * All runtime functionality is implemented in report.php extending quiz_default_report.
  *
  * @package    quiz_aigrader
- * @copyright  2025 Essay Grader AI
+ * @copyright  2026 LMS Hosting Services
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 

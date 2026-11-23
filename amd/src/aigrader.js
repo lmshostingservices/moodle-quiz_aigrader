@@ -14,7 +14,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * AI Grader  -  clean AMD JS module.
+ * AI Essay Grader marking screen.
  *
  * Handles:
  *  - Fetching credits
@@ -23,10 +23,10 @@
  *  - Expand/collapse answers
  *
  * @module     quiz_aigrader/aigrader
- * @copyright  2026 LMS Labs
+ * @copyright  2026 LMS Hosting Services
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-define(['jquery', 'core/str', 'core/notification', 'core/log'], function($, Str, Notification, Log) {
+define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/log'], function($, Ajax, Str, Notification, Log) {
 
     let config = {};
     let strings = {};
@@ -48,7 +48,7 @@ define(['jquery', 'core/str', 'core/notification', 'core/log'], function($, Str,
         if (!config.debug) {
             return;
         }
-        Log.debug('[AI Grader] ' + msg, data ?? '');
+        Log.debug('[AI Essay Grader] ' + msg, data ?? '');
     }
 
     /**
@@ -1348,7 +1348,9 @@ define(['jquery', 'core/str', 'core/notification', 'core/log'], function($, Str,
             cmid: config.cmid,
             qubaid: qubaid,
             slot: slot,
-            language: config.language || ''
+            // The quiz's own feedback language, so the pill on the card names the language the
+            // feedback is written in, not the assessor's interface language.
+            language: $('#aigrader-feedback-language').val() || config.language || ''
         }, null, 'json')
         .done(resp => {
             log('GRADE response:', resp);
@@ -1757,37 +1759,24 @@ define(['jquery', 'core/str', 'core/notification', 'core/log'], function($, Str,
         $btn.prop('disabled', true)
             .html(`<span class="aigrader-spinner"></span> ${strings.saving}`);
 
-        // Use FormData to handle special characters (emojis) properly
-        const formData = new FormData();
-        formData.append('action', 'approve');
-        formData.append('sesskey', config.sesskey);
-        formData.append('cmid', config.cmid);
-        formData.append('qubaid', qubaid);
-        formData.append('slot', slot);
-        formData.append('mark', mark);
-        formData.append('feedbackhtml', feedbackHtml);
-        // Recorded on the decision so the feedback the learner received can be explained.
-        formData.append('policymode', config.fullMarksFeedback || 'strengths');
-        // The breakdown behind the mark, recorded with the decision.
-        const criteriaJson = $('#criteriadata-' + id).val();
-        if (criteriaJson) {
-            formData.append('criteria', criteriaJson);
-        }
-        // Present only once the assessor has acknowledged a flagged attempt. The server
-        // decides whether an acknowledgement was required; sending one never implies it was.
-        const acknowledgement = $(`#aigrader-ack-${id} textarea`).val();
-        if (acknowledgement) {
-            formData.append('acknowledgement', acknowledgement);
-        }
+        // Sent through Moodle's web service layer (quiz_aigrader_approve_mark, 5.2.0), which checks
+        // the session, the login and every parameter's type before the plugin's own checks run.
+        const args = {
+            cmid: Number(config.cmid),
+            qubaid: Number(qubaid),
+            slot: Number(slot),
+            mark: String(mark),
+            feedbackhtml: feedbackHtml,
+            // Recorded on the decision so the feedback the learner received can be explained.
+            policymode: config.fullMarksFeedback || 'strengths',
+            // The breakdown behind the mark, recorded with the decision.
+            criteria: $('#criteriadata-' + id).val() || '',
+            // Present only once the assessor has acknowledged a flagged attempt. The server
+            // decides whether an acknowledgement was required; sending one never implies it was.
+            acknowledgement: $(`#aigrader-ack-${id} textarea`).val() || ''
+        };
 
-        $.ajax({
-            url: config.ajaxurl,
-            type: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            dataType: 'json'
-        })
+        Ajax.call([{methodname: 'quiz_aigrader_approve_mark', args: args}])[0]
         .done(resp => {
             log('APPROVE response:', resp);
 
@@ -1858,12 +1847,11 @@ define(['jquery', 'core/str', 'core/notification', 'core/log'], function($, Str,
                 lockNextApproveButton();
             }, 1500);
         })
-        .fail((xhr) => {
+        .fail((ex) => {
             $btn.prop('disabled', false).html(strings.approve_save);
-            // Surface the server's error message (e.g. 'Session expired') when available,
-            // instead of always showing a generic 'Connection error'.
-            var serverMsg = (xhr && xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : null;
-            showAlert('error', strings.error, serverMsg || strings.error_connection);
+            // Surface the server's own reason (for example an expired session) when there is one,
+            // instead of always showing a generic connection error.
+            showAlert('error', strings.error, (ex && ex.message) || strings.error_connection);
         });
     }
 
@@ -2385,6 +2373,23 @@ define(['jquery', 'core/str', 'core/notification', 'core/log'], function($, Str,
      * @return {void}
      */
     function registerHandlers() {
+        // Remember whether this assessor keeps the setup panel open. Browser storage can be
+        // unavailable or full, so a failure simply keeps the default (folded).
+        const setup = document.getElementById('aigrader-setup');
+        if (setup) {
+            try {
+                setup.open = window.localStorage.getItem('quiz_aigrader_setup_open') === '1';
+            } catch (e) {
+                setup.open = false;
+            }
+            setup.addEventListener('toggle', () => {
+                try {
+                    window.localStorage.setItem('quiz_aigrader_setup_open', setup.open ? '1' : '0');
+                } catch (e) {
+                    // Nothing to do: the panel still opens and closes.
+                }
+            });
+        }
         $(document).on('click', '#aigrader-refresh-btn', fetchCredits);
 
         $(document).on('click', '.aigrader-expand-btn', function(e) {

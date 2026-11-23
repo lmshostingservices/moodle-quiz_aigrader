@@ -20,15 +20,15 @@
  * The release history is maintained in CHANGELOG.md.
  *
  * @package    quiz_aigrader
- * @copyright  2026 LMS Labs
+ * @copyright  2026 LMS Hosting Services
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'quiz_aigrader';
-$plugin->version = 2026112300;
+$plugin->version = 2026112400;
 $plugin->requires = 2024042200;
 $plugin->supported = [404, 503];
 $plugin->maturity = MATURITY_STABLE;
-$plugin->release = '5.1.0';
+$plugin->release = '5.2.0';

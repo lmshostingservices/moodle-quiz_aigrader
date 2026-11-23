@@ -24,7 +24,7 @@ use quiz_aigrader\local\criteria;
  * Tests for criteria an assessor confirms per question (5.0.4).
  *
  * @package    quiz_aigrader
- * @copyright  2026 LMS Labs
+ * @copyright  2026 LMS Hosting Services
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \quiz_aigrader\local\confirmed
  */

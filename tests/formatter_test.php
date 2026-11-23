@@ -119,23 +119,33 @@ final class formatter_test extends \advanced_testcase {
      * The language pill names the language an assessor is approving feedback in.
      */
     public function test_language_label(): void {
-        $this->assertSame(
-            get_string('language_th', 'quiz_aigrader'),
-            formatter::language_label('th')
-        );
-        $this->assertSame(
-            get_string('language_en', 'quiz_aigrader'),
-            formatter::language_label('en')
-        );
+        $names = get_string_manager()->get_list_of_languages();
+        $this->assertSame($names['th'], formatter::language_label('th'));
+        $this->assertSame($names['en'], formatter::language_label('en'));
     }
 
     /**
-     * A region suffix still resolves to the base language.
+     * A regional code is named with its country, and an unlisted region falls back to its base language.
      */
     public function test_language_label_handles_regions(): void {
-        $expected = get_string('language_en', 'quiz_aigrader');
-        $this->assertSame($expected, formatter::language_label('en-AU'));
-        $this->assertSame($expected, formatter::language_label('en_US'));
+        $names = get_string_manager()->get_list_of_languages();
+        $countries = get_string_manager()->get_list_of_countries(true);
+        $this->assertSame($names['en'] . ' (' . $countries['AU'] . ')', formatter::language_label('en-AU'));
+        $this->assertSame($names['en'] . ' (' . $countries['US'] . ')', formatter::language_label('en_US'));
+        $this->assertSame($names['fr'], formatter::language_label('fr-CA'));
+    }
+
+    /**
+     * The site default and every quiz offer the same list (5.2.0).
+     */
+    public function test_one_language_list(): void {
+        $languages = formatter::feedback_languages();
+        $this->assertCount(count(formatter::FEEDBACK_LANGUAGES), $languages);
+        $this->assertArrayHasKey('en-AU', $languages);
+        $this->assertArrayHasKey('th', $languages);
+        foreach ($languages as $code => $name) {
+            $this->assertNotSame('', trim($name), $code);
+        }
     }
 
     /**
