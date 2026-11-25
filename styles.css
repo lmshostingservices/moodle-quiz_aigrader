@@ -4580,3 +4580,13 @@
     outline-offset: 2px;
     box-shadow: var(--lx-ring);
 }
+
+/* The learner feedback card lays out its rows with a small table (it must survive Moodle's
+   HTML cleaner). Keep the theme's table borders and stripes off it in the preview. */
+.aigrader-container .aigrader-feedback table,
+.aigrader-container .aigrader-feedback tr,
+.aigrader-container .aigrader-feedback td {
+    border: 0;
+    background-color: transparent;
+    box-shadow: none;
+}

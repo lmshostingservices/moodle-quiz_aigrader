@@ -291,7 +291,11 @@ class formatter {
         $current = null;
         foreach (preg_split('/\n+/', $text) as $line) {
             $line = trim($line);
-            if ($line === '' || stripos($line, 'marked against your grading criteria') !== false) {
+            if (
+                $line === ''
+                || stripos($line, 'marked against your grading criteria') !== false
+                || stripos($line, 'marked against the criteria for this question') !== false
+            ) {
                 continue;
             }
             if (preg_match('~^(.+?)\s+(\d+(?:\.\d+)?)\s*/\s*(\d+(?:\.\d+)?)$~u', $line)) {

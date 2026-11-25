@@ -932,10 +932,24 @@ try {
             if (is_array($feedbacktext) || is_object($feedbacktext)) {
                 foreach ((array)$feedbacktext as $sectionkey => $sectionvalue) {
                     $normalised = strtolower(str_replace([' ', '-'], '_', (string)$sectionkey));
+                    $sectiontype = $sectiontypemap[$normalised] ?? 'info';
+                    // The plugin's own headings for the sections it knows, in sentence case like
+                    // the rest of Moodle; any other section keeps its own name, in sentence case.
+                    $headingids = [
+                        'success' => 'feedback_strengths',
+                        'warning' => 'feedback_improvements',
+                        'next_steps' => 'feedback_nextsteps',
+                        'nextsteps' => 'feedback_nextsteps',
+                        'info' => 'feedback_suggestions',
+                    ];
+                    $headingid = $headingids[$normalised] ?? $headingids[$sectiontype];
+                    $heading = isset($sectiontypemap[$normalised])
+                        ? get_string($headingid, 'quiz_aigrader')
+                        : clean_param(ucfirst(strtolower(str_replace('_', ' ', (string)$sectionkey))), PARAM_TEXT);
                     $feedbacksections[] = [
                         'key' => $normalised,
-                        'type' => $sectiontypemap[$normalised] ?? 'info',
-                        'heading' => ucwords(str_replace('_', ' ', (string)$sectionkey)),
+                        'type' => $sectiontype,
+                        'heading' => $heading,
                         'items' => is_array($sectionvalue)
                             ? array_values(array_map('strval', $sectionvalue))
                             : [(string)$sectionvalue],
@@ -945,7 +959,7 @@ try {
                 // Convert structured feedback to a formatted string.
                 $parts = [];
                 foreach ((array)$feedbacktext as $key => $value) {
-                    $header = ucwords(str_replace('_', ' ', $key));
+                    $header = ucfirst(strtolower(str_replace('_', ' ', $key)));
                     if (is_array($value)) {
                         $items = implode("\n- ", $value);
                         $parts[] = "$header:\n- $items";

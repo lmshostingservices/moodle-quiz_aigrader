@@ -52,9 +52,9 @@ Feature: Graders review and approve AI suggestions in the Essay Grader
     Given the Essay Grader service is simulated
     And I am on the "Task 2 Knowledge quiz" "quiz_aigrader > Report" page logged in as "teacher1"
     When I ask the Essay Grader to suggest a mark for "Priya Sharma"
-    And I wait until "Approve & Save to Gradebook" "button" exists
+    And I wait until "Approve and save to gradebook" "button" exists
     Then I should see "You explained what consultation means for workers."
-    And I click on "Approve & Save to Gradebook" "button"
+    And I click on "Approve and save to gradebook" "button"
     And I wait until ".aigrader-btn-saved" "css_element" exists
     And I am on the "Task 2 Knowledge quiz > student1 > Attempt 1" "mod_quiz > Attempt review" page
     And I should see "This feedback was drafted with the help of AI, then checked and approved by Sarah Mitchell"
@@ -64,7 +64,7 @@ Feature: Graders review and approve AI suggestions in the Essay Grader
     And I am on the "Task 2 Knowledge quiz" "quiz_aigrader > Report" page logged in as "teacher1"
     When I ask the Essay Grader to suggest a mark for "Priya Sharma"
     Then I should see "The grading service did not accept this site's API key"
-    And "Approve & Save to Gradebook" "button" should not exist
+    And "Approve and save to gradebook" "button" should not exist
 
   Scenario: An administrator pauses AI suggestions for the whole site
     Given the Essay Grader service is simulated

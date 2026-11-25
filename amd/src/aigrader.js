@@ -274,7 +274,8 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/log', 'cor
      * The summary is plain text taken from the approved feedback: a criterion line such as
      * "Defines active listening 0 / 2" followed by its comment. Shown as raw text it read as
      * a wall of lines; here each criterion becomes a row with its score in a pill, its comment
-     * underneath, and the repeated "marked against your grading criteria" heading is dropped.
+     * underneath, and the repeated "marked against ... criteria" heading is dropped (the wording
+     * before 5.3.0 included, so older feedback is handled too).
      *
      * @param {String} text The saved summary.
      * @return {String} HTML.
@@ -291,7 +292,7 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/log', 'cor
         };
         for (const raw of String(text || '').split('\n')) {
             const line = raw.trim();
-            if (line === '' || /marked against your grading criteria/i.test(line)) {
+            if (line === '' || /marked against (your grading criteria|the criteria for this question)/i.test(line)) {
                 continue;
             }
             const m = line.match(SCORE);
@@ -622,7 +623,7 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/log', 'cor
         if (all('extracted')) {
             return strings.criteria_heading_extracted || strings.criteria_heading;
         }
-        return strings.criteria_heading || 'AI feedback · marked against your grading criteria';
+        return strings.criteria_heading || 'AI feedback · marked against the criteria for this question';
     }
 
     /**
@@ -669,13 +670,15 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/log', 'cor
                 + `border:1px solid #e3e8ef;border-radius:8px;">`
                 // A two-cell table, not flex: this HTML is cleaned before it is saved, and the
                 // cleaner removes display rules.
-                + `<table role="presentation" style="border-collapse:collapse;width:100%;margin:0 0 9px;"><tr>`
-                + `<td style="padding:0;vertical-align:bottom;font-size:14.5px;font-weight:600;color:#202124;">`
+                + `<table class="table-reboot" role="presentation"`
+                + ` style="border:0;border-collapse:collapse;width:100%;margin:0 0 9px;">`
+                + `<tbody style="border:0;"><tr style="border:0;">`
+                + `<td style="border:0;padding:0;vertical-align:bottom;font-size:14.5px;font-weight:600;color:#202124;">`
                 + escapeHtml(c.label) + `</td>`
-                + `<td style="padding:0 0 0 12px;vertical-align:bottom;text-align:right;white-space:nowrap;`
+                + `<td style="border:0;padding:0 0 0 12px;vertical-align:bottom;text-align:right;white-space:nowrap;`
                 + `font-size:14.5px;font-weight:700;color:#202124;">`
                 + escapeHtml(scoreLabel) + `</td>`
-                + `</tr></table>`
+                + `</tr></tbody></table>`
                 + `<div role="img" aria-label="${escapeHtml(c.label)}: ${escapeHtml(scoreLabel)}"`
                 + ` style="height:6px;background:#e8eaed;border-radius:999px;overflow:hidden;">`
                 + `<div style="height:6px;width:${pct}%;background:#21a44a;border-radius:999px;"></div>`
@@ -1150,18 +1153,18 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/log', 'cor
             if (section.items.length > 0) {
                 // Each item carries a small marker in the section's colour: a tick for what went
                 // well, an upward arrow for what to improve, a forward arrow for next time.
-                html += '<table class="feedback-card-list" role="presentation" ' +
-                    'style="border-collapse:collapse;width:100%;margin:0;">';
+                html += '<table class="feedback-card-list table-reboot" role="presentation" ' +
+                    'style="border:0;border-collapse:collapse;width:100%;margin:0;"><tbody style="border:0;">';
                 for (const item of section.items) {
-                    html += '<tr class="feedback-card-item">';
-                    html += '<td class="feedback-bullet" style="width:22px;padding:0 0 6px 0;vertical-align:top;' +
+                    html += '<tr class="feedback-card-item" style="border:0;">';
+                    html += '<td class="feedback-bullet" style="width:22px;border:0;padding:0 0 6px 0;vertical-align:top;' +
                         'font-weight:700;font-size:14px;line-height:1.65;color:' + s.accent + ';">' +
                         (bullets[section.type] || bullets.info) + '</td>';
-                    html += '<td style="padding:0 0 6px 0;vertical-align:top;font-size:14px;line-height:1.65;' +
+                    html += '<td style="border:0;padding:0 0 6px 0;vertical-align:top;font-size:14px;line-height:1.65;' +
                         'color:' + TEXT + ';">' + escapeHtml(item) + '</td>';
                     html += '</tr>';
                 }
-                html += '</table>';
+                html += '</tbody></table>';
             }
 
             html += '</div>';

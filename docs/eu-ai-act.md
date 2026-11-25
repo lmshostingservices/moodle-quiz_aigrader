@@ -3,7 +3,7 @@
 How Essay Grader (`quiz_aigrader`) 5.3.0 lines up with the EU Artificial Intelligence Act,
 Regulation (EU) 2024/1689, as amended by the Digital Omnibus on AI, Regulation (EU) 2026/1744.
 
-Status: 24 November 2026. This is the provider's technical analysis, not legal advice. Each
+Status: 25 November 2026. This is the provider's technical analysis, not legal advice. Each
 organisation that uses Essay Grader in the EU should confirm its own position with its
 advisers.
 
@@ -85,7 +85,10 @@ general-purpose AI model duties (Arts 53, 55), not the deployer.
 | Machine-readable marking | 50(2) | The notice carries the class `quiz-aigrader-ai-notice`, and the decision record marks each result as AI-assisted |
 | Explanation on request | 86 | The decision record and per-criterion feedback give the grader what they need to explain a result |
 | AI literacy | 4 | **New:** "Using AI suggestions well" panel on the grading screen: limits, bias, responsibility and how to report problems |
-| Privacy | GDPR | Moodle privacy API implemented; learner names are not sent to the service |
+| Accuracy and robustness | 15 | A service error, refused key, timeout or unreadable reply is shown as an error and never offered as a mark; suggested marks are clamped to the question's scale; "Grade all" stops on failures that would repeat and reports partial results honestly |
+| Cybersecurity | 15(5) | API key stored encrypted; https only; redirects never followed; every reply from the service is validated and cleaned before use; approved feedback cleaned on the server before it reaches the learner |
+| Privacy | GDPR | Moodle privacy API with complete metadata; learner names are not sent to the service; records removed when the quiz, attempt or user is deleted, with a daily clean-up for anything Moodle's events miss |
+| Accessibility | 16(l) | No WCAG 2.2 AA violations (axe-core) on any screen in light or dark mode; fully keyboard-operable |
 
 ## 5. Instructions for use (basis for Article 13)
 

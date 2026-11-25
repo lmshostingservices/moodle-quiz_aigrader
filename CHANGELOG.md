@@ -26,6 +26,17 @@ LMS Labs premium style. No database changes. Tested on Moodle 4.5, 5.1 and 5.3, 
   contrast (white on blue now 4.9:1) and blue text on dark surfaces. The statistics panel opens
   from the keyboard, and every control shows a visible focus ring.
 
+## Wording and learner card
+
+- Labels are in sentence case, as Moodle asks ("Approve and save to gradebook", "Grading time
+  statistics"), and the learner's feedback sections read "What you did well", "What needs
+  improvement" and "Next steps".
+- The learner feedback heading no longer says "your grading criteria" (it read as the learner's own
+  criteria); it now says "marked against the criteria for this question". Older feedback with the
+  previous wording is still recognised.
+- The learner feedback card keeps its look in every theme: its layout table carries its own border
+  reset, so Boost's table borders no longer show inside it.
+
 ## Security and privacy
 
 - Approved feedback is cleaned on the server before it is saved, because Moodle shows question
