@@ -76,6 +76,7 @@ general-purpose AI model duties (Arts 53, 55), not the deployer.
 | Duty | Article | How Essay Grader supports it |
 |---|---|---|
 | Human oversight by design | 14 | Nothing reaches the gradebook until a grader approves it. The grader can change the mark and the feedback first |
+| Oversight from the dashboard | 14, 26(5) | The AI Essay Grader dashboard block (block_aigrader_dashboard 2.5.0) puts overdue essays first with how long they have waited, reminds graders that AI suggestions are drafts until approved, and shows when AI suggestions are paused. It shows no AI output and never changes a mark |
 | Guard against automation bias | 14(4)(b) | Minimum review time before Approve unlocks; acknowledgement step; review time logged per decision |
 | Understand and interpret the output | 14(4)(c), 86 | Per-criterion breakdown against confirmed criteria; the grader sees why each mark was suggested |
 | Input relevant to the purpose | 26(4) | Marking criteria check: criteria are proposed from the question and must be confirmed before they are used |
