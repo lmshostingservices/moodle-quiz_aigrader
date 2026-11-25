@@ -23,10 +23,11 @@
  * adjust anything and was one of three issues holding the plugin out of the Moodle
  * plugins directory.
  *
- * Deliberately light-only. A Moodle plugin sits inside the site's theme, so a
- * prefers-color-scheme block here would render a dark panel inside a light page on every
- * theme that does not follow the OS setting. Colours come from the tokens below, so a
- * theme that wants to restyle the plugin overrides those and nothing else.
+ * Built on the Moodle Design System (5.3.0): every colour, radius, space and component
+ * comes from MDS tokens and components, finished in the LMS Labs premium style. Dark mode
+ * follows the theme (data-bs-theme="dark", as Boost sets it in Moodle 5.3), never the
+ * operating system, so a light theme never shows a dark panel. A theme that wants to
+ * restyle the plugin overrides the --mds-* or --ag-* tokens and nothing else.
  *
  * Feedback delivered to the learner is NOT styled here. It is written with inline styles
  * by amd/src/aigrader.js, because it is stored in the database and rendered on the quiz
@@ -37,50 +38,1809 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+/* ---------------------------------------------------------------------------
+ * Moodle Design System foundation (5.3.0)
+ *
+ * Tokens and the Button, Badge, Alert and Close button components from
+ * @moodlehq/design-system 5.5.0 (GPL-3.0), scoped to this plugin's own containers so they
+ * never restyle the rest of the site, then the LMS Labs premium finish. The tokens are a
+ * fallback for Moodle before 5.3; from 5.3 the plugin uses core's, so it follows the site's
+ * light and dark colour modes. Generated from the package: do not edit by hand.
+ * ------------------------------------------------------------------------ */
+
+/* MDS tokens, light values. Moodle 5.3 and later ship these in core (with the dark
+   palette), so this block only applies where the plugin adds .aigrader-mds-fallback: on
+   older Moodle, or a theme that does not load them (see \quiz_aigrader\local\design). */
+.aigrader-mds-fallback {
+    --mds-typography-line-height-paragraph-lg: 2.5rem;
+    --mds-typography-line-height-paragraph-base: 1.5rem;
+    --mds-typography-line-height-paragraph-sm: 1.0875rem;
+    --mds-typography-line-height-paragraph-xs: 0.75rem;
+    --mds-typography-line-height-headings-h6: 1.2rem;
+    --mds-typography-line-height-headings-h5: 1.5rem;
+    --mds-typography-line-height-headings-h4: 1.8rem;
+    --mds-typography-line-height-headings-h3: 2.1rem;
+    --mds-typography-line-height-headings-h2: 2.4rem;
+    --mds-typography-line-height-headings-h1: 3rem;
+    --mds-typography-line-height-displays-d6: 3rem;
+    --mds-typography-line-height-displays-d5: 3.6rem;
+    --mds-typography-line-height-displays-d4: 4.2rem;
+    --mds-typography-line-height-displays-d3: 4.8rem;
+    --mds-typography-line-height-displays-d2: 5.4rem;
+    --mds-typography-line-height-displays-d1: 6rem;
+    --mds-typography-letter-spacing-none: 0;
+    --mds-typography-font-weight-black: 900;
+    --mds-typography-font-weight-extrabold: 800;
+    --mds-typography-font-weight-bold: 700;
+    --mds-typography-font-weight-semibold: 600;
+    --mds-typography-font-weight-medium: 500;
+    --mds-typography-font-weight-regular: 400;
+    --mds-typography-font-weight-light: 300;
+    --mds-typography-font-weight-extralight: 200;
+    --mds-typography-font-weight-thin: 100;
+    --mds-typography-font-size-0: 0;
+    --mds-typography-font-size-1: 1rem;
+    --mds-typography-font-size-2: 2rem;
+    --mds-typography-font-size-2-5: 2.5rem;
+    --mds-typography-font-size-1-75: 1.75rem;
+    --mds-typography-font-size-1-5: 1.5rem;
+    --mds-typography-font-size-1-25: 1.25rem;
+    --mds-typography-font-size-0-875: 0.875rem;
+    --mds-typography-font-family-monospace: Menlo;
+    --mds-typography-font-family-sans-serif-jp: Noto Sans JP;
+    --mds-typography-font-family-sans-serif: Noto Sans;
+    --mds-scale-0: 0;
+    --mds-scale-50: 0.125rem;
+    --mds-scale-100: 0.25rem;
+    --mds-scale-200: 0.375rem;
+    --mds-scale-300: 0.5rem;
+    --mds-scale-400: 0.75rem;
+    --mds-scale-500: 0.875rem;
+    --mds-scale-600: 1rem;
+    --mds-scale-700: 1.25rem;
+    --mds-scale-800: 1.5rem;
+    --mds-scale-900: 1.75rem;
+    --mds-scale-1000: 2rem;
+    --mds-scale-1100: 2.5rem;
+    --mds-scale-1200: 3rem;
+    --mds-scale-1300: 3.5rem;
+    --mds-scale-1400: 4rem;
+    --mds-scale-1500: 4.5rem;
+    --mds-scale-1600: 5rem;
+    --mds-scale-1700: 6rem;
+    --mds-scale-1800: 50rem;
+    --mds-color-yellow-50: #fdf7ed;
+    --mds-color-yellow-100: #fcefdc;
+    --mds-color-yellow-200: #f9deb8;
+    --mds-color-yellow-300: #f6ce95;
+    --mds-color-yellow-400: #f3bd71;
+    --mds-color-yellow-500: #f0ad4e;
+    --mds-color-yellow-600: #c08a3e;
+    --mds-color-yellow-700: #90682f;
+    --mds-color-yellow-800: #60451f;
+    --mds-color-yellow-900: #302310;
+    --mds-color-teal-100: #d2f4ea;
+    --mds-color-teal-200: #a6e9d5;
+    --mds-color-teal-300: #79dfc1;
+    --mds-color-teal-400: #4dd4ac;
+    --mds-color-teal-500: #20c997;
+    --mds-color-teal-600: #1aa179;
+    --mds-color-teal-700: #13795b;
+    --mds-color-teal-800: #0d503c;
+    --mds-color-teal-900: #06281e;
+    --mds-color-red-50: #faeae9;
+    --mds-color-red-100: #f4d6d2;
+    --mds-color-red-200: #eaada6;
+    --mds-color-red-300: #df8379;
+    --mds-color-red-400: #d55a4d;
+    --mds-color-red-500: #ca3120;
+    --mds-color-red-600: #a2271a;
+    --mds-color-red-700: #791d13;
+    --mds-color-red-800: #51140d;
+    --mds-color-red-900: #280a06;
+    --mds-color-purple-100: #dfd8e5;
+    --mds-color-purple-200: #c0b1cb;
+    --mds-color-purple-300: #a08bb0;
+    --mds-color-purple-400: #816496;
+    --mds-color-purple-500: #613d7c;
+    --mds-color-purple-600: #4e3163;
+    --mds-color-purple-700: #3a254a;
+    --mds-color-purple-800: #271832;
+    --mds-color-purple-900: #130c19;
+    --mds-color-pink-100: #f8d1e3;
+    --mds-color-pink-200: #f1a3c7;
+    --mds-color-pink-300: #e976ac;
+    --mds-color-pink-400: #e24890;
+    --mds-color-pink-500: #db1a74;
+    --mds-color-pink-600: #af155d;
+    --mds-color-pink-700: #831046;
+    --mds-color-pink-800: #580a2e;
+    --mds-color-pink-900: #2c0517;
+    --mds-color-orange-100: #ffe3d1;
+    --mds-color-orange-200: #ffc8a3;
+    --mds-color-orange-300: #ffac74;
+    --mds-color-orange-400: #ff9146;
+    --mds-color-orange-500: #ff7518;
+    --mds-color-orange-600: #cc5e13;
+    --mds-color-orange-700: #99460e;
+    --mds-color-orange-800: #662f0a;
+    --mds-color-orange-900: #331705;
+    --mds-color-indigo-100: #e0cffc;
+    --mds-color-indigo-200: #c29ffa;
+    --mds-color-indigo-300: #a370f7;
+    --mds-color-indigo-400: #8540f5;
+    --mds-color-indigo-500: #6610f2;
+    --mds-color-indigo-600: #520dc2;
+    --mds-color-indigo-700: #3d0a91;
+    --mds-color-indigo-800: #290661;
+    --mds-color-indigo-900: #140330;
+    --mds-color-green-50: #ebf2ea;
+    --mds-color-green-100: #d7e4d6;
+    --mds-color-green-200: #aecaad;
+    --mds-color-green-300: #86af84;
+    --mds-color-green-400: #5d955b;
+    --mds-color-green-500: #357a32;
+    --mds-color-green-600: #2a6228;
+    --mds-color-green-700: #20491e;
+    --mds-color-green-800: #153114;
+    --mds-color-green-900: #0b180a;
+    --mds-color-gray-100: #f8f9fa;
+    --mds-color-gray-200: #e9ecef;
+    --mds-color-gray-300: #dee2e6;
+    --mds-color-gray-400: #ced4da;
+    --mds-color-gray-500: #8f959e;
+    --mds-color-gray-600: #6a737b;
+    --mds-color-gray-700: #495057;
+    --mds-color-gray-800: #343a40;
+    --mds-color-gray-900: #1d2125;
+    --mds-color-gray-black: #000;
+    --mds-color-gray-white: #fff;
+    --mds-color-cyan-50: #e5f2f4;
+    --mds-color-cyan-100: #cce6ea;
+    --mds-color-cyan-200: #99cdd5;
+    --mds-color-cyan-300: #66b3c0;
+    --mds-color-cyan-400: #339aab;
+    --mds-color-cyan-500: #008196;
+    --mds-color-cyan-600: #006778;
+    --mds-color-cyan-700: #004d5a;
+    --mds-color-cyan-800: #00343c;
+    --mds-color-cyan-900: #001a1e;
+    --mds-color-blue-50: #e7f0f9;
+    --mds-color-blue-100: #cfe2f2;
+    --mds-color-blue-200: #9fc4e5;
+    --mds-color-blue-300: #6fa7d9;
+    --mds-color-blue-400: #3f89cc;
+    --mds-color-blue-500: #0f6cbf;
+    --mds-color-blue-600: #0c5699;
+    --mds-color-blue-700: #094173;
+    --mds-color-blue-800: #062b4c;
+    --mds-color-blue-900: #031626;
+    --mds-spacing-offset: 0.0625rem;
+    --mds-stroke-weight-xxl: 5px;
+    --mds-stroke-weight-xl: 4px;
+    --mds-stroke-weight-lg: 3px;
+    --mds-stroke-weight-md: 2px;
+    --mds-stroke-weight-sm: 1px;
+    --mds-color-lg: rgba(0, 0, 0, 0.17);
+    --mds-color-md: rgba(0, 0, 0, 0.15);
+    --mds-color-sm: rgba(0, 0, 0, 0.08);
+    --mds-border-translucent: rgba(0, 0, 0, 0);
+    --mds-breakpoints-xxl: 87.5rem;
+    --mds-breakpoints-xl: 75rem;
+    --mds-breakpoints-lg: 62rem;
+    --mds-breakpoints-md: 48rem;
+    --mds-breakpoints-sm: 36rem;
+    --mds-line-height-paragraph-lead: var(--mds-typography-line-height-paragraph-lg);
+    --mds-line-height-paragraph-default: var(--mds-typography-line-height-paragraph-base);
+    --mds-line-height-paragraph-small: var(--mds-typography-line-height-paragraph-sm);
+    --mds-line-height-paragraph-xs: var(--mds-typography-line-height-paragraph-xs);
+    --mds-line-height-headings-1: var(--mds-typography-line-height-headings-h1);
+    --mds-line-height-headings-2: var(--mds-typography-line-height-headings-h2);
+    --mds-line-height-headings-3: var(--mds-typography-line-height-headings-h3);
+    --mds-line-height-headings-4: var(--mds-typography-line-height-headings-h4);
+    --mds-line-height-headings-5: var(--mds-typography-line-height-headings-h5);
+    --mds-line-height-headings-6: var(--mds-typography-line-height-headings-h6);
+    --mds-line-height-displays-1: var(--mds-typography-line-height-displays-d1);
+    --mds-line-height-displays-2: var(--mds-typography-line-height-displays-d2);
+    --mds-line-height-displays-3: var(--mds-typography-line-height-displays-d3);
+    --mds-line-height-displays-4: var(--mds-typography-line-height-displays-d4);
+    --mds-line-height-displays-5: var(--mds-typography-line-height-displays-d5);
+    --mds-line-height-displays-6: var(--mds-typography-line-height-displays-d6);
+    --mds-letter-spacing-default: var(--mds-typography-letter-spacing-none);
+    --mds-font-weight-bold: var(--mds-typography-font-weight-bold);
+    --mds-font-weight-semibold: var(--mds-typography-font-weight-semibold);
+    --mds-font-weight-medium: var(--mds-typography-font-weight-medium);
+    --mds-font-weight-regular: var(--mds-typography-font-weight-regular);
+    --mds-font-weight-light: var(--mds-typography-font-weight-light);
+    --mds-font-size-paragraph-lead: var(--mds-typography-font-size-1-25);
+    --mds-font-size-paragraph-default: var(--mds-typography-font-size-1);
+    --mds-font-size-paragraph-small: var(--mds-typography-font-size-0-875);
+    --mds-font-size-headings-1: var(--mds-typography-font-size-2-5);
+    --mds-font-size-headings-2: var(--mds-typography-font-size-2);
+    --mds-font-size-headings-3: var(--mds-typography-font-size-1-75);
+    --mds-font-size-headings-4: var(--mds-typography-font-size-1-5);
+    --mds-font-size-headings-5: var(--mds-typography-font-size-1-25);
+    --mds-font-size-headings-6: var(--mds-typography-font-size-1);
+    --mds-font-size-displays-1: var(--mds-scale-1600);
+    --mds-font-size-displays-2: var(--mds-scale-1500);
+    --mds-font-size-displays-3: var(--mds-scale-1400);
+    --mds-font-size-displays-4: var(--mds-scale-1300);
+    --mds-font-size-displays-5: var(--mds-scale-1200);
+    --mds-font-size-displays-6: var(--mds-scale-1100);
+    --mds-font-family-code: var(--mds-typography-font-family-monospace);
+    --mds-font-family-base-jp: var(--mds-typography-font-family-sans-serif-jp);
+    --mds-font-family-base: var(--mds-typography-font-family-sans-serif);
+    --mds-switch-track-padding: var(--mds-scale-50);
+    --mds-spacing-xxl: var(--mds-scale-1200);
+    --mds-spacing-xl: var(--mds-scale-1000);
+    --mds-spacing-lg: var(--mds-scale-700);
+    --mds-spacing-sm: var(--mds-scale-400);
+    --mds-spacing-xxs: var(--mds-scale-100);
+    --mds-spacing-md: var(--mds-scale-600);
+    --mds-spacing-xs: var(--mds-scale-300);
+    --mds-spacing-none: var(--mds-scale-0);
+    --mds-border-radius-pill: var(--mds-scale-1800);
+    --mds-border-radius-xxl: var(--mds-scale-1000);
+    --mds-border-radius-xl: var(--mds-scale-600);
+    --mds-border-radius-lg: var(--mds-scale-400);
+    --mds-border-radius-md: var(--mds-scale-300);
+    --mds-border-radius-sm: var(--mds-scale-200);
+    --mds-border-radius-xs: var(--mds-scale-100);
+    --mds-border-radius-none: var(--mds-scale-0);
+    --mds-offset-lg: var(--mds-scale-600);
+    --mds-offset-md: var(--mds-scale-300);
+    --mds-offset-sm: var(--mds-scale-50);
+    --mds-blur-lg: var(--mds-scale-1200);
+    --mds-blur-md: var(--mds-scale-600);
+    --mds-blur-sm: var(--mds-scale-100);
+    --mds-text-inverse: var(--mds-color-gray-100);
+    --mds-text-danger-disabled: var(--mds-color-red-300);
+    --mds-text-danger: var(--mds-color-red-500);
+    --mds-text-emphasis: var(--mds-color-gray-black);
+    --mds-text-muted: var(--mds-color-gray-600);
+    --mds-text-subtle: var(--mds-color-gray-700);
+    --mds-text-default: var(--mds-color-gray-900);
+    --mds-text-link-primary-disabled: var(--mds-color-blue-300);
+    --mds-text-feedback-danger: var(--mds-color-red-800);
+    --mds-text-feedback-warning: var(--mds-color-yellow-800);
+    --mds-text-feedback-info: var(--mds-color-cyan-800);
+    --mds-text-feedback-success: var(--mds-color-green-800);
+    --mds-text-feedback-secondary: var(--mds-color-gray-800);
+    --mds-text-feedback-primary: var(--mds-color-blue-800);
+    --mds-focus-danger: var(--mds-color-red-200);
+    --mds-border-subtle: var(--mds-color-gray-200);
+    --mds-border-default: var(--mds-color-gray-300);
+    --mds-border-interactive-secondary-disabled: var(--mds-color-gray-300);
+    --mds-border-interactive-secondary-active: var(--mds-color-gray-700);
+    --mds-border-interactive-secondary-hover: var(--mds-color-gray-600);
+    --mds-border-interactive-secondary-default: var(--mds-color-gray-400);
+    --mds-border-interactive-primary-disabled: var(--mds-color-blue-300);
+    --mds-border-interactive-primary-active: var(--mds-color-blue-600);
+    --mds-border-interactive-danger-disabled: var(--mds-color-red-300);
+    --mds-border-interactive-danger-active: var(--mds-color-red-600);
+    --mds-border-feedback-danger: var(--mds-color-red-200);
+    --mds-border-feedback-warning: var(--mds-color-yellow-200);
+    --mds-border-feedback-info: var(--mds-color-cyan-200);
+    --mds-border-feedback-success: var(--mds-color-green-200);
+    --mds-border-feedback-secondary: var(--mds-color-gray-200);
+    --mds-border-feedback-primary: var(--mds-color-blue-200);
+    --mds-bg-switch-track-disabled: var(--mds-color-gray-200);
+    --mds-bg-switch-track-hover: var(--mds-color-gray-400);
+    --mds-bg-switch-track-default: var(--mds-color-gray-300);
+    --mds-bg-switch-thumb-disabled: var(--mds-color-gray-500);
+    --mds-bg-switch-thumb-hover: var(--mds-color-gray-700);
+    --mds-bg-switch-thumb-default: var(--mds-color-gray-700);
+    --mds-bg-surface-strong: var(--mds-color-gray-200);
+    --mds-bg-surface-subtle: var(--mds-color-gray-100);
+    --mds-bg-surface-default: var(--mds-color-gray-white);
+    --mds-bg-nav-pill-selected: var(--mds-color-gray-200);
+    --mds-bg-nav-pill-pressed: var(--mds-color-gray-300);
+    --mds-bg-nav-pill-hover: var(--mds-color-gray-200);
+    --mds-bg-interactive-secondary-disabled: var(--mds-color-gray-200);
+    --mds-bg-interactive-secondary-hover: var(--mds-color-gray-400);
+    --mds-bg-interactive-secondary-default: var(--mds-color-gray-300);
+    --mds-bg-interactive-primary-disabled: var(--mds-color-blue-200);
+    --mds-bg-interactive-primary-active: var(--mds-color-blue-700);
+    --mds-bg-interactive-primary-hover: var(--mds-color-blue-600);
+    --mds-bg-interactive-primary-default-light: var(--mds-color-blue-50);
+    --mds-bg-interactive-primary-default: var(--mds-color-blue-500);
+    --mds-bg-interactive-danger-disabled: var(--mds-color-red-200);
+    --mds-bg-interactive-danger-active: var(--mds-color-red-700);
+    --mds-bg-interactive-danger-hover: var(--mds-color-red-600);
+    --mds-bg-interactive-danger-default-light: var(--mds-color-red-50);
+    --mds-bg-interactive-danger-default: var(--mds-color-red-500);
+    --mds-bg-feedback-warning-subtle: var(--mds-color-yellow-100);
+    --mds-bg-feedback-warning-light: var(--mds-color-yellow-50);
+    --mds-bg-feedback-warning-default: var(--mds-color-yellow-500);
+    --mds-bg-feedback-success-subtle: var(--mds-color-green-100);
+    --mds-bg-feedback-success-light: var(--mds-color-green-50);
+    --mds-bg-feedback-success-default: var(--mds-color-green-500);
+    --mds-bg-feedback-secondary-subtle: var(--mds-color-gray-100);
+    --mds-bg-feedback-secondary-dark: var(--mds-color-gray-800);
+    --mds-bg-feedback-secondary-default: var(--mds-color-gray-300);
+    --mds-bg-feedback-primary-subtle: var(--mds-color-blue-100);
+    --mds-bg-feedback-primary-light: var(--mds-color-blue-50);
+    --mds-bg-feedback-primary-default: var(--mds-color-blue-500);
+    --mds-bg-feedback-info-subtle: var(--mds-color-cyan-100);
+    --mds-bg-feedback-info-light: var(--mds-color-cyan-50);
+    --mds-bg-feedback-info-default: var(--mds-color-cyan-600);
+    --mds-bg-feedback-danger-subtle: var(--mds-color-red-100);
+    --mds-bg-feedback-danger-light: var(--mds-color-red-50);
+    --mds-activity-icon-resource-bg: var(--mds-color-cyan-100);
+    --mds-activity-icon-resource-icon: var(--mds-color-cyan-500);
+    --mds-activity-icon-other-bg: var(--mds-color-gray-300);
+    --mds-activity-icon-other-icon: var(--mds-color-gray-900);
+    --mds-activity-icon-muted-bg: var(--mds-color-gray-200);
+    --mds-activity-icon-muted-icon: var(--mds-color-gray-600);
+    --mds-activity-icon-interactive-bg: var(--mds-color-red-100);
+    --mds-activity-icon-interactive-icon: var(--mds-color-red-700);
+    --mds-activity-icon-file-bg: var(--mds-color-cyan-100);
+    --mds-activity-icon-file-icon: var(--mds-color-cyan-500);
+    --mds-activity-icon-communication-bg: var(--mds-color-orange-100);
+    --mds-activity-icon-communication-icon: var(--mds-color-orange-600);
+    --mds-activity-icon-collaboration-bg: var(--mds-color-indigo-100);
+    --mds-activity-icon-collaboration-icon: var(--mds-color-indigo-500);
+    --mds-activity-icon-assessment-bg: var(--mds-color-pink-100);
+    --mds-activity-icon-assessment-icon: var(--mds-color-pink-500);
+    --mds-icons-xxxl: var(--mds-scale-1200);
+    --mds-icons-xxl: var(--mds-scale-1100);
+    --mds-icons-xl: var(--mds-scale-1000);
+    --mds-icons-lg: var(--mds-scale-800);
+    --mds-icons-md: var(--mds-scale-700);
+    --mds-icons-sm: var(--mds-scale-600);
+    --mds-icons-xs: var(--mds-scale-400);
+    --mds-icons-xxs: var(--mds-scale-300);
+    --mds-avatars-xxl: var(--mds-scale-1700);
+    --mds-avatars-xl: var(--mds-scale-1400);
+    --mds-avatars-lg: var(--mds-scale-1200);
+    --mds-avatars-md: var(--mds-scale-1000);
+    --mds-avatars-sm: var(--mds-scale-800);
+    --mds-avatars-xs: var(--mds-scale-600);
+    --mds-margin-bottom-paragraph: var(--mds-spacing-md);
+    --mds-margin-bottom-heading: var(--mds-spacing-xs);
+    --mds-margin-bottom-display: var(--mds-spacing-none);
+    --mds-text-link-primary-hover: var(--mds-bg-interactive-primary-hover);
+    --mds-text-link-primary-default: var(--mds-bg-interactive-primary-default);
+    --mds-border-interactive-primary-hover: var(--mds-bg-interactive-primary-default);
+    --mds-border-interactive-primary-default: var(--mds-bg-interactive-primary-default);
+    --mds-border-interactive-danger-hover: var(--mds-bg-interactive-danger-default);
+    --mds-border-interactive-danger-default: var(--mds-bg-interactive-danger-default);
+    --mds-bg-interactive-secondary-active: var(--mds-bg-interactive-secondary-default);
+    --mds-bg-feedback-danger-default: var(--mds-bg-interactive-danger-default);
+    --mds-focus-default: var(--mds-border-interactive-primary-default);
+}
+
+
+/* MDS button (@moodlehq/design-system 5.5.0, GPL-3.0) */
+.aigrader-container .mds-btn.btn,
+.aigrader-root .mds-btn.btn,
+.aigrader-report-container .mds-btn.btn,
+.aigrader-loading-overlay .mds-btn.btn {
+    background-color: var(--mds-bg-interactive-primary-default);
+    border: none;
+    border-radius: var(--mds-border-radius-md);
+    padding: var(--mds-spacing-xs) var(--mds-spacing-sm);
+    color: var(--mds-text-inverse);
+    font-family: var(--mds-font-family-base);
+    font-weight: var(--mds-font-weight-regular);
+    font-size: var(--mds-font-size-paragraph-default);
+    line-height: var(--mds-line-height-paragraph-xs);
+    letter-spacing: var(--mds-letter-spacing-default);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--mds-spacing-xs);
+}
+
+.aigrader-container .mds-btn.btn.mds-btn--icon-only,
+.aigrader-root .mds-btn.btn.mds-btn--icon-only,
+.aigrader-report-container .mds-btn.btn.mds-btn--icon-only,
+.aigrader-loading-overlay .mds-btn.btn.mds-btn--icon-only {
+    padding: var(--mds-spacing-xs);
+    border-radius: var(--mds-border-radius-xl);
+}
+
+.aigrader-container .mds-btn.btn.mds-btn--icon-only i,
+.aigrader-root .mds-btn.btn.mds-btn--icon-only i,
+.aigrader-report-container .mds-btn.btn.mds-btn--icon-only i,
+.aigrader-loading-overlay .mds-btn.btn.mds-btn--icon-only i,
+.aigrader-container .mds-btn.btn.mds-btn--icon-only svg,
+.aigrader-root .mds-btn.btn.mds-btn--icon-only svg,
+.aigrader-report-container .mds-btn.btn.mds-btn--icon-only svg,
+.aigrader-loading-overlay .mds-btn.btn.mds-btn--icon-only svg {
+    inline-size: var(--mds-icons-xs);
+    block-size: var(--mds-icons-xs);
+    font-size: var(--mds-icons-xs);
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.aigrader-container .mds-btn.btn.mds-btn--icon-only.mds-btn--size-sm,
+.aigrader-root .mds-btn.btn.mds-btn--icon-only.mds-btn--size-sm,
+.aigrader-report-container .mds-btn.btn.mds-btn--icon-only.mds-btn--size-sm,
+.aigrader-loading-overlay .mds-btn.btn.mds-btn--icon-only.mds-btn--size-sm {
+    padding: var(--mds-spacing-xxs);
+}
+
+.aigrader-container .mds-btn.btn.mds-btn--icon-only.mds-btn--size-sm i,
+.aigrader-root .mds-btn.btn.mds-btn--icon-only.mds-btn--size-sm i,
+.aigrader-report-container .mds-btn.btn.mds-btn--icon-only.mds-btn--size-sm i,
+.aigrader-loading-overlay .mds-btn.btn.mds-btn--icon-only.mds-btn--size-sm i,
+.aigrader-container .mds-btn.btn.mds-btn--icon-only.mds-btn--size-sm svg,
+.aigrader-root .mds-btn.btn.mds-btn--icon-only.mds-btn--size-sm svg,
+.aigrader-report-container .mds-btn.btn.mds-btn--icon-only.mds-btn--size-sm svg,
+.aigrader-loading-overlay .mds-btn.btn.mds-btn--icon-only.mds-btn--size-sm svg {
+    inline-size: var(--mds-icons-xxs);
+    block-size: var(--mds-icons-xxs);
+    font-size: var(--mds-icons-xxs);
+}
+
+.aigrader-container .mds-btn.btn.mds-btn--icon-only.mds-btn--size-lg,
+.aigrader-root .mds-btn.btn.mds-btn--icon-only.mds-btn--size-lg,
+.aigrader-report-container .mds-btn.btn.mds-btn--icon-only.mds-btn--size-lg,
+.aigrader-loading-overlay .mds-btn.btn.mds-btn--icon-only.mds-btn--size-lg {
+    padding: var(--mds-spacing-xs);
+    border-radius: var(--mds-border-radius-md);
+}
+
+.aigrader-container .mds-btn.btn.mds-btn--size-sm i,
+.aigrader-root .mds-btn.btn.mds-btn--size-sm i,
+.aigrader-report-container .mds-btn.btn.mds-btn--size-sm i,
+.aigrader-loading-overlay .mds-btn.btn.mds-btn--size-sm i,
+.aigrader-container .mds-btn.btn.mds-btn--size-sm svg,
+.aigrader-root .mds-btn.btn.mds-btn--size-sm svg,
+.aigrader-report-container .mds-btn.btn.mds-btn--size-sm svg,
+.aigrader-loading-overlay .mds-btn.btn.mds-btn--size-sm svg {
+    inline-size: var(--mds-icons-xxs);
+    block-size: var(--mds-icons-xxs);
+    font-size: var(--mds-icons-xxs);
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.aigrader-container .mds-btn.btn.mds-btn--size-md i,
+.aigrader-root .mds-btn.btn.mds-btn--size-md i,
+.aigrader-report-container .mds-btn.btn.mds-btn--size-md i,
+.aigrader-loading-overlay .mds-btn.btn.mds-btn--size-md i,
+.aigrader-container .mds-btn.btn.mds-btn--size-md svg,
+.aigrader-root .mds-btn.btn.mds-btn--size-md svg,
+.aigrader-report-container .mds-btn.btn.mds-btn--size-md svg,
+.aigrader-loading-overlay .mds-btn.btn.mds-btn--size-md svg,
+.aigrader-container .mds-btn.btn.mds-btn--size-lg i,
+.aigrader-root .mds-btn.btn.mds-btn--size-lg i,
+.aigrader-report-container .mds-btn.btn.mds-btn--size-lg i,
+.aigrader-loading-overlay .mds-btn.btn.mds-btn--size-lg i,
+.aigrader-container .mds-btn.btn.mds-btn--size-lg svg,
+.aigrader-root .mds-btn.btn.mds-btn--size-lg svg,
+.aigrader-report-container .mds-btn.btn.mds-btn--size-lg svg,
+.aigrader-loading-overlay .mds-btn.btn.mds-btn--size-lg svg {
+    inline-size: var(--mds-icons-xs);
+    block-size: var(--mds-icons-xs);
+    font-size: var(--mds-icons-xs);
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.aigrader-container .mds-btn.btn:focus,
+.aigrader-root .mds-btn.btn:focus,
+.aigrader-report-container .mds-btn.btn:focus,
+.aigrader-loading-overlay .mds-btn.btn:focus {
+    box-shadow: none;
+    outline: none;
+}
+
+.aigrader-container .mds-btn.btn:focus-visible,
+.aigrader-root .mds-btn.btn:focus-visible,
+.aigrader-report-container .mds-btn.btn:focus-visible,
+.aigrader-loading-overlay .mds-btn.btn:focus-visible {
+    outline: var(--mds-stroke-weight-md) solid var(--mds-focus-default);
+    outline-offset: var(--mds-spacing-offset);
+    box-shadow: none;
+}
+
+.aigrader-container .mds-btn.btn:active:focus-visible,
+.aigrader-root .mds-btn.btn:active:focus-visible,
+.aigrader-report-container .mds-btn.btn:active:focus-visible,
+.aigrader-loading-overlay .mds-btn.btn:active:focus-visible {
+    box-shadow: none;
+}
+
+.aigrader-container .mds-btn.btn.btn-danger:focus-visible,
+.aigrader-root .mds-btn.btn.btn-danger:focus-visible,
+.aigrader-report-container .mds-btn.btn.btn-danger:focus-visible,
+.aigrader-loading-overlay .mds-btn.btn.btn-danger:focus-visible,
+.aigrader-container .mds-btn.btn.btn-outline-danger:focus-visible,
+.aigrader-root .mds-btn.btn.btn-outline-danger:focus-visible,
+.aigrader-report-container .mds-btn.btn.btn-outline-danger:focus-visible,
+.aigrader-loading-overlay .mds-btn.btn.btn-outline-danger:focus-visible {
+    outline: var(--mds-stroke-weight-md) solid var(--mds-focus-danger);
+}
+
+.aigrader-container .mds-btn.btn:hover,
+.aigrader-root .mds-btn.btn:hover,
+.aigrader-report-container .mds-btn.btn:hover,
+.aigrader-loading-overlay .mds-btn.btn:hover {
+    background-color: var(--mds-bg-interactive-primary-hover);
+}
+
+.aigrader-container .mds-btn.btn:active,
+.aigrader-root .mds-btn.btn:active,
+.aigrader-report-container .mds-btn.btn:active,
+.aigrader-loading-overlay .mds-btn.btn:active {
+    background-color: var(--mds-bg-interactive-primary-active);
+    box-shadow: none;
+}
+
+.aigrader-container .mds-btn.btn:disabled,
+.aigrader-root .mds-btn.btn:disabled,
+.aigrader-report-container .mds-btn.btn:disabled,
+.aigrader-loading-overlay .mds-btn.btn:disabled {
+    background-color: var(--mds-bg-interactive-primary-disabled);
+}
+
+.aigrader-container .mds-btn.btn.btn-secondary,
+.aigrader-root .mds-btn.btn.btn-secondary,
+.aigrader-report-container .mds-btn.btn.btn-secondary,
+.aigrader-loading-overlay .mds-btn.btn.btn-secondary {
+    background-color: var(--mds-bg-interactive-secondary-default);
+    color: var(--mds-text-subtle);
+}
+
+.aigrader-container .mds-btn.btn.btn-secondary:hover,
+.aigrader-root .mds-btn.btn.btn-secondary:hover,
+.aigrader-report-container .mds-btn.btn.btn-secondary:hover,
+.aigrader-loading-overlay .mds-btn.btn.btn-secondary:hover {
+    background-color: var(--mds-bg-interactive-secondary-hover);
+}
+
+.aigrader-container .mds-btn.btn.btn-secondary:active,
+.aigrader-root .mds-btn.btn.btn-secondary:active,
+.aigrader-report-container .mds-btn.btn.btn-secondary:active,
+.aigrader-loading-overlay .mds-btn.btn.btn-secondary:active {
+    background-color: var(--mds-bg-interactive-secondary-active);
+}
+
+.aigrader-container .mds-btn.btn.btn-secondary:disabled,
+.aigrader-root .mds-btn.btn.btn-secondary:disabled,
+.aigrader-report-container .mds-btn.btn.btn-secondary:disabled,
+.aigrader-loading-overlay .mds-btn.btn.btn-secondary:disabled {
+    background-color: var(--mds-bg-interactive-secondary-disabled);
+    color: var(--mds-text-muted);
+}
+
+.aigrader-container .mds-btn.btn-danger,
+.aigrader-root .mds-btn.btn-danger,
+.aigrader-report-container .mds-btn.btn-danger,
+.aigrader-loading-overlay .mds-btn.btn-danger {
+    background-color: var(--mds-bg-interactive-danger-default);
+}
+
+.aigrader-container .mds-btn.btn-danger:hover,
+.aigrader-root .mds-btn.btn-danger:hover,
+.aigrader-report-container .mds-btn.btn-danger:hover,
+.aigrader-loading-overlay .mds-btn.btn-danger:hover {
+    background-color: var(--mds-bg-interactive-danger-hover);
+}
+
+.aigrader-container .mds-btn.btn-danger:active,
+.aigrader-root .mds-btn.btn-danger:active,
+.aigrader-report-container .mds-btn.btn-danger:active,
+.aigrader-loading-overlay .mds-btn.btn-danger:active {
+    background-color: var(--mds-bg-interactive-danger-active);
+}
+
+.aigrader-container .mds-btn.btn.btn-danger:disabled,
+.aigrader-root .mds-btn.btn.btn-danger:disabled,
+.aigrader-report-container .mds-btn.btn.btn-danger:disabled,
+.aigrader-loading-overlay .mds-btn.btn.btn-danger:disabled {
+    background-color: var(--mds-bg-interactive-danger-disabled);
+}
+
+.aigrader-container .mds-btn.btn.btn-ghost,
+.aigrader-root .mds-btn.btn.btn-ghost,
+.aigrader-report-container .mds-btn.btn.btn-ghost,
+.aigrader-loading-overlay .mds-btn.btn.btn-ghost {
+    background-color: transparent;
+    color: var(--mds-text-subtle);
+}
+
+.aigrader-container .mds-btn.btn.btn-ghost:hover,
+.aigrader-root .mds-btn.btn.btn-ghost:hover,
+.aigrader-report-container .mds-btn.btn.btn-ghost:hover,
+.aigrader-loading-overlay .mds-btn.btn.btn-ghost:hover {
+    background-color: var(--mds-bg-interactive-secondary-hover);
+    color: var(--mds-text-subtle);
+}
+
+.aigrader-container .mds-btn.btn.btn-ghost:active,
+.aigrader-root .mds-btn.btn.btn-ghost:active,
+.aigrader-report-container .mds-btn.btn.btn-ghost:active,
+.aigrader-loading-overlay .mds-btn.btn.btn-ghost:active {
+    background-color: var(--mds-bg-interactive-secondary-active);
+    color: var(--mds-text-subtle);
+}
+
+.aigrader-container .mds-btn.btn.btn-ghost:disabled,
+.aigrader-root .mds-btn.btn.btn-ghost:disabled,
+.aigrader-report-container .mds-btn.btn.btn-ghost:disabled,
+.aigrader-loading-overlay .mds-btn.btn.btn-ghost:disabled {
+    background-color: transparent;
+    color: var(--mds-text-muted);
+}
+
+.aigrader-container .mds-btn.btn.btn-outline-primary,
+.aigrader-container .mds-btn.btn.btn-outline-secondary,
+.aigrader-container .mds-btn.btn.btn-outline-danger,
+.aigrader-root .mds-btn.btn.btn-outline-primary,
+.aigrader-root .mds-btn.btn.btn-outline-secondary,
+.aigrader-root .mds-btn.btn.btn-outline-danger,
+.aigrader-report-container .mds-btn.btn.btn-outline-primary,
+.aigrader-report-container .mds-btn.btn.btn-outline-secondary,
+.aigrader-report-container .mds-btn.btn.btn-outline-danger,
+.aigrader-loading-overlay .mds-btn.btn.btn-outline-primary,
+.aigrader-loading-overlay .mds-btn.btn.btn-outline-secondary,
+.aigrader-loading-overlay .mds-btn.btn.btn-outline-danger {
+    background-color: transparent;
+    border: var(--mds-stroke-weight-sm) solid transparent;
+}
+
+.aigrader-container .mds-btn.btn.btn-outline-primary,
+.aigrader-root .mds-btn.btn.btn-outline-primary,
+.aigrader-report-container .mds-btn.btn.btn-outline-primary,
+.aigrader-loading-overlay .mds-btn.btn.btn-outline-primary {
+    border-color: var(--mds-border-interactive-primary-default);
+    color: var(--mds-text-link-primary-default);
+}
+
+.aigrader-container .mds-btn.btn-outline-primary:hover,
+.aigrader-root .mds-btn.btn-outline-primary:hover,
+.aigrader-report-container .mds-btn.btn-outline-primary:hover,
+.aigrader-loading-overlay .mds-btn.btn-outline-primary:hover {
+    border-color: var(--mds-bg-interactive-primary-hover);
+    background-color: var(--mds-bg-interactive-primary-hover);
+    color: var(--mds-text-inverse);
+}
+
+.aigrader-container .mds-btn.btn-outline-primary:active,
+.aigrader-root .mds-btn.btn-outline-primary:active,
+.aigrader-report-container .mds-btn.btn-outline-primary:active,
+.aigrader-loading-overlay .mds-btn.btn-outline-primary:active {
+    border-color: var(--mds-bg-interactive-primary-active);
+    background-color: var(--mds-bg-interactive-primary-active);
+    color: var(--mds-text-inverse);
+}
+
+.aigrader-container .mds-btn.btn.btn-outline-primary:disabled,
+.aigrader-root .mds-btn.btn.btn-outline-primary:disabled,
+.aigrader-report-container .mds-btn.btn.btn-outline-primary:disabled,
+.aigrader-loading-overlay .mds-btn.btn.btn-outline-primary:disabled {
+    border-color: var(--mds-border-interactive-primary-disabled);
+    color: var(--mds-text-link-primary-disabled);
+}
+
+.aigrader-container .mds-btn.btn.btn-outline-secondary,
+.aigrader-root .mds-btn.btn.btn-outline-secondary,
+.aigrader-report-container .mds-btn.btn.btn-outline-secondary,
+.aigrader-loading-overlay .mds-btn.btn.btn-outline-secondary {
+    border-color: var(--mds-border-interactive-secondary-default);
+    color: var(--mds-text-subtle);
+}
+
+.aigrader-container .mds-btn.btn-outline-secondary:hover,
+.aigrader-root .mds-btn.btn-outline-secondary:hover,
+.aigrader-report-container .mds-btn.btn-outline-secondary:hover,
+.aigrader-loading-overlay .mds-btn.btn-outline-secondary:hover {
+    border-color: var(--mds-border-interactive-secondary-hover);
+    background-color: var(--mds-border-interactive-secondary-hover);
+    color: var(--mds-text-inverse);
+}
+
+.aigrader-container .mds-btn.btn-outline-secondary:active,
+.aigrader-root .mds-btn.btn-outline-secondary:active,
+.aigrader-report-container .mds-btn.btn-outline-secondary:active,
+.aigrader-loading-overlay .mds-btn.btn-outline-secondary:active {
+    border-color: var(--mds-border-interactive-secondary-active);
+    background-color: var(--mds-border-interactive-secondary-active);
+    color: var(--mds-text-inverse);
+}
+
+.aigrader-container .mds-btn.btn.btn-outline-secondary:disabled,
+.aigrader-root .mds-btn.btn.btn-outline-secondary:disabled,
+.aigrader-report-container .mds-btn.btn.btn-outline-secondary:disabled,
+.aigrader-loading-overlay .mds-btn.btn.btn-outline-secondary:disabled {
+    border-color: var(--mds-border-interactive-secondary-disabled);
+    color: var(--mds-text-muted);
+}
+
+.aigrader-container .mds-btn.btn.btn-outline-danger,
+.aigrader-root .mds-btn.btn.btn-outline-danger,
+.aigrader-report-container .mds-btn.btn.btn-outline-danger,
+.aigrader-loading-overlay .mds-btn.btn.btn-outline-danger {
+    border-color: var(--mds-border-interactive-danger-default);
+    color: var(--mds-text-danger);
+}
+
+.aigrader-container .mds-btn.btn-outline-danger:hover,
+.aigrader-root .mds-btn.btn-outline-danger:hover,
+.aigrader-report-container .mds-btn.btn-outline-danger:hover,
+.aigrader-loading-overlay .mds-btn.btn-outline-danger:hover {
+    border-color: var(--mds-bg-interactive-danger-hover);
+    background-color: var(--mds-bg-interactive-danger-hover);
+    color: var(--mds-text-inverse);
+}
+
+.aigrader-container .mds-btn.btn-outline-danger:active,
+.aigrader-root .mds-btn.btn-outline-danger:active,
+.aigrader-report-container .mds-btn.btn-outline-danger:active,
+.aigrader-loading-overlay .mds-btn.btn-outline-danger:active {
+    border-color: var(--mds-bg-interactive-danger-active);
+    background-color: var(--mds-bg-interactive-danger-active);
+    color: var(--mds-text-inverse);
+}
+
+.aigrader-container .mds-btn.btn.btn-outline-danger:disabled,
+.aigrader-root .mds-btn.btn.btn-outline-danger:disabled,
+.aigrader-report-container .mds-btn.btn.btn-outline-danger:disabled,
+.aigrader-loading-overlay .mds-btn.btn.btn-outline-danger:disabled {
+    border-color: var(--mds-border-interactive-danger-disabled);
+    color: var(--mds-text-danger-disabled);
+}
+
+.aigrader-container .mds-btn.mds-btn--size-sm,
+.aigrader-root .mds-btn.mds-btn--size-sm,
+.aigrader-report-container .mds-btn.mds-btn--size-sm,
+.aigrader-loading-overlay .mds-btn.mds-btn--size-sm {
+    padding: var(--mds-spacing-xxs) var(--mds-spacing-xs);
+    border-radius: var(--mds-border-radius-sm);
+    font-weight: var(--mds-font-weight-medium);
+    font-size: var(--mds-font-size-paragraph-small);
+}
+
+.aigrader-container .mds-btn.mds-btn--size-md,
+.aigrader-root .mds-btn.mds-btn--size-md,
+.aigrader-report-container .mds-btn.mds-btn--size-md,
+.aigrader-loading-overlay .mds-btn.mds-btn--size-md {
+    padding: var(--mds-spacing-xs) var(--mds-spacing-sm);
+    font-size: var(--mds-font-size-paragraph-default);
+}
+
+.aigrader-container .mds-btn.mds-btn--size-lg,
+.aigrader-root .mds-btn.mds-btn--size-lg,
+.aigrader-report-container .mds-btn.mds-btn--size-lg,
+.aigrader-loading-overlay .mds-btn.mds-btn--size-lg {
+    padding: var(--mds-spacing-sm) var(--mds-spacing-md);
+    font-size: var(--mds-font-size-paragraph-default);
+}
+
+.aigrader-container .mds-btn.mds-btn--size-sm.btn-outline-primary,
+.aigrader-container .mds-btn.mds-btn--size-sm.btn-outline-secondary,
+.aigrader-container .mds-btn.mds-btn--size-sm.btn-outline-danger,
+.aigrader-root .mds-btn.mds-btn--size-sm.btn-outline-primary,
+.aigrader-root .mds-btn.mds-btn--size-sm.btn-outline-secondary,
+.aigrader-root .mds-btn.mds-btn--size-sm.btn-outline-danger,
+.aigrader-report-container .mds-btn.mds-btn--size-sm.btn-outline-primary,
+.aigrader-report-container .mds-btn.mds-btn--size-sm.btn-outline-secondary,
+.aigrader-report-container .mds-btn.mds-btn--size-sm.btn-outline-danger,
+.aigrader-loading-overlay .mds-btn.mds-btn--size-sm.btn-outline-primary,
+.aigrader-loading-overlay .mds-btn.mds-btn--size-sm.btn-outline-secondary,
+.aigrader-loading-overlay .mds-btn.mds-btn--size-sm.btn-outline-danger {
+    padding: calc(var(--mds-spacing-xxs) - var(--mds-stroke-weight-sm)) calc(var(--mds-spacing-xs) - var(--mds-stroke-weight-sm));
+}
+
+.aigrader-container .mds-btn.mds-btn--size-md.btn-outline-primary,
+.aigrader-container .mds-btn.mds-btn--size-md.btn-outline-secondary,
+.aigrader-container .mds-btn.mds-btn--size-md.btn-outline-danger,
+.aigrader-root .mds-btn.mds-btn--size-md.btn-outline-primary,
+.aigrader-root .mds-btn.mds-btn--size-md.btn-outline-secondary,
+.aigrader-root .mds-btn.mds-btn--size-md.btn-outline-danger,
+.aigrader-report-container .mds-btn.mds-btn--size-md.btn-outline-primary,
+.aigrader-report-container .mds-btn.mds-btn--size-md.btn-outline-secondary,
+.aigrader-report-container .mds-btn.mds-btn--size-md.btn-outline-danger,
+.aigrader-loading-overlay .mds-btn.mds-btn--size-md.btn-outline-primary,
+.aigrader-loading-overlay .mds-btn.mds-btn--size-md.btn-outline-secondary,
+.aigrader-loading-overlay .mds-btn.mds-btn--size-md.btn-outline-danger {
+    padding: calc(var(--mds-spacing-xs) - var(--mds-stroke-weight-sm)) calc(var(--mds-spacing-sm) - var(--mds-stroke-weight-sm));
+}
+
+.aigrader-container .mds-btn.mds-btn--size-lg.btn-outline-primary,
+.aigrader-container .mds-btn.mds-btn--size-lg.btn-outline-secondary,
+.aigrader-container .mds-btn.mds-btn--size-lg.btn-outline-danger,
+.aigrader-root .mds-btn.mds-btn--size-lg.btn-outline-primary,
+.aigrader-root .mds-btn.mds-btn--size-lg.btn-outline-secondary,
+.aigrader-root .mds-btn.mds-btn--size-lg.btn-outline-danger,
+.aigrader-report-container .mds-btn.mds-btn--size-lg.btn-outline-primary,
+.aigrader-report-container .mds-btn.mds-btn--size-lg.btn-outline-secondary,
+.aigrader-report-container .mds-btn.mds-btn--size-lg.btn-outline-danger,
+.aigrader-loading-overlay .mds-btn.mds-btn--size-lg.btn-outline-primary,
+.aigrader-loading-overlay .mds-btn.mds-btn--size-lg.btn-outline-secondary,
+.aigrader-loading-overlay .mds-btn.mds-btn--size-lg.btn-outline-danger {
+    padding: calc(var(--mds-spacing-sm) - var(--mds-stroke-weight-sm)) calc(var(--mds-spacing-md) - var(--mds-stroke-weight-sm));
+}
+
+.aigrader-container .mds-btn.mds-btn--icon-only.btn-outline-primary,
+.aigrader-container .mds-btn.mds-btn--icon-only.btn-outline-secondary,
+.aigrader-container .mds-btn.mds-btn--icon-only.btn-outline-danger,
+.aigrader-root .mds-btn.mds-btn--icon-only.btn-outline-primary,
+.aigrader-root .mds-btn.mds-btn--icon-only.btn-outline-secondary,
+.aigrader-root .mds-btn.mds-btn--icon-only.btn-outline-danger,
+.aigrader-report-container .mds-btn.mds-btn--icon-only.btn-outline-primary,
+.aigrader-report-container .mds-btn.mds-btn--icon-only.btn-outline-secondary,
+.aigrader-report-container .mds-btn.mds-btn--icon-only.btn-outline-danger,
+.aigrader-loading-overlay .mds-btn.mds-btn--icon-only.btn-outline-primary,
+.aigrader-loading-overlay .mds-btn.mds-btn--icon-only.btn-outline-secondary,
+.aigrader-loading-overlay .mds-btn.mds-btn--icon-only.btn-outline-danger {
+    padding: calc(var(--mds-spacing-xs) - var(--mds-stroke-weight-sm));
+}
+
+.aigrader-container .mds-btn.mds-btn--icon-only.mds-btn--size-sm.btn-outline-primary,
+.aigrader-container .mds-btn.mds-btn--icon-only.mds-btn--size-sm.btn-outline-secondary,
+.aigrader-container .mds-btn.mds-btn--icon-only.mds-btn--size-sm.btn-outline-danger,
+.aigrader-root .mds-btn.mds-btn--icon-only.mds-btn--size-sm.btn-outline-primary,
+.aigrader-root .mds-btn.mds-btn--icon-only.mds-btn--size-sm.btn-outline-secondary,
+.aigrader-root .mds-btn.mds-btn--icon-only.mds-btn--size-sm.btn-outline-danger,
+.aigrader-report-container .mds-btn.mds-btn--icon-only.mds-btn--size-sm.btn-outline-primary,
+.aigrader-report-container .mds-btn.mds-btn--icon-only.mds-btn--size-sm.btn-outline-secondary,
+.aigrader-report-container .mds-btn.mds-btn--icon-only.mds-btn--size-sm.btn-outline-danger,
+.aigrader-loading-overlay .mds-btn.mds-btn--icon-only.mds-btn--size-sm.btn-outline-primary,
+.aigrader-loading-overlay .mds-btn.mds-btn--icon-only.mds-btn--size-sm.btn-outline-secondary,
+.aigrader-loading-overlay .mds-btn.mds-btn--icon-only.mds-btn--size-sm.btn-outline-danger {
+    padding: calc(var(--mds-spacing-xxs) - var(--mds-stroke-weight-sm));
+}
+
+.aigrader-container .mds-btn.mds-btn--icon-only.mds-btn--size-lg.btn-outline-primary,
+.aigrader-container .mds-btn.mds-btn--icon-only.mds-btn--size-lg.btn-outline-secondary,
+.aigrader-container .mds-btn.mds-btn--icon-only.mds-btn--size-lg.btn-outline-danger,
+.aigrader-root .mds-btn.mds-btn--icon-only.mds-btn--size-lg.btn-outline-primary,
+.aigrader-root .mds-btn.mds-btn--icon-only.mds-btn--size-lg.btn-outline-secondary,
+.aigrader-root .mds-btn.mds-btn--icon-only.mds-btn--size-lg.btn-outline-danger,
+.aigrader-report-container .mds-btn.mds-btn--icon-only.mds-btn--size-lg.btn-outline-primary,
+.aigrader-report-container .mds-btn.mds-btn--icon-only.mds-btn--size-lg.btn-outline-secondary,
+.aigrader-report-container .mds-btn.mds-btn--icon-only.mds-btn--size-lg.btn-outline-danger,
+.aigrader-loading-overlay .mds-btn.mds-btn--icon-only.mds-btn--size-lg.btn-outline-primary,
+.aigrader-loading-overlay .mds-btn.mds-btn--icon-only.mds-btn--size-lg.btn-outline-secondary,
+.aigrader-loading-overlay .mds-btn.mds-btn--icon-only.mds-btn--size-lg.btn-outline-danger {
+    padding: calc(var(--mds-spacing-xs) - var(--mds-stroke-weight-sm));
+}
+
+
+/* MDS badge (@moodlehq/design-system 5.5.0, GPL-3.0) */
+.aigrader-container .mds-badge[class],
+.aigrader-root .mds-badge[class],
+.aigrader-report-container .mds-badge[class],
+.aigrader-loading-overlay .mds-badge[class] {
+    display: inline-flex;
+    align-items: center;
+    align-self: flex-start;
+    gap: 0;
+    padding: var(--mds-spacing-xxs) var(--mds-spacing-xs);
+    border-radius: var(--mds-border-radius-sm);
+    font-family: var(--mds-font-family-base);
+    font-weight: var(--mds-font-weight-medium);
+    font-size: var(--mds-font-size-paragraph-small);
+    line-height: var(--mds-line-height-paragraph-xs);
+    letter-spacing: var(--mds-letter-spacing-default);
+    white-space: nowrap;
+    vertical-align: baseline;
+}
+
+.aigrader-container .mds-badge[class].mds-badge--has-icon,
+.aigrader-root .mds-badge[class].mds-badge--has-icon,
+.aigrader-report-container .mds-badge[class].mds-badge--has-icon,
+.aigrader-loading-overlay .mds-badge[class].mds-badge--has-icon {
+    gap: var(--mds-spacing-xxs);
+}
+
+.aigrader-container .mds-badge[class] > i,
+.aigrader-root .mds-badge[class] > i,
+.aigrader-report-container .mds-badge[class] > i,
+.aigrader-loading-overlay .mds-badge[class] > i,
+.aigrader-container .mds-badge[class] > svg,
+.aigrader-root .mds-badge[class] > svg,
+.aigrader-report-container .mds-badge[class] > svg,
+.aigrader-loading-overlay .mds-badge[class] > svg {
+    width: var(--mds-icons-xxs);
+    height: var(--mds-icons-xxs);
+    font-size: var(--mds-icons-xxs);
+    flex-shrink: 0;
+}
+
+.aigrader-container .mds-badge[class].mds-badge--pill,
+.aigrader-root .mds-badge[class].mds-badge--pill,
+.aigrader-report-container .mds-badge[class].mds-badge--pill,
+.aigrader-loading-overlay .mds-badge[class].mds-badge--pill {
+    border-radius: var(--mds-border-radius-pill);
+}
+
+.aigrader-container .mds-badge[class].mds-badge--subtle,
+.aigrader-root .mds-badge[class].mds-badge--subtle,
+.aigrader-report-container .mds-badge[class].mds-badge--subtle,
+.aigrader-loading-overlay .mds-badge[class].mds-badge--subtle {
+    border: var(--mds-stroke-weight-sm) solid transparent;
+}
+
+.aigrader-container .mds-badge[class].mds-badge--primary,
+.aigrader-root .mds-badge[class].mds-badge--primary,
+.aigrader-report-container .mds-badge[class].mds-badge--primary,
+.aigrader-loading-overlay .mds-badge[class].mds-badge--primary {
+    background-color: var(--mds-bg-feedback-primary-default);
+    color: var(--mds-text-inverse);
+}
+
+.aigrader-container .mds-badge[class].mds-badge--primary.mds-badge--subtle,
+.aigrader-root .mds-badge[class].mds-badge--primary.mds-badge--subtle,
+.aigrader-report-container .mds-badge[class].mds-badge--primary.mds-badge--subtle,
+.aigrader-loading-overlay .mds-badge[class].mds-badge--primary.mds-badge--subtle {
+    background-color: var(--mds-bg-feedback-primary-subtle);
+    color: var(--mds-text-feedback-primary);
+    border-color: var(--mds-border-feedback-primary);
+}
+
+.aigrader-container .mds-badge[class].mds-badge--secondary,
+.aigrader-root .mds-badge[class].mds-badge--secondary,
+.aigrader-report-container .mds-badge[class].mds-badge--secondary,
+.aigrader-loading-overlay .mds-badge[class].mds-badge--secondary {
+    background-color: var(--mds-bg-feedback-secondary-default);
+    color: var(--mds-text-feedback-secondary);
+}
+
+.aigrader-container .mds-badge[class].mds-badge--secondary.mds-badge--subtle,
+.aigrader-root .mds-badge[class].mds-badge--secondary.mds-badge--subtle,
+.aigrader-report-container .mds-badge[class].mds-badge--secondary.mds-badge--subtle,
+.aigrader-loading-overlay .mds-badge[class].mds-badge--secondary.mds-badge--subtle {
+    background-color: var(--mds-bg-feedback-secondary-subtle);
+    color: var(--mds-text-feedback-secondary);
+    border-color: var(--mds-border-feedback-secondary);
+}
+
+.aigrader-container .mds-badge[class].mds-badge--success,
+.aigrader-root .mds-badge[class].mds-badge--success,
+.aigrader-report-container .mds-badge[class].mds-badge--success,
+.aigrader-loading-overlay .mds-badge[class].mds-badge--success {
+    background-color: var(--mds-bg-feedback-success-default);
+    color: var(--mds-text-inverse);
+}
+
+.aigrader-container .mds-badge[class].mds-badge--success.mds-badge--subtle,
+.aigrader-root .mds-badge[class].mds-badge--success.mds-badge--subtle,
+.aigrader-report-container .mds-badge[class].mds-badge--success.mds-badge--subtle,
+.aigrader-loading-overlay .mds-badge[class].mds-badge--success.mds-badge--subtle {
+    background-color: var(--mds-bg-feedback-success-subtle);
+    color: var(--mds-text-feedback-success);
+    border-color: var(--mds-border-feedback-success);
+}
+
+.aigrader-container .mds-badge[class].mds-badge--danger,
+.aigrader-root .mds-badge[class].mds-badge--danger,
+.aigrader-report-container .mds-badge[class].mds-badge--danger,
+.aigrader-loading-overlay .mds-badge[class].mds-badge--danger {
+    background-color: var(--mds-bg-feedback-danger-default);
+    color: var(--mds-text-inverse);
+}
+
+.aigrader-container .mds-badge[class].mds-badge--danger.mds-badge--subtle,
+.aigrader-root .mds-badge[class].mds-badge--danger.mds-badge--subtle,
+.aigrader-report-container .mds-badge[class].mds-badge--danger.mds-badge--subtle,
+.aigrader-loading-overlay .mds-badge[class].mds-badge--danger.mds-badge--subtle {
+    background-color: var(--mds-bg-feedback-danger-subtle);
+    color: var(--mds-text-feedback-danger);
+    border-color: var(--mds-border-feedback-danger);
+}
+
+.aigrader-container .mds-badge[class].mds-badge--warning,
+.aigrader-root .mds-badge[class].mds-badge--warning,
+.aigrader-report-container .mds-badge[class].mds-badge--warning,
+.aigrader-loading-overlay .mds-badge[class].mds-badge--warning {
+    background-color: var(--mds-bg-feedback-warning-default);
+    color: var(--mds-text-feedback-warning);
+}
+
+.aigrader-container .mds-badge[class].mds-badge--warning.mds-badge--subtle,
+.aigrader-root .mds-badge[class].mds-badge--warning.mds-badge--subtle,
+.aigrader-report-container .mds-badge[class].mds-badge--warning.mds-badge--subtle,
+.aigrader-loading-overlay .mds-badge[class].mds-badge--warning.mds-badge--subtle {
+    background-color: var(--mds-bg-feedback-warning-subtle);
+    color: var(--mds-text-feedback-warning);
+    border-color: var(--mds-border-feedback-warning);
+}
+
+.aigrader-container .mds-badge[class].mds-badge--info,
+.aigrader-root .mds-badge[class].mds-badge--info,
+.aigrader-report-container .mds-badge[class].mds-badge--info,
+.aigrader-loading-overlay .mds-badge[class].mds-badge--info {
+    background-color: var(--mds-bg-feedback-info-default);
+    color: var(--mds-text-inverse);
+}
+
+.aigrader-container .mds-badge[class].mds-badge--info.mds-badge--subtle,
+.aigrader-root .mds-badge[class].mds-badge--info.mds-badge--subtle,
+.aigrader-report-container .mds-badge[class].mds-badge--info.mds-badge--subtle,
+.aigrader-loading-overlay .mds-badge[class].mds-badge--info.mds-badge--subtle {
+    background-color: var(--mds-bg-feedback-info-subtle);
+    color: var(--mds-text-feedback-info);
+    border-color: var(--mds-border-feedback-info);
+}
+
+
+/* MDS alert (@moodlehq/design-system 5.5.0, GPL-3.0) */
+.aigrader-container .mds-alert,
+.aigrader-root .mds-alert,
+.aigrader-report-container .mds-alert,
+.aigrader-loading-overlay .mds-alert {
+    display: flex;
+    gap: var(--mds-spacing-md);
+    align-items: flex-start;
+    inline-size: 100%;
+    padding: var(--mds-spacing-md);
+    border: var(--mds-stroke-weight-sm) solid var(--mds-border-feedback-primary);
+    border-radius: var(--mds-border-radius-md);
+    background-color: var(--mds-bg-feedback-primary-light);
+    color: var(--mds-text-feedback-primary);
+}
+
+.aigrader-container .mds-alert--success,
+.aigrader-root .mds-alert--success,
+.aigrader-report-container .mds-alert--success,
+.aigrader-loading-overlay .mds-alert--success {
+    background-color: var(--mds-bg-feedback-success-light);
+    border-color: var(--mds-border-feedback-success);
+    color: var(--mds-text-feedback-success);
+}
+
+.aigrader-container .mds-alert--warning,
+.aigrader-root .mds-alert--warning,
+.aigrader-report-container .mds-alert--warning,
+.aigrader-loading-overlay .mds-alert--warning {
+    background-color: var(--mds-bg-feedback-warning-light);
+    border-color: var(--mds-border-feedback-warning);
+    color: var(--mds-text-feedback-warning);
+}
+
+.aigrader-container .mds-alert--danger,
+.aigrader-root .mds-alert--danger,
+.aigrader-report-container .mds-alert--danger,
+.aigrader-loading-overlay .mds-alert--danger {
+    background-color: var(--mds-bg-feedback-danger-light);
+    border-color: var(--mds-border-feedback-danger);
+    color: var(--mds-text-feedback-danger);
+}
+
+.aigrader-container .mds-alert-icon-wrap,
+.aigrader-root .mds-alert-icon-wrap,
+.aigrader-report-container .mds-alert-icon-wrap,
+.aigrader-loading-overlay .mds-alert-icon-wrap {
+    display: flex;
+    flex-shrink: 0;
+    inline-size: 20px;
+    block-size: 20px;
+}
+
+.aigrader-container .mds-alert--no-title .mds-alert-icon-wrap,
+.aigrader-root .mds-alert--no-title .mds-alert-icon-wrap,
+.aigrader-report-container .mds-alert--no-title .mds-alert-icon-wrap,
+.aigrader-loading-overlay .mds-alert--no-title .mds-alert-icon-wrap {
+    block-size: 24px;
+}
+
+.aigrader-container .mds-alert-icon,
+.aigrader-root .mds-alert-icon,
+.aigrader-report-container .mds-alert-icon,
+.aigrader-loading-overlay .mds-alert-icon {
+    display: block;
+    inline-size: 100%;
+    block-size: 100%;
+    background-color: var(--mds-bg-feedback-primary-default);
+    mask-repeat: no-repeat;
+    mask-position: center;
+    mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    -webkit-mask-size: contain;
+}
+
+.aigrader-container .mds-alert--success .mds-alert-icon,
+.aigrader-root .mds-alert--success .mds-alert-icon,
+.aigrader-report-container .mds-alert--success .mds-alert-icon,
+.aigrader-loading-overlay .mds-alert--success .mds-alert-icon {
+    background-color: var(--mds-bg-feedback-success-default);
+}
+
+.aigrader-container .mds-alert--warning .mds-alert-icon,
+.aigrader-root .mds-alert--warning .mds-alert-icon,
+.aigrader-report-container .mds-alert--warning .mds-alert-icon,
+.aigrader-loading-overlay .mds-alert--warning .mds-alert-icon {
+    background-color: var(--mds-bg-feedback-warning-default);
+}
+
+.aigrader-container .mds-alert--danger .mds-alert-icon,
+.aigrader-root .mds-alert--danger .mds-alert-icon,
+.aigrader-report-container .mds-alert--danger .mds-alert-icon,
+.aigrader-loading-overlay .mds-alert--danger .mds-alert-icon {
+    background-color: var(--mds-bg-feedback-danger-default);
+}
+
+.aigrader-container .mds-alert-content,
+.aigrader-root .mds-alert-content,
+.aigrader-report-container .mds-alert-content,
+.aigrader-loading-overlay .mds-alert-content {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: var(--mds-spacing-md);
+    min-inline-size: 0;
+}
+
+.aigrader-container .mds-alert-text,
+.aigrader-root .mds-alert-text,
+.aigrader-report-container .mds-alert-text,
+.aigrader-loading-overlay .mds-alert-text {
+    display: flex;
+    flex-direction: column;
+    gap: var(--mds-spacing-xs);
+}
+
+.aigrader-container .mds-alert-title,
+.aigrader-root .mds-alert-title,
+.aigrader-report-container .mds-alert-title,
+.aigrader-loading-overlay .mds-alert-title {
+    margin: 0;
+    font-family: var(--mds-font-family-base);
+    font-size: var(--mds-font-size-headings-6);
+    font-weight: var(--mds-font-weight-medium);
+    line-height: var(--mds-line-height-headings-6);
+    color: inherit;
+}
+
+.aigrader-container .mds-alert-message,
+.aigrader-root .mds-alert-message,
+.aigrader-report-container .mds-alert-message,
+.aigrader-loading-overlay .mds-alert-message {
+    margin: 0;
+    font-family: var(--mds-font-family-base);
+    font-size: var(--mds-font-size-paragraph-default);
+    font-weight: var(--mds-font-weight-regular);
+    line-height: var(--mds-line-height-paragraph-default);
+    color: inherit;
+}
+
+.aigrader-container .mds-alert-message a,
+.aigrader-root .mds-alert-message a,
+.aigrader-report-container .mds-alert-message a,
+.aigrader-loading-overlay .mds-alert-message a,
+.aigrader-container .mds-alert-custom a,
+.aigrader-root .mds-alert-custom a,
+.aigrader-report-container .mds-alert-custom a,
+.aigrader-loading-overlay .mds-alert-custom a {
+    color: var(--mds-text-link-primary-default);
+    text-decoration: underline;
+}
+
+.aigrader-container .mds-alert-custom,
+.aigrader-root .mds-alert-custom,
+.aigrader-report-container .mds-alert-custom,
+.aigrader-loading-overlay .mds-alert-custom {
+    font-family: var(--mds-font-family-base);
+    font-size: var(--mds-font-size-paragraph-default);
+    font-weight: var(--mds-font-weight-regular);
+    line-height: var(--mds-line-height-paragraph-default);
+    color: inherit;
+}
+
+.aigrader-container .mds-alert-actions,
+.aigrader-root .mds-alert-actions,
+.aigrader-report-container .mds-alert-actions,
+.aigrader-loading-overlay .mds-alert-actions {
+    display: flex;
+}
+
+.aigrader-container .mds-alert-dismiss,
+.aigrader-root .mds-alert-dismiss,
+.aigrader-report-container .mds-alert-dismiss,
+.aigrader-loading-overlay .mds-alert-dismiss {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+}
+
+.aigrader-container .mds-alert-dismiss-button,
+.aigrader-root .mds-alert-dismiss-button,
+.aigrader-report-container .mds-alert-dismiss-button,
+.aigrader-loading-overlay .mds-alert-dismiss-button {
+    color: inherit;
+}
+
+
+/* MDS close-button (@moodlehq/design-system 5.5.0, GPL-3.0) */
+.aigrader-container .mds-close-button.btn-close,
+.aigrader-root .mds-close-button.btn-close,
+.aigrader-report-container .mds-close-button.btn-close,
+.aigrader-loading-overlay .mds-close-button.btn-close {
+    inline-size: var(--mds-icons-md);
+    block-size: var(--mds-icons-md);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border-radius: var(--mds-border-radius-xs);
+    color: var(--mds-text-subtle);
+    background-color: transparent;
+    background-image: none;
+    opacity: 1;
+}
+
+.aigrader-container .mds-close-button.btn-close::before,
+.aigrader-root .mds-close-button.btn-close::before,
+.aigrader-report-container .mds-close-button.btn-close::before,
+.aigrader-loading-overlay .mds-close-button.btn-close::before {
+    content: '';
+    display: block;
+    inline-size: var(--mds-icons-xs);
+    block-size: var(--mds-icons-xs);
+    background-color: currentColor;
+    mask-repeat: no-repeat;
+    mask-position: center;
+    mask-size: 100%;
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    -webkit-mask-size: 100%;
+}
+
+.aigrader-container .mds-close-button.btn-close:hover,
+.aigrader-root .mds-close-button.btn-close:hover,
+.aigrader-report-container .mds-close-button.btn-close:hover,
+.aigrader-loading-overlay .mds-close-button.btn-close:hover {
+    color: var(--mds-text-emphasis);
+}
+
+.aigrader-container .mds-close-button.btn-close:focus,
+.aigrader-root .mds-close-button.btn-close:focus,
+.aigrader-report-container .mds-close-button.btn-close:focus,
+.aigrader-loading-overlay .mds-close-button.btn-close:focus {
+    box-shadow: none;
+    outline: none;
+}
+
+.aigrader-container .mds-close-button.btn-close:focus-visible,
+.aigrader-root .mds-close-button.btn-close:focus-visible,
+.aigrader-report-container .mds-close-button.btn-close:focus-visible,
+.aigrader-loading-overlay .mds-close-button.btn-close:focus-visible {
+    color: var(--mds-text-emphasis);
+    outline: var(--mds-stroke-weight-md) solid var(--mds-focus-default);
+    outline-offset: 0;
+    box-shadow: none;
+}
+
+.aigrader-container .mds-close-button.btn-close:disabled,
+.aigrader-root .mds-close-button.btn-close:disabled,
+.aigrader-report-container .mds-close-button.btn-close:disabled,
+.aigrader-loading-overlay .mds-close-button.btn-close:disabled,
+.aigrader-container .mds-close-button.btn-close.disabled,
+.aigrader-root .mds-close-button.btn-close.disabled,
+.aigrader-report-container .mds-close-button.btn-close.disabled,
+.aigrader-loading-overlay .mds-close-button.btn-close.disabled {
+    color: var(--mds-text-muted);
+}
+
+.aigrader-container .mds-close-button.btn-close.mds-close-button--sm,
+.aigrader-root .mds-close-button.btn-close.mds-close-button--sm,
+.aigrader-report-container .mds-close-button.btn-close.mds-close-button--sm,
+.aigrader-loading-overlay .mds-close-button.btn-close.mds-close-button--sm {
+    inline-size: var(--mds-icons-sm);
+    block-size: var(--mds-icons-sm);
+}
+
+.aigrader-container .mds-close-button.btn-close.mds-close-button--sm::before,
+.aigrader-root .mds-close-button.btn-close.mds-close-button--sm::before,
+.aigrader-report-container .mds-close-button.btn-close.mds-close-button--sm::before,
+.aigrader-loading-overlay .mds-close-button.btn-close.mds-close-button--sm::before {
+    inline-size: var(--mds-icons-xxs);
+    block-size: var(--mds-icons-xxs);
+}
+
+.aigrader-container .mds-close-button.btn-close.mds-close-button--md,
+.aigrader-root .mds-close-button.btn-close.mds-close-button--md,
+.aigrader-report-container .mds-close-button.btn-close.mds-close-button--md,
+.aigrader-loading-overlay .mds-close-button.btn-close.mds-close-button--md {
+    inline-size: var(--mds-icons-md);
+    block-size: var(--mds-icons-md);
+}
+
+.aigrader-container .mds-close-button.btn-close.mds-close-button--lg,
+.aigrader-root .mds-close-button.btn-close.mds-close-button--lg,
+.aigrader-report-container .mds-close-button.btn-close.mds-close-button--lg,
+.aigrader-loading-overlay .mds-close-button.btn-close.mds-close-button--lg {
+    inline-size: var(--mds-icons-lg);
+    block-size: var(--mds-icons-lg);
+}
+
+.aigrader-container .mds-close-button.btn-close.mds-close-button--lg::before,
+.aigrader-root .mds-close-button.btn-close.mds-close-button--lg::before,
+.aigrader-report-container .mds-close-button.btn-close.mds-close-button--lg::before,
+.aigrader-loading-overlay .mds-close-button.btn-close.mds-close-button--lg::before {
+    inline-size: var(--mds-icons-sm);
+    block-size: var(--mds-icons-sm);
+}
+
+
+/* LMS Labs premium finish (MDS Premium) */
 .aigrader-container,
 .aigrader-root,
-.aigrader-report-container {
-    --ag-ink: #202124;
-    --ag-ink-2: #5f6368;
-    --ag-ink-3: #80868b;
-    --ag-line: #e3e8ef;
-    --ag-line-strong: #d2d9e3;
-    --ag-surface: #fff;
-    --ag-surface-2: #f8f9fa;
-    --ag-surface-3: #f1f3f5;
+.aigrader-report-container,
+.aigrader-loading-overlay {
+    --mds-bg-surface-default: #fff;
+    --mds-bg-surface-subtle: #f7f8fa;
+    --mds-bg-surface-strong: #eef0f3;
+    --mds-border-subtle: #eceef1;
+    --mds-border-default: #e1e4e8;
+    --mds-border-interactive-secondary-default: #d5d9de;
+    --mds-border-interactive-secondary-hover: #b9bfc6;
+    --mds-text-default: var(--mds-color-gray-900);
+    --mds-text-subtle: #3f464d;
+    --mds-text-muted: var(--mds-color-gray-600);
+    --mds-bg-interactive-primary-default: var(--mds-color-blue-500);
+    --mds-bg-interactive-primary-hover: var(--mds-color-blue-600);
+    --mds-bg-interactive-primary-active: var(--mds-color-blue-700);
+    --lx-page: #f7f8fa;
+    --lx-ring: 0 0 0 3px rgba(15, 108, 191, 0.22);
+    --lx-ring-danger: 0 0 0 3px rgba(202, 49, 32, 0.2);
+    --lx-shadow-xs: 0 1px 2px rgba(16, 24, 40, 0.06);
+    --lx-shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.06), 0 1px 3px rgba(16, 24, 40, 0.08);
+    --lx-shadow-md: 0 4px 8px -2px rgba(16, 24, 40, 0.08), 0 2px 4px -2px rgba(16, 24, 40, 0.05);
+    --lx-shadow-lg: 0 12px 24px -6px rgba(16, 24, 40, 0.14), 0 4px 8px -4px rgba(16, 24, 40, 0.06);
+    --lx-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+    --lx-ease: cubic-bezier(0.2, 0, 0, 1);
+    --lx-fast: 150ms;
+    --lx-base: 200ms;
+    --lx-radius-control: var(--mds-border-radius-md);
+    --lx-radius-card: var(--mds-border-radius-lg);
+    --lx-radius-overlay: var(--mds-border-radius-xl);
+    font-family: var(--mds-font-family-base), 'Noto Sans', system-ui, sans-serif;
+    color: var(--mds-text-default);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
 
-    --ag-blue: #1a73e8;
-    --ag-blue-dark: #1765cc;
-    --ag-blue-soft: #e8f0fe;
-    --ag-blue-border: #c6dafc;
+[data-bs-theme='dark'] .aigrader-container,
+[data-bs-theme='dark'] .aigrader-root,
+[data-bs-theme='dark'] .aigrader-report-container,
+[data-bs-theme='dark'] .aigrader-loading-overlay {
+    --lx-page: #0e1115;
+    --mds-bg-surface-default: #161a1f;
+    --mds-bg-surface-subtle: #1c2127;
+    --mds-bg-surface-strong: #252b32;
+    --mds-border-subtle: #22282e;
+    --mds-border-default: #2c333a;
+    --mds-border-interactive-secondary-default: #3a424a;
+    --mds-border-interactive-secondary-hover: #4b545d;
+    --mds-border-interactive-secondary-active: #5c666f;
+    --mds-border-interactive-secondary-disabled: #2c333a;
+    --mds-text-default: #e8eaed;
+    --mds-text-emphasis: #fff;
+    --mds-text-subtle: #c4c9cf;
+    --mds-text-muted: #8f959e;
+    --mds-text-inverse: #fff;
+    --mds-text-danger: #e7837a;
+    --mds-bg-interactive-primary-default: #3f89cc;
+    --mds-bg-interactive-primary-hover: #5b9bd5;
+    --mds-bg-interactive-primary-active: #2f78ba;
+    --mds-bg-interactive-primary-disabled: #1f3a55;
+    --mds-bg-interactive-primary-default-light: rgba(63, 137, 204, 0.16);
+    --mds-bg-interactive-secondary-default: #252b32;
+    --mds-bg-interactive-secondary-hover: #2c333a;
+    --mds-bg-interactive-secondary-active: #343b43;
+    --mds-bg-interactive-secondary-disabled: #1c2127;
+    --mds-bg-interactive-danger-default-light: rgba(202, 49, 32, 0.16);
+    --mds-text-link-primary-default: #6fa7d9;
+    --mds-text-link-primary-hover: #9fc4e5;
+    --mds-border-interactive-primary-default: #3f89cc;
+    --mds-focus-default: #6fa7d9;
+    --mds-bg-nav-pill-hover: #22282e;
+    --mds-bg-nav-pill-selected: #2c333a;
+    --mds-bg-nav-pill-pressed: #343b43;
+    --mds-bg-switch-track-default: #3a424a;
+    --mds-bg-switch-track-hover: #4b545d;
+    --mds-bg-switch-thumb-default: #e8eaed;
+    --mds-bg-switch-thumb-hover: #fff;
+    --mds-bg-feedback-secondary-default: #2c333a;
+    --mds-bg-feedback-secondary-subtle: #1c2127;
+    --mds-bg-feedback-secondary-dark: #e8eaed;
+    --mds-text-feedback-secondary: #c4c9cf;
+    --mds-border-feedback-secondary: #2c333a;
+    --mds-bg-feedback-primary-light: rgba(63, 137, 204, 0.12);
+    --mds-border-feedback-primary: rgba(63, 137, 204, 0.35);
+    --mds-text-feedback-primary: #9fc4e5;
+    --mds-bg-feedback-primary-subtle: rgba(63, 137, 204, 0.2);
+    --mds-bg-feedback-success-light: rgba(93, 149, 91, 0.14);
+    --mds-border-feedback-success: rgba(93, 149, 91, 0.4);
+    --mds-text-feedback-success: #aecaad;
+    --mds-bg-feedback-success-subtle: rgba(93, 149, 91, 0.22);
+    --mds-bg-feedback-warning-light: rgba(240, 173, 78, 0.12);
+    --mds-border-feedback-warning: rgba(240, 173, 78, 0.38);
+    --mds-text-feedback-warning: #f6ce95;
+    --mds-bg-feedback-warning-subtle: rgba(240, 173, 78, 0.2);
+    --mds-bg-feedback-danger-light: rgba(202, 49, 32, 0.14);
+    --mds-border-feedback-danger: rgba(223, 131, 121, 0.4);
+    --mds-text-feedback-danger: #eaada6;
+    --mds-bg-feedback-danger-subtle: rgba(202, 49, 32, 0.22);
+    --mds-bg-feedback-info-light: rgba(51, 154, 171, 0.14);
+    --mds-border-feedback-info: rgba(102, 179, 192, 0.4);
+    --mds-text-feedback-info: #99cdd5;
+    --mds-bg-feedback-info-subtle: rgba(51, 154, 171, 0.22);
+    --lx-ring: 0 0 0 3px rgba(111, 167, 217, 0.3);
+    --lx-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --lx-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.03);
+    --lx-shadow-md: 0 8px 16px -4px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.04);
+    --lx-shadow-lg: 0 16px 32px -8px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05);
+    --lx-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    color-scheme: dark;
+}
 
-    --ag-green: #21a44a;
-    --ag-green-dark: #1b8c3f;
-    --ag-green-soft: #e8f7ee;
-    --ag-green-border: #b7e3c7;
-    --ag-green-ink: #1a7f3c;
+.aigrader-container h1,
+.aigrader-container h2,
+.aigrader-container h3,
+.aigrader-container .h1,
+.aigrader-container .h2,
+.aigrader-container .h3,
+.aigrader-root h1,
+.aigrader-root h2,
+.aigrader-root h3,
+.aigrader-root .h1,
+.aigrader-root .h2,
+.aigrader-root .h3,
+.aigrader-report-container h1,
+.aigrader-report-container h2,
+.aigrader-report-container h3,
+.aigrader-report-container .h1,
+.aigrader-report-container .h2,
+.aigrader-report-container .h3,
+.aigrader-loading-overlay h1,
+.aigrader-loading-overlay h2,
+.aigrader-loading-overlay h3,
+.aigrader-loading-overlay .h1,
+.aigrader-loading-overlay .h2,
+.aigrader-loading-overlay .h3 {
+    font-weight: var(--mds-font-weight-semibold);
+    letter-spacing: -0.02em;
+}
 
-    --ag-amber: #e8710a;
-    --ag-amber-soft: #fdf3e7;
-    --ag-amber-border: #f6d9b0;
-    --ag-amber-ink: #8a4b06;
+.aigrader-container h4,
+.aigrader-container h5,
+.aigrader-container h6,
+.aigrader-container .h4,
+.aigrader-container .h5,
+.aigrader-container .h6,
+.aigrader-root h4,
+.aigrader-root h5,
+.aigrader-root h6,
+.aigrader-root .h4,
+.aigrader-root .h5,
+.aigrader-root .h6,
+.aigrader-report-container h4,
+.aigrader-report-container h5,
+.aigrader-report-container h6,
+.aigrader-report-container .h4,
+.aigrader-report-container .h5,
+.aigrader-report-container .h6,
+.aigrader-loading-overlay h4,
+.aigrader-loading-overlay h5,
+.aigrader-loading-overlay h6,
+.aigrader-loading-overlay .h4,
+.aigrader-loading-overlay .h5,
+.aigrader-loading-overlay .h6 {
+    font-weight: var(--mds-font-weight-semibold);
+    letter-spacing: -0.01em;
+}
 
-    --ag-red: #d93025;
-    --ag-red-soft: #fdecea;
-    --ag-red-border: #f5c2bd;
-    --ag-red-ink: #a52318;
+.aigrader-container .mds-btn.btn,
+.aigrader-root .mds-btn.btn,
+.aigrader-report-container .mds-btn.btn,
+.aigrader-loading-overlay .mds-btn.btn {
+    border-radius: var(--lx-radius-control);
+    font-weight: var(--mds-font-weight-medium);
+    transition:
+        background-color var(--lx-fast) var(--lx-ease),
+        border-color var(--lx-fast) var(--lx-ease),
+        color var(--lx-fast) var(--lx-ease),
+        box-shadow var(--lx-fast) var(--lx-ease),
+        transform var(--lx-fast) var(--lx-ease);
+}
 
-    --ag-purple: #6b4fd8;
-    --ag-teal: #0f9b8e;
+.aigrader-container .mds-btn.btn:active:not(:disabled),
+.aigrader-root .mds-btn.btn:active:not(:disabled),
+.aigrader-report-container .mds-btn.btn:active:not(:disabled),
+.aigrader-loading-overlay .mds-btn.btn:active:not(:disabled) {
+    transform: translateY(0.5px);
+}
 
-    --ag-radius: 8px;
-    --ag-radius-lg: 12px;
-    --ag-radius-pill: 999px;
-    --ag-shadow: 0 1px 2px rgba(32, 33, 36, 0.06);
+.aigrader-container .mds-btn.mds-btn--size-sm,
+.aigrader-root .mds-btn.mds-btn--size-sm,
+.aigrader-report-container .mds-btn.mds-btn--size-sm,
+.aigrader-loading-overlay .mds-btn.mds-btn--size-sm {
+    border-radius: var(--mds-border-radius-sm);
+}
+
+.aigrader-container .mds-btn.mds-btn--icon-only:not(.mds-btn--size-lg),
+.aigrader-root .mds-btn.mds-btn--icon-only:not(.mds-btn--size-lg),
+.aigrader-report-container .mds-btn.mds-btn--icon-only:not(.mds-btn--size-lg),
+.aigrader-loading-overlay .mds-btn.mds-btn--icon-only:not(.mds-btn--size-lg) {
+    border-radius: var(--mds-border-radius-pill);
+}
+
+.aigrader-container .mds-btn.btn.btn-primary:not(:disabled),
+.aigrader-container .mds-btn.btn.btn-danger:not(:disabled),
+.aigrader-root .mds-btn.btn.btn-primary:not(:disabled),
+.aigrader-root .mds-btn.btn.btn-danger:not(:disabled),
+.aigrader-report-container .mds-btn.btn.btn-primary:not(:disabled),
+.aigrader-report-container .mds-btn.btn.btn-danger:not(:disabled),
+.aigrader-loading-overlay .mds-btn.btn.btn-primary:not(:disabled),
+.aigrader-loading-overlay .mds-btn.btn.btn-danger:not(:disabled) {
+    box-shadow: var(--lx-shadow-xs), var(--lx-highlight), inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+.aigrader-container .mds-btn.btn.btn-secondary,
+.aigrader-root .mds-btn.btn.btn-secondary,
+.aigrader-report-container .mds-btn.btn.btn-secondary,
+.aigrader-loading-overlay .mds-btn.btn.btn-secondary {
+    background-color: var(--mds-bg-surface-default);
+    color: var(--mds-text-default);
+    box-shadow: var(--lx-shadow-xs), inset 0 0 0 1px var(--mds-border-interactive-secondary-default);
+}
+
+.aigrader-container .mds-btn.btn.btn-secondary:hover,
+.aigrader-root .mds-btn.btn.btn-secondary:hover,
+.aigrader-report-container .mds-btn.btn.btn-secondary:hover,
+.aigrader-loading-overlay .mds-btn.btn.btn-secondary:hover {
+    background-color: var(--mds-bg-surface-subtle);
+    box-shadow: var(--lx-shadow-xs), inset 0 0 0 1px var(--mds-border-interactive-secondary-hover);
+}
+
+.aigrader-container .mds-btn.btn.btn-secondary:active,
+.aigrader-root .mds-btn.btn.btn-secondary:active,
+.aigrader-report-container .mds-btn.btn.btn-secondary:active,
+.aigrader-loading-overlay .mds-btn.btn.btn-secondary:active {
+    background-color: var(--mds-bg-surface-strong);
+}
+
+.aigrader-container .mds-btn.btn.btn-secondary:disabled,
+.aigrader-root .mds-btn.btn.btn-secondary:disabled,
+.aigrader-report-container .mds-btn.btn.btn-secondary:disabled,
+.aigrader-loading-overlay .mds-btn.btn.btn-secondary:disabled {
+    background-color: var(--mds-bg-surface-subtle);
+    color: var(--mds-text-muted);
+    box-shadow: inset 0 0 0 1px var(--mds-border-subtle);
+}
+
+.aigrader-container .mds-btn.btn.btn-ghost,
+.aigrader-root .mds-btn.btn.btn-ghost,
+.aigrader-report-container .mds-btn.btn.btn-ghost,
+.aigrader-loading-overlay .mds-btn.btn.btn-ghost {
+    color: var(--mds-text-subtle);
+}
+
+.aigrader-container .mds-btn.btn.btn-ghost:hover,
+.aigrader-root .mds-btn.btn.btn-ghost:hover,
+.aigrader-report-container .mds-btn.btn.btn-ghost:hover,
+.aigrader-loading-overlay .mds-btn.btn.btn-ghost:hover {
+    background-color: var(--mds-bg-surface-strong);
+    color: var(--mds-text-default);
+}
+
+.aigrader-container .mds-btn.btn.btn-ghost:active,
+.aigrader-root .mds-btn.btn.btn-ghost:active,
+.aigrader-report-container .mds-btn.btn.btn-ghost:active,
+.aigrader-loading-overlay .mds-btn.btn.btn-ghost:active {
+    background-color: var(--mds-border-default);
+}
+
+.aigrader-container .mds-btn.btn.btn-outline-primary:hover,
+.aigrader-root .mds-btn.btn.btn-outline-primary:hover,
+.aigrader-report-container .mds-btn.btn.btn-outline-primary:hover,
+.aigrader-loading-overlay .mds-btn.btn.btn-outline-primary:hover {
+    background-color: var(--mds-bg-interactive-primary-default-light);
+    color: var(--mds-text-link-primary-default);
+    border-color: var(--mds-bg-interactive-primary-default);
+}
+
+.aigrader-container .mds-btn.btn.btn-outline-primary:active,
+.aigrader-root .mds-btn.btn.btn-outline-primary:active,
+.aigrader-report-container .mds-btn.btn.btn-outline-primary:active,
+.aigrader-loading-overlay .mds-btn.btn.btn-outline-primary:active {
+    background-color: var(--mds-bg-feedback-primary-subtle);
+    color: var(--mds-text-link-primary-default);
+}
+
+.aigrader-container .mds-btn.btn.btn-outline-secondary,
+.aigrader-root .mds-btn.btn.btn-outline-secondary,
+.aigrader-report-container .mds-btn.btn.btn-outline-secondary,
+.aigrader-loading-overlay .mds-btn.btn.btn-outline-secondary {
+    color: var(--mds-text-default);
+}
+
+.aigrader-container .mds-btn.btn.btn-outline-secondary:hover,
+.aigrader-root .mds-btn.btn.btn-outline-secondary:hover,
+.aigrader-report-container .mds-btn.btn.btn-outline-secondary:hover,
+.aigrader-loading-overlay .mds-btn.btn.btn-outline-secondary:hover {
+    background-color: var(--mds-bg-surface-subtle);
+    color: var(--mds-text-default);
+    border-color: var(--mds-border-interactive-secondary-hover);
+}
+
+.aigrader-container .mds-btn.btn.btn-outline-secondary:active,
+.aigrader-root .mds-btn.btn.btn-outline-secondary:active,
+.aigrader-report-container .mds-btn.btn.btn-outline-secondary:active,
+.aigrader-loading-overlay .mds-btn.btn.btn-outline-secondary:active {
+    background-color: var(--mds-bg-surface-strong);
+    color: var(--mds-text-default);
+}
+
+.aigrader-container .mds-btn.btn.btn-outline-danger:hover,
+.aigrader-root .mds-btn.btn.btn-outline-danger:hover,
+.aigrader-report-container .mds-btn.btn.btn-outline-danger:hover,
+.aigrader-loading-overlay .mds-btn.btn.btn-outline-danger:hover {
+    background-color: var(--mds-bg-interactive-danger-default-light);
+    color: var(--mds-text-danger);
+    border-color: var(--mds-bg-interactive-danger-default);
+}
+
+.aigrader-container .mds-btn.btn.btn-outline-danger:active,
+.aigrader-root .mds-btn.btn.btn-outline-danger:active,
+.aigrader-report-container .mds-btn.btn.btn-outline-danger:active,
+.aigrader-loading-overlay .mds-btn.btn.btn-outline-danger:active {
+    background-color: var(--mds-bg-feedback-danger-subtle);
+    color: var(--mds-text-danger);
+}
+
+.aigrader-container .mds-btn.btn.btn-danger:focus-visible,
+.aigrader-root .mds-btn.btn.btn-danger:focus-visible,
+.aigrader-report-container .mds-btn.btn.btn-danger:focus-visible,
+.aigrader-loading-overlay .mds-btn.btn.btn-danger:focus-visible,
+.aigrader-container .mds-btn.btn.btn-outline-danger:focus-visible,
+.aigrader-root .mds-btn.btn.btn-outline-danger:focus-visible,
+.aigrader-report-container .mds-btn.btn.btn-outline-danger:focus-visible,
+.aigrader-loading-overlay .mds-btn.btn.btn-outline-danger:focus-visible {
+    box-shadow: var(--lx-ring-danger);
+}
+
+.aigrader-container .mds-alert,
+.aigrader-root .mds-alert,
+.aigrader-report-container .mds-alert,
+.aigrader-loading-overlay .mds-alert {
+    border-radius: var(--lx-radius-card);
+    box-shadow: var(--lx-shadow-xs);
+}
+
+.aigrader-container .mds-alert-title,
+.aigrader-root .mds-alert-title,
+.aigrader-report-container .mds-alert-title,
+.aigrader-loading-overlay .mds-alert-title {
+    font-weight: var(--mds-font-weight-semibold);
+}
+
+.aigrader-container .mds-badge[class],
+.aigrader-root .mds-badge[class],
+.aigrader-report-container .mds-badge[class],
+.aigrader-loading-overlay .mds-badge[class] {
+    border-radius: var(--mds-border-radius-sm);
+    letter-spacing: 0.01em;
+}
+
+.aigrader-container .mds-badge[class].mds-badge--pill,
+.aigrader-root .mds-badge[class].mds-badge--pill,
+.aigrader-report-container .mds-badge[class].mds-badge--pill,
+.aigrader-loading-overlay .mds-badge[class].mds-badge--pill {
+    border-radius: var(--mds-border-radius-pill);
+}
+
+.aigrader-container .mds-badge[class]:not(.mds-badge--subtle),
+.aigrader-root .mds-badge[class]:not(.mds-badge--subtle),
+.aigrader-report-container .mds-badge[class]:not(.mds-badge--subtle),
+.aigrader-loading-overlay .mds-badge[class]:not(.mds-badge--subtle) {
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+
+.aigrader-container .mds-badge[class].mds-badge--warning:not(.mds-badge--subtle),
+.aigrader-root .mds-badge[class].mds-badge--warning:not(.mds-badge--subtle),
+.aigrader-report-container .mds-badge[class].mds-badge--warning:not(.mds-badge--subtle),
+.aigrader-loading-overlay .mds-badge[class].mds-badge--warning:not(.mds-badge--subtle) {
+    color: var(--mds-color-yellow-800);
+}
+
+.aigrader-container .mds-close-button.btn-close,
+.aigrader-root .mds-close-button.btn-close,
+.aigrader-report-container .mds-close-button.btn-close,
+.aigrader-loading-overlay .mds-close-button.btn-close {
+    border-radius: var(--mds-border-radius-sm);
+    transition: background-color var(--lx-fast) var(--lx-ease), color var(--lx-fast) var(--lx-ease);
+}
+
+.aigrader-container .mds-close-button.btn-close:hover,
+.aigrader-root .mds-close-button.btn-close:hover,
+.aigrader-report-container .mds-close-button.btn-close:hover,
+.aigrader-loading-overlay .mds-close-button.btn-close:hover {
+    background-color: var(--mds-bg-surface-strong);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .aigrader-container *,
+    .aigrader-root *,
+    .aigrader-report-container *,
+    .aigrader-loading-overlay *,
+    .aigrader-container *::before,
+    .aigrader-root *::before,
+    .aigrader-report-container *::before,
+    .aigrader-loading-overlay *::before,
+    .aigrader-container *::after,
+    .aigrader-root *::after,
+    .aigrader-report-container *::after,
+    .aigrader-loading-overlay *::after {
+        animation: none;
+        transition: none;
+    }
+}
+
+.aigrader-container,
+.aigrader-root,
+.aigrader-report-container,
+.aigrader-loading-overlay {
+    /* The site's own font when Noto Sans is not installed. */
+    --mds-font-family-base: "Noto Sans", var(--bs-body-font-family, system-ui), sans-serif;
+
+    /* Plugin aliases for the MDS semantic tokens the rules below use. */
+    --ag-ink: var(--mds-text-default);
+    --ag-ink-2: var(--mds-text-subtle);
+    --ag-ink-3: var(--mds-text-muted);
+    --ag-line: var(--mds-border-default);
+    --ag-line-strong: var(--mds-border-interactive-secondary-default);
+    --ag-surface: var(--mds-bg-surface-default);
+    --ag-surface-2: var(--mds-bg-surface-subtle);
+    --ag-surface-3: var(--mds-bg-surface-strong);
+
+    --ag-blue: var(--mds-bg-interactive-primary-default);
+    --ag-blue-dark: var(--mds-bg-interactive-primary-hover);
+    --ag-blue-soft: var(--mds-bg-feedback-primary-light);
+    --ag-blue-border: var(--mds-border-feedback-primary);
+    --ag-link: var(--mds-text-link-primary-default);
+
+    --ag-green: var(--mds-bg-feedback-success-default);
+    --ag-green-dark: var(--mds-color-green-600);
+    --ag-green-soft: var(--mds-bg-feedback-success-light);
+    --ag-green-border: var(--mds-border-feedback-success);
+    --ag-green-ink: var(--mds-text-feedback-success);
+
+    --ag-amber: var(--mds-color-yellow-700);
+    --ag-amber-soft: var(--mds-bg-feedback-warning-light);
+    --ag-amber-border: var(--mds-border-feedback-warning);
+    --ag-amber-ink: var(--mds-text-feedback-warning);
+
+    --ag-red: var(--mds-text-danger);
+    --ag-red-soft: var(--mds-bg-feedback-danger-light);
+    --ag-red-border: var(--mds-border-feedback-danger);
+    --ag-red-ink: var(--mds-text-feedback-danger);
+
+    --ag-purple: var(--mds-color-purple-500);
+    --ag-teal: var(--mds-color-cyan-500);
+
+    --ag-radius: var(--mds-border-radius-md);
+    --ag-radius-sm: var(--mds-border-radius-sm);
+    --ag-radius-lg: var(--mds-border-radius-lg);
+    --ag-radius-pill: var(--mds-border-radius-pill);
+    --ag-shadow: var(--lx-shadow-sm);
+    --ag-overlay: rgba(255, 255, 255, 0.72);
 
     color: var(--ag-ink);
-    font-size: 15px;
-    line-height: 1.6;
+    font-family: var(--mds-font-family-base);
+    font-size: var(--mds-font-size-paragraph-default);
+    line-height: 1.5;
+}
+
+[data-bs-theme='dark'] .aigrader-container,
+[data-bs-theme='dark'] .aigrader-root,
+[data-bs-theme='dark'] .aigrader-report-container,
+[data-bs-theme='dark'] .aigrader-loading-overlay {
+    --ag-green-dark: var(--mds-color-green-300);
+    --ag-amber: var(--mds-color-yellow-300);
+    --ag-purple: var(--mds-color-purple-200);
+    --ag-overlay: rgba(14, 17, 21, 0.72);
 }
 
 .aigrader-container *,
@@ -152,9 +1912,10 @@
 .aigrader-container .ag-card,
 .aigrader-container .aigrader-panel,
 .aigrader-container .aigrader-section-box {
-    background: var(--ag-surface);
+    background-color: var(--ag-surface);
     border: 1px solid var(--ag-line);
     border-radius: var(--ag-radius-lg);
+    box-shadow: var(--lx-shadow-sm);
 }
 
 /* ---------------------------------------------------------------------------
@@ -204,7 +1965,7 @@
     color: var(--ag-green-ink);
     background: var(--ag-green-soft);
     border: 1px solid var(--ag-green-border);
-    border-radius: var(--ag-radius-pill);
+    border-radius: var(--ag-radius-sm);
 }
 
 .aigrader-container .aigrader-credits-icon {
@@ -249,138 +2010,62 @@
 }
 
 /* ---------------------------------------------------------------------------
- * Buttons
+ * Buttons and badges
+ *
+ * Every button is an MDS Button (mds-btn btn btn-<variant> mds-btn--size-<size>) and every
+ * badge an MDS Badge (mds-badge badge mds-badge--<variant>), styled by the foundation above.
+ * The aigrader-* classes on them are JavaScript hooks and the few states MDS does not
+ * have; they carry no colour of their own.
  * ------------------------------------------------------------------------ */
 
-.aigrader-container .aigrader-btn,
-.aigrader-container .ag-btn-base {
-    display: inline-flex;
-    align-items: center;
+.aigrader-container .mds-btn.btn,
+.aigrader-report-container .mds-btn.btn {
     justify-content: center;
-    gap: 7px;
-    padding: 9px 16px;
-    font-family: inherit;
-    font-size: 0.875rem;
-    font-weight: 600;
-    line-height: 1.2;
-    text-decoration: none;
     white-space: nowrap;
-    cursor: pointer;
-    border: 1px solid transparent;
-    border-radius: var(--ag-radius);
-    transition: background-color 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+    text-decoration: none;
 }
 
-.aigrader-container .aigrader-btn-sm {
-    padding: 6px 12px;
-    font-size: 0.8125rem;
+.aigrader-container .mds-btn.btn .ag-icon-xs,
+.aigrader-container .mds-btn.btn .ag-icon-sm,
+.aigrader-report-container .mds-btn.btn .ag-icon-sm {
+    flex: none;
 }
 
-.aigrader-container .aigrader-btn-primary,
-.aigrader-container .ag-btn-primary,
-.aigrader-container .aigrader-btn-submit,
-.aigrader-container .aigrader-gradeall-btn,
-.aigrader-container .aigrader-grade-btn,
-.aigrader-container .aigrader-btn-download-primary {
-    color: #fff;
-    background: var(--ag-blue);
-    border-color: var(--ag-blue);
-}
-
-.aigrader-container .aigrader-btn-primary:hover,
-.aigrader-container .ag-btn-primary:hover,
-.aigrader-container .aigrader-btn-submit:hover,
-.aigrader-container .aigrader-gradeall-btn:hover,
-.aigrader-container .aigrader-grade-btn:hover,
-.aigrader-container .aigrader-btn-download-primary:hover {
-    color: #fff;
-    background: var(--ag-blue-dark);
-    border-color: var(--ag-blue-dark);
-}
-
-.aigrader-container .aigrader-btn-success,
-.aigrader-container .ag-btn-success {
-    color: #fff;
-    background: var(--ag-green);
-    border-color: var(--ag-green);
-}
-
-.aigrader-container .aigrader-btn-success:hover,
-.aigrader-container .ag-btn-success:hover {
-    color: #fff;
-    background: var(--ag-green-dark);
-    border-color: var(--ag-green-dark);
-}
-
-/* The approved state: the button stays in place and turns green, so the assessor sees the
-   decision land on the card they were reading rather than the card being rebuilt. */
-.aigrader-container .aigrader-btn-saved {
-    color: #fff;
-    background: var(--ag-green);
-    border-color: var(--ag-green);
+/* The approved state: the button stays in place and turns to a settled success state, so
+   the grader sees the decision land on the card they were reading. */
+.aigrader-container .mds-btn.btn.aigrader-btn-saved,
+.aigrader-container .mds-btn.btn.aigrader-btn-saved:disabled {
+    color: var(--ag-green-ink);
+    background-color: var(--ag-green-soft);
+    box-shadow: inset 0 0 0 1px var(--ag-green-border);
+    opacity: 1;
     cursor: default;
-}
-
-.aigrader-container .aigrader-btn-outline,
-.aigrader-container .aigrader-btn-secondary,
-.aigrader-container .aigrader-btn-download,
-.aigrader-container .aigrader-refresh-btn {
-    color: var(--ag-blue);
-    background: var(--ag-surface);
-    border-color: var(--ag-line-strong);
-}
-
-.aigrader-container .aigrader-btn-outline:hover,
-.aigrader-container .aigrader-btn-secondary:hover,
-.aigrader-container .aigrader-btn-download:hover,
-.aigrader-container .aigrader-refresh-btn:hover {
-    color: var(--ag-blue-dark);
-    background: var(--ag-blue-soft);
-    border-color: var(--ag-blue-border);
-}
-
-.aigrader-container .aigrader-btn:disabled,
-.aigrader-container .aigrader-btn-disabled {
-    cursor: not-allowed;
-    opacity: 0.65;
 }
 
 /* Locked while the minimum review time runs. Muted rather than merely faded, so it reads
    as "not yet" instead of "broken". */
-.aigrader-container .aigrader-approve-locked {
-    color: #fff;
-    background: #a8c4ee;
-    border-color: #a8c4ee;
+.aigrader-container .mds-btn.btn.aigrader-approve-locked,
+.aigrader-container .mds-btn.btn.aigrader-approve-locked:disabled {
+    color: var(--mds-text-inverse);
+    background-color: var(--mds-bg-interactive-primary-disabled);
     opacity: 1;
 }
 
-.aigrader-container .aigrader-btn:focus-visible,
+.aigrader-container .mds-btn.btn.aigrader-btn-disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+}
+
 .aigrader-container .aigrader-grade-dropdown:focus-visible,
 .aigrader-container .aigrader-feedback-edit:focus-visible,
 .aigrader-container input:focus-visible,
 .aigrader-container select:focus-visible,
-.aigrader-container textarea:focus-visible {
-    outline: 2px solid var(--ag-blue);
-    outline-offset: 2px;
-}
-
-.aigrader-container .aigrader-upload-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    padding: 8px 14px;
-    font-size: 0.8125rem;
-    font-weight: 600;
-    color: var(--ag-blue);
-    cursor: pointer;
-    background: var(--ag-surface);
-    border: 1px solid var(--ag-line-strong);
-    border-radius: var(--ag-radius);
-}
-
-.aigrader-container .aigrader-upload-btn:hover {
-    background: var(--ag-blue-soft);
-    border-color: var(--ag-blue-border);
+.aigrader-container textarea:focus-visible,
+.aigrader-report-container input:focus-visible,
+.aigrader-report-container select:focus-visible {
+    outline: 0;
+    border-color: var(--mds-border-interactive-primary-default);
+    box-shadow: var(--lx-ring);
 }
 
 .aigrader-container .aigrader-file-input,
@@ -392,8 +2077,8 @@
 .aigrader-container .aigrader-help-text,
 .aigrader-container .aigrader-section-help,
 .aigrader-container .aigrader-documents-help {
-    margin: 6px 0 0;
-    font-size: 0.75rem;
+    margin: var(--mds-spacing-xxs) 0 0;
+    font-size: 0.8125rem;
     line-height: 1.5;
     color: var(--ag-ink-3);
 }
@@ -404,7 +2089,7 @@
     height: 13px;
     vertical-align: -2px;
     border: 2px solid rgba(255, 255, 255, 0.45);
-    border-top-color: #fff;
+    border-top-color: var(--mds-text-inverse);
     border-radius: 50%;
     animation: aigrader-spin 0.7s linear infinite;
 }
@@ -419,86 +2104,105 @@
     .aigrader-container .aigrader-spinner {
         animation-duration: 2s;
     }
-
-    .aigrader-container .aigrader-btn {
-        transition: none;
-    }
 }
 
-/* ---------------------------------------------------------------------------
- * Badges and pills
- * ------------------------------------------------------------------------ */
-
-.aigrader-container .ag-badge,
-.aigrader-container .aigrader-count-badge,
-.aigrader-container .aigrader-attempt-badge {
-    display: inline-flex;
+/* Alert and close icons are Font Awesome glyphs in the markup: Moodle does not allow the
+   data: URLs the MDS package draws them with, so those declarations are left out above. */
+.aigrader-container .mds-alert .mds-alert-icon {
+    display: flex;
     align-items: center;
-    gap: 5px;
-    padding: 3px 10px;
+    justify-content: center;
+    font-size: 1rem;
+    color: var(--mds-bg-feedback-primary-default);
+    background-color: transparent;
+    mask-image: none;
+    -webkit-mask-image: none;
+}
+
+.aigrader-container .mds-alert.mds-alert--success .mds-alert-icon {
+    color: var(--mds-bg-feedback-success-default);
+    background-color: transparent;
+}
+
+.aigrader-container .mds-alert.mds-alert--warning .mds-alert-icon {
+    color: var(--mds-color-yellow-700);
+    background-color: transparent;
+}
+
+.aigrader-container .mds-alert.mds-alert--danger .mds-alert-icon {
+    color: var(--mds-text-danger);
+    background-color: transparent;
+}
+
+.aigrader-container .mds-alert .mds-close-button.btn-close {
+    font-size: 1rem;
+    opacity: 1;
+}
+
+.aigrader-container .mds-alert .mds-close-button.btn-close::before {
+    content: none;
+}
+
+/* Font Awesome icons (MDS icon set) sized to the MDS icon scale. */
+.aigrader-container i.ag-icon-xs,
+.aigrader-report-container i.ag-icon-xs {
     font-size: 0.75rem;
-    font-weight: 600;
+}
+
+.aigrader-container i.ag-icon-sm,
+.aigrader-report-container i.ag-icon-sm {
+    font-size: 1rem;
+}
+
+.aigrader-container i.ag-icon-md {
+    font-size: 1.25rem;
+}
+
+.aigrader-container i.ag-icon-lg {
+    font-size: 1.5rem;
+}
+
+.aigrader-container i[class*='ag-icon-'] {
+    width: auto;
+    height: auto;
+    line-height: 1;
+}
+
+/* Badges keep the MDS shape; these only set the spacing they sit in. */
+.aigrader-container .mds-badge,
+.aigrader-report-container .mds-badge {
     white-space: nowrap;
-    border: 1px solid transparent;
-    border-radius: var(--ag-radius-pill);
+    font-variant-numeric: tabular-nums;
 }
 
-.aigrader-container .ag-badge-success {
-    color: var(--ag-green-ink);
-    background: var(--ag-green-soft);
-    border-color: var(--ag-green-border);
+/* A count inside the primary Grade all essays button. */
+.aigrader-container .mds-btn.btn-primary .mds-badge.aigrader-count-badge {
+    padding-block: 0;
+    color: var(--mds-bg-interactive-primary-default);
+    background-color: var(--mds-bg-surface-default);
+    line-height: 1.4;
 }
 
-.aigrader-container .ag-badge-warning {
-    color: var(--ag-amber-ink);
-    background: var(--ag-amber-soft);
-    border-color: var(--ag-amber-border);
+.aigrader-container .aigrader-date-filter {
+    align-items: center;
 }
 
-.aigrader-container .ag-badge-error {
-    color: var(--ag-red-ink);
-    background: var(--ag-red-soft);
-    border-color: var(--ag-red-border);
-}
-
-.aigrader-container .ag-badge-info,
-.aigrader-container .aigrader-count-badge,
-.aigrader-container .aigrader-attempt-badge {
+/* The plugin's mark, in the brand blue. */
+.aigrader-container .aigrader-logo {
     color: var(--ag-blue);
-    background: var(--ag-blue-soft);
-    border-color: var(--ag-blue-border);
+}
+
+/* Labels in a filter row read at the same size as the fields beside them. */
+.aigrader-container .aigrader-date-filter-label,
+.aigrader-container .aigrader-group-filter-bar label {
+    font-size: 0.875rem;
+    font-weight: var(--mds-font-weight-medium);
+    color: var(--ag-ink-2);
 }
 
 /* The headline figure, top right of the card. */
 .aigrader-container .aigrader-suggested-slot:empty {
     display: none;
-}
-
-.aigrader-container .aigrader-suggested-grade {
-    display: inline-flex;
-    align-items: center;
-    padding: 5px 13px;
-    font-size: 0.8125rem;
-    font-weight: 600;
-    white-space: nowrap;
-    color: var(--ag-green-ink);
-    background: var(--ag-green-soft);
-    border: 1px solid var(--ag-green-border);
-    border-radius: var(--ag-radius-pill);
-}
-
-/* Confirms an edit was kept. Nothing has reached the gradebook at this point, which is why
-   the wording is "Changes saved" and not "Saved". */
-.aigrader-container .aigrader-saved-pill {
-    display: inline-flex;
-    align-items: center;
-    padding: 3px 10px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--ag-green-ink);
-    background: var(--ag-green-soft);
-    border: 1px solid var(--ag-green-border);
-    border-radius: var(--ag-radius-pill);
 }
 
 .aigrader-container .aigrader-saved-icon {
@@ -535,7 +2239,7 @@
     font: inherit;
     font-size: 0.875rem;
     color: var(--ag-ink);
-    background: var(--ag-surface);
+    background-color: var(--ag-surface);
     border: 1px solid var(--ag-line-strong);
     border-radius: var(--ag-radius);
 }
@@ -583,7 +2287,7 @@
     font: inherit;
     font-size: 0.875rem;
     color: var(--ag-ink);
-    background: var(--ag-surface);
+    background-color: var(--ag-surface);
     border: 1px solid var(--ag-line-strong);
     border-radius: var(--ag-radius);
 }
@@ -605,7 +2309,7 @@
 .aigrader-container .aigrader-group-filter-bar {
     margin: 0 0 16px;
     padding: 12px 15px;
-    background: var(--ag-surface-2);
+    background-color: var(--ag-surface-2);
     border: 1px solid var(--ag-line);
     border-radius: var(--ag-radius);
 }
@@ -616,7 +2320,10 @@
     gap: 8px;
 }
 
-.aigrader-container .aigrader-date-filter-notice,
+.aigrader-container .aigrader-date-filter-notice {
+    margin: var(--mds-spacing-sm) 0 0;
+}
+
 .aigrader-container .aigrader-next-run {
     margin: 10px 0 0;
     font-size: 0.8125rem;
@@ -632,7 +2339,7 @@
 .aigrader-container .aigrader-instructions-section,
 .aigrader-container .aigrader-stats-box {
     margin: 0 0 16px;
-    background: var(--ag-surface);
+    background-color: var(--ag-surface);
     border: 1px solid var(--ag-line);
     border-radius: var(--ag-radius-lg);
 }
@@ -703,7 +2410,7 @@
     font-size: 0.875rem;
     line-height: 1.55;
     color: var(--ag-ink);
-    background: var(--ag-surface);
+    background-color: var(--ag-surface);
     border: 1px solid var(--ag-line-strong);
     border-radius: var(--ag-radius);
     resize: vertical;
@@ -736,7 +2443,7 @@
     align-items: center;
     gap: 11px;
     padding: 10px 13px;
-    background: var(--ag-surface-2);
+    background-color: var(--ag-surface-2);
     border: 1px solid var(--ag-line);
     border-radius: var(--ag-radius);
 }
@@ -770,40 +2477,6 @@
 
 .aigrader-container .aigrader-doc-status {
     flex: none;
-    padding: 2px 9px;
-    font-size: 0.6875rem;
-    font-weight: 600;
-    border-radius: var(--ag-radius-pill);
-}
-
-.aigrader-container .aigrader-doc-status-ready {
-    color: var(--ag-green-ink);
-    background: var(--ag-green-soft);
-}
-
-.aigrader-container .aigrader-doc-status-processing {
-    color: var(--ag-amber-ink);
-    background: var(--ag-amber-soft);
-}
-
-.aigrader-container .aigrader-doc-status-failed {
-    color: var(--ag-red-ink);
-    background: var(--ag-red-soft);
-}
-
-.aigrader-container .aigrader-doc-delete {
-    flex: none;
-    padding: 4px;
-    color: var(--ag-ink-3);
-    cursor: pointer;
-    background: none;
-    border: 0;
-    border-radius: 5px;
-}
-
-.aigrader-container .aigrader-doc-delete:hover {
-    color: var(--ag-red);
-    background: var(--ag-red-soft);
 }
 
 .aigrader-container .aigrader-no-documents,
@@ -831,7 +2504,7 @@
 .aigrader-container .aigrader-stat-card,
 .aigrader-container .aigrader-stat-tile {
     padding: 15px 17px;
-    background: var(--ag-surface);
+    background-color: var(--ag-surface);
     border: 1px solid var(--ag-line);
     border-radius: var(--ag-radius-lg);
 }
@@ -882,7 +2555,7 @@
 }
 
 .aigrader-container .aigrader-table-card {
-    background: var(--ag-surface);
+    background-color: var(--ag-surface);
     border: 1px solid var(--ag-line);
     border-radius: var(--ag-radius-lg);
 }
@@ -904,7 +2577,7 @@
     font-weight: 600;
     text-align: left;
     color: var(--ag-ink-2);
-    background: var(--ag-surface-2);
+    background-color: var(--ag-surface-2);
     border-bottom: 1px solid var(--ag-line);
 }
 
@@ -951,7 +2624,7 @@
 
 .aigrader-container .aigrader-card-header {
     padding: 13px 17px;
-    background: var(--ag-surface-2);
+    background-color: var(--ag-surface-2);
     border-bottom: 1px solid var(--ag-line);
 }
 
@@ -990,7 +2663,7 @@
 }
 
 .aigrader-container .aigrader-col-response {
-    background: var(--ag-surface-2);
+    background-color: var(--ag-surface-2);
 }
 
 .aigrader-container .aigrader-card-section {
@@ -1117,7 +2790,7 @@
     text-align: left;
     white-space: nowrap;
     color: var(--ag-ink-2);
-    background: var(--ag-surface-2);
+    background-color: var(--ag-surface-2);
     border-bottom: 1px solid var(--ag-line);
 }
 
@@ -1129,7 +2802,7 @@
 }
 
 .aigrader-container .aigrader-qrow:hover > td {
-    background: var(--ag-surface-2);
+    background-color: var(--ag-surface-2);
 }
 
 .aigrader-container .aigrader-q-expand {
@@ -1153,7 +2826,7 @@
 
 .aigrader-container .aigrader-expand-btn:hover {
     color: var(--ag-ink);
-    background: var(--ag-surface-3);
+    background-color: var(--ag-surface-3);
 }
 
 .aigrader-container .aigrader-expand-btn .aigrader-chevron {
@@ -1191,44 +2864,22 @@
     white-space: nowrap;
 }
 
+/* Row status is an MDS Badge; the variant is set by setRowStatus() in aigrader.js. */
 .aigrader-container .aigrader-status {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 0.8125rem;
-    font-weight: 600;
-}
-
-.aigrader-container .aigrader-status-pending {
-    font-weight: 500;
-    color: var(--ag-ink-3);
-}
-
-.aigrader-container .aigrader-status-grading {
-    color: var(--ag-blue);
-}
-
-.aigrader-container .aigrader-status-graded,
-.aigrader-container .aigrader-status-approved {
-    color: var(--ag-green-ink);
-}
-
-/* A question with no criteria on a site that marks only against written criteria. */
-.aigrader-container .aigrader-status-manual {
-    color: var(--ag-amber-ink);
+    gap: var(--mds-spacing-xxs);
 }
 
 /* An unassessed response is grey, never green: Essay Guard saw nothing, which is not the
    same as finding nothing. */
 .aigrader-container .ag-eg-badge-nodata {
     color: var(--ag-ink-2);
-    background: var(--ag-surface-3);
+    background-color: var(--ag-surface-3);
     border-color: var(--ag-line-strong);
 }
 
 .aigrader-container .aigrader-qdetail > td {
     padding: 0;
-    background: var(--ag-surface);
+    background-color: var(--ag-surface);
     border-bottom: 1px solid var(--ag-line);
 }
 
@@ -1276,7 +2927,7 @@
 .aigrader-container .aigrader-crit {
     margin: 0 0 10px;
     padding: 13px 16px;
-    background: var(--ag-surface);
+    background-color: var(--ag-surface);
     border: 1px solid var(--ag-line);
     border-radius: var(--ag-radius);
 }
@@ -1317,9 +2968,9 @@
     text-align: right;
     font-variant-numeric: tabular-nums;
     color: var(--ag-ink);
-    background: var(--ag-surface);
+    background-color: var(--ag-surface);
     border: 1px solid var(--ag-line-strong);
-    border-radius: 6px;
+    border-radius: var(--ag-radius-sm);
 }
 
 .aigrader-container .aigrader-crit-max {
@@ -1331,7 +2982,7 @@
 
 .aigrader-container .aigrader-crit-track {
     height: 6px;
-    background: #e8eaed;
+    background-color: var(--ag-surface-3);
     border-radius: var(--ag-radius-pill);
     overflow: hidden;
 }
@@ -1364,7 +3015,7 @@
     line-height: 1.5;
     color: var(--ag-amber-ink);
     background: var(--ag-amber-soft);
-    border-radius: 6px;
+    border-radius: var(--ag-radius-sm);
 }
 
 .aigrader-container .aigrader-crit-improve[hidden] {
@@ -1462,9 +3113,9 @@
     font-weight: 600;
     font-variant-numeric: tabular-nums;
     color: var(--ag-ink);
-    background: var(--ag-surface);
+    background-color: var(--ag-surface);
     border: 1px solid var(--ag-line-strong);
-    border-radius: 6px;
+    border-radius: var(--ag-radius-sm);
 }
 
 .aigrader-container .aigrader-edit-actions {
@@ -1483,7 +3134,7 @@
     font-size: 0.875rem;
     line-height: 1.6;
     color: var(--ag-ink);
-    background: var(--ag-surface);
+    background-color: var(--ag-surface);
     border: 1px solid var(--ag-line);
     border-radius: var(--ag-radius);
     resize: vertical;
@@ -1491,15 +3142,15 @@
 
 .aigrader-container .aigrader-feedback-edit[readonly] {
     color: var(--ag-ink-2);
-    background: var(--ag-surface);
+    background-color: var(--ag-surface);
     cursor: default;
 }
 
 .aigrader-container .aigrader-feedback-edit.is-editing {
     color: var(--ag-ink);
-    background: var(--ag-surface);
+    background-color: var(--ag-surface);
     border-color: var(--ag-blue);
-    box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.12);
+    box-shadow: var(--lx-ring);
 }
 
 .aigrader-container .aigrader-feedback-text {
@@ -1535,9 +3186,9 @@
 /* Previous attempt context: a neutral panel, so the colour stays with the marks. */
 .aigrader-container .aigrader-previous-attempt {
     margin: 0 0 14px;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
+    background-color: var(--ag-surface-2);
+    border: 1px solid var(--ag-line);
+    border-radius: var(--ag-radius-lg);
 }
 
 .aigrader-container .aigrader-previous-toggle {
@@ -1550,7 +3201,7 @@
     font-size: 0.8125rem;
     font-weight: 600;
     text-align: left;
-    color: #0f172a;
+    color: var(--ag-ink);
     cursor: pointer;
     background: none;
     border: 0;
@@ -1564,7 +3215,7 @@
     padding: 0 14px 12px;
     font-size: 0.8125rem;
     line-height: 1.55;
-    color: #475569;
+    color: var(--ag-ink-2);
 }
 
 .aigrader-container .aigrader-previous-content[hidden] {
@@ -1583,8 +3234,8 @@
 
 .aigrader-container .aigrader-prev-crit {
     padding: 9px 12px;
-    background: #fff;
-    border: 1px solid #e2e8f0;
+    background-color: var(--ag-surface);
+    border: 1px solid var(--ag-line);
     border-radius: 10px;
 }
 
@@ -1595,7 +3246,7 @@
     gap: 10px;
     margin-bottom: 2px;
     font-weight: 600;
-    color: #0f172a;
+    color: var(--ag-ink);
 }
 
 .aigrader-container .aigrader-prev-score {
@@ -1604,27 +3255,27 @@
     font-size: 0.75rem;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
-    border-radius: 999px;
+    border-radius: var(--ag-radius-pill);
 }
 
 .aigrader-container .aigrader-prev-score.is-full {
-    color: #166534;
-    background: #dcfce7;
+    color: var(--ag-green-ink);
+    background: var(--ag-green-soft);
 }
 
 .aigrader-container .aigrader-prev-score.is-short {
-    color: #92400e;
-    background: #fef3c7;
+    color: var(--ag-amber-ink);
+    background: var(--ag-amber-soft);
 }
 
 .aigrader-container .aigrader-prev-heading {
     margin-top: 4px;
     font-weight: 600;
-    color: #0f172a;
+    color: var(--ag-ink);
 }
 
 .aigrader-container .aigrader-prev-line {
-    color: #475569;
+    color: var(--ag-ink-2);
 }
 
 /* The assessor's own button reset, so the theme's default button background and border do
@@ -1640,7 +3291,7 @@
 
 .aigrader-container button.aigrader-documents-toggle:hover,
 .aigrader-container button.aigrader-documents-toggle:focus-visible {
-    background: var(--ag-surface-2);
+    background-color: var(--ag-surface-2);
     color: var(--ag-ink);
 }
 
@@ -1680,9 +3331,9 @@
     line-height: 1.55;
     white-space: pre-wrap;
     color: var(--ag-ink-2);
-    background: var(--ag-surface-2);
+    background-color: var(--ag-surface-2);
     border: 1px dashed var(--ag-line-strong);
-    border-radius: 6px;
+    border-radius: var(--ag-radius-sm);
 }
 
 .aigrader-container .aigrader-policy-warn {
@@ -1691,7 +3342,7 @@
     background: var(--ag-amber-soft);
     border: 1px solid var(--ag-amber-border);
     border-left: 3px solid var(--ag-amber);
-    border-radius: 6px;
+    border-radius: var(--ag-radius-sm);
 }
 
 /* Assessor acknowledgement, required when an attempt is flagged for human review. The
@@ -1719,9 +3370,9 @@
     font: inherit;
     font-size: 0.875rem;
     color: var(--ag-ink);
-    background: var(--ag-surface);
+    background-color: var(--ag-surface);
     border: 1px solid var(--ag-line-strong);
-    border-radius: 6px;
+    border-radius: var(--ag-radius-sm);
     resize: vertical;
 }
 
@@ -1736,7 +3387,7 @@
     color: var(--ag-amber-ink);
     background: var(--ag-amber-soft);
     border: 1px solid var(--ag-amber-border);
-    border-radius: 6px;
+    border-radius: var(--ag-radius-sm);
 }
 
 /* States and small containers the inventory showed still unstyled. */
@@ -1768,41 +3419,15 @@
     margin: 0;
 }
 
-.aigrader-container .aigrader-date-filter-apply {
-    align-self: center;
-    padding: 8px 16px;
-    font: inherit;
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: #fff;
-    background: var(--ag-blue);
-    border: 1px solid var(--ag-blue);
-    border-radius: var(--ag-radius);
-    cursor: pointer;
-}
-
-.aigrader-container .aigrader-date-filter-apply:hover,
-.aigrader-container .aigrader-date-filter-apply:focus-visible {
-    background: #1557b0;
-    border-color: #1557b0;
-}
 
 /* Which question a row is, so three rows for one learner can be told apart at a glance. */
 .aigrader-container .aigrader-q-badge {
-    display: inline-block;
     min-width: 28px;
-    margin-right: 8px;
-    padding: 1px 7px;
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-align: center;
-    color: var(--ag-blue);
-    background: #e8f0fe;
-    border-radius: 999px;
+    margin-right: var(--mds-spacing-xs);
 }
 
 .aigrader-container .aigrader-col-feedback {
-    background: var(--ag-surface);
+    background-color: var(--ag-surface);
 }
 
 /* A suggestion is on screen and nothing has been written yet. The left edge carries the
@@ -1819,12 +3444,12 @@
 }
 
 .aigrader-container .aigrader-approved .aigrader-feedback-edit {
-    background: var(--ag-surface-2);
+    background-color: var(--ag-surface-2);
 }
 
 .aigrader-container .aigrader-approved .aigrader-grade-dropdown:disabled {
     color: var(--ag-ink-2);
-    background: var(--ag-surface-2);
+    background-color: var(--ag-surface-2);
 }
 
 /* ---------------------------------------------------------------------------
@@ -1905,54 +3530,7 @@
  * ------------------------------------------------------------------------ */
 
 .aigrader-container .aigrader-alert {
-    display: flex;
-    align-items: flex-start;
-    gap: 11px;
-    margin: 0 0 14px;
-    padding: 13px 15px;
-    border: 1px solid transparent;
-    border-radius: var(--ag-radius);
-}
-
-.aigrader-container .aigrader-alert-icon {
-    flex: none;
-    width: 18px;
-    height: 18px;
-    margin-top: 1px;
-}
-
-.aigrader-container .aigrader-alert-content {
-    min-width: 0;
-}
-
-.aigrader-container .aigrader-alert-title {
-    margin: 0 0 2px;
-    font-size: 0.875rem;
-    font-weight: 600;
-}
-
-.aigrader-container .aigrader-alert-message {
-    margin: 0;
-    font-size: 0.8125rem;
-    line-height: 1.5;
-}
-
-.aigrader-container .aigrader-alert-success {
-    color: var(--ag-green-ink);
-    background: var(--ag-green-soft);
-    border-color: var(--ag-green-border);
-}
-
-.aigrader-container .aigrader-alert-error {
-    color: var(--ag-red-ink);
-    background: var(--ag-red-soft);
-    border-color: var(--ag-red-border);
-}
-
-.aigrader-container .aigrader-alert-warning {
-    color: var(--ag-amber-ink);
-    background: var(--ag-amber-soft);
-    border-color: var(--ag-amber-border);
+    margin: 0 0 var(--mds-spacing-md);
 }
 
 .aigrader-container .aigrader-error-text {
@@ -2003,7 +3581,7 @@
     z-index: 1050;
     align-items: center;
     justify-content: center;
-    background: rgba(255, 255, 255, 0.72);
+    background: var(--ag-overlay);
     backdrop-filter: blur(2px);
 }
 
@@ -2017,16 +3595,16 @@
     gap: 12px;
     padding: 16px 22px;
     border-radius: 14px;
-    background: #fff;
-    border: 1px solid #e3e8ef;
-    box-shadow: 0 18px 40px -24px rgba(15, 23, 42, 0.45);
+    background-color: var(--ag-surface);
+    border: 1px solid var(--ag-line);
+    box-shadow: var(--lx-shadow-lg);
 }
 
 #aigrader-loading .aigrader-loading-spinner {
     width: 20px;
     height: 20px;
-    border: 2px solid #d2d9e3;
-    border-top-color: #1a73e8;
+    border: 2px solid var(--ag-line-strong);
+    border-top-color: var(--ag-blue);
     border-radius: 50%;
     animation: aigrader-spin 0.7s linear infinite;
 }
@@ -2034,7 +3612,7 @@
 #aigrader-loading .aigrader-loading-text {
     font-size: 0.9375rem;
     font-weight: 600;
-    color: #202124;
+    color: var(--ag-ink);
 }
 
 .aigrader-container .aigrader-loading-content {
@@ -2096,7 +3674,7 @@
 }
 
 .aigrader-report-container .aigrader-report-table tbody tr:hover {
-    background: var(--ag-surface-2);
+    background-color: var(--ag-surface-2);
 }
 
 .aigrader-report-container .aigrader-avatar,
@@ -2139,7 +3717,7 @@
 .aigrader-report-container .aigrader-filter-form {
     margin: 0 0 14px;
     padding: 16px 18px;
-    background: var(--ag-surface);
+    background-color: var(--ag-surface);
     border: 1px solid var(--ag-line);
     border-radius: var(--ag-radius-lg);
 }
@@ -2169,26 +3747,11 @@
     padding: 6px 10px;
     font-size: 0.875rem;
     color: var(--ag-ink);
-    background: var(--ag-surface);
+    background-color: var(--ag-surface);
     border: 1px solid var(--ag-line-strong);
-    border-radius: 8px;
+    border-radius: var(--ag-radius);
 }
 
-.aigrader-report-container .aigrader-btn-submit {
-    min-height: 38px;
-    padding: 0 18px;
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: #fff;
-    background: var(--ag-blue);
-    border: 0;
-    border-radius: 8px;
-}
-
-.aigrader-report-container .aigrader-btn-submit.aigrader-btn-submit:hover,
-.aigrader-report-container .aigrader-btn-submit.aigrader-btn-submit:focus {
-    background: var(--ag-blue-dark);
-}
 
 .aigrader-report-container .aigrader-download-row {
     display: flex;
@@ -2197,21 +3760,6 @@
     margin: 0 0 18px;
 }
 
-.aigrader-report-container .aigrader-btn-download {
-    padding: 7px 14px;
-    font-size: 0.8125rem;
-    font-weight: 600;
-    color: var(--ag-ink);
-    background: var(--ag-surface);
-    border: 1px solid var(--ag-line-strong);
-    border-radius: 8px;
-}
-
-.aigrader-report-container .aigrader-btn-download-primary {
-    color: #fff;
-    background: var(--ag-blue);
-    border-color: var(--ag-blue);
-}
 
 .aigrader-report-container .aigrader-stat-grid {
     display: grid;
@@ -2222,7 +3770,7 @@
 
 .aigrader-report-container .aigrader-stat-tile {
     padding: 15px 17px;
-    background: var(--ag-surface);
+    background-color: var(--ag-surface);
     border: 1px solid var(--ag-line);
     border-radius: var(--ag-radius-lg);
 }
@@ -2271,7 +3819,7 @@
 .aigrader-report-container .aigrader-table-card {
     margin: 0 0 24px;
     overflow: hidden;
-    background: var(--ag-surface);
+    background-color: var(--ag-surface);
     border: 1px solid var(--ag-line);
     border-radius: var(--ag-radius-lg);
 }
@@ -2282,7 +3830,7 @@
 
 .aigrader-report-container .aigrader-panel {
     padding: 18px;
-    background: var(--ag-surface);
+    background-color: var(--ag-surface);
     border: 1px solid var(--ag-line);
     border-radius: var(--ag-radius-lg);
 }
@@ -2339,35 +3887,6 @@
     }
 }
 
-/* Which language the feedback is written in. Shown beside the label so an assessor who
-   does not read it knows what they are approving. */
-.aigrader-container .aigrader-lang-pill {
-    display: inline-flex;
-    align-items: center;
-    padding: 3px 10px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--ag-blue);
-    background: var(--ag-blue-soft);
-    border: 1px solid var(--ag-blue-border);
-    border-radius: var(--ag-radius-pill);
-}
-
-/* Average time per question on the activity report. Given a pill because it is the first
-   figure an auditor looks for, not because it needs decoration. */
-.aigrader-container .aigrader-time-pill,
-.aigrader-report-container .aigrader-time-pill {
-    display: inline-flex;
-    align-items: center;
-    padding: 3px 11px;
-    font-size: 0.8125rem;
-    font-weight: 600;
-    font-variant-numeric: tabular-nums;
-    color: #1a7f3c;
-    background: #e8f7ee;
-    border: 1px solid #b7e3c7;
-    border-radius: 999px;
-}
 
 /* Visually hidden, readable by assistive technology.
    Moodle core provides .accesshide, and the markup uses it; this is the plugin's own copy
@@ -2462,7 +3981,7 @@
 
 .aigrader-container .aigrader-critcheck {
     margin: 0 0 16px;
-    background: var(--ag-surface);
+    background-color: var(--ag-surface);
     border: 1px solid var(--ag-line);
     border-radius: var(--ag-radius);
 }
@@ -2567,25 +4086,6 @@
     color: var(--ag-blue);
 }
 
-.aigrader-container .aigrader-critcheck-pill {
-    display: inline-block;
-    white-space: nowrap;
-    min-width: 28px;
-    padding: 2px 9px;
-    font-weight: 700;
-    text-align: center;
-    font-variant-numeric: tabular-nums;
-    color: var(--ag-green-ink);
-    background: var(--ag-green-soft);
-    border: 1px solid var(--ag-green-border);
-    border-radius: var(--ag-radius-pill);
-}
-
-.aigrader-container .aigrader-critcheck-pill-attention {
-    color: var(--ag-amber-ink);
-    background: var(--ag-amber-soft);
-    border-color: var(--ag-amber-border);
-}
 
 .aigrader-container .aigrader-critcheck-notes {
     margin: 0;
@@ -2614,7 +4114,7 @@
     font-weight: 700;
     font-variant-numeric: tabular-nums;
     color: var(--ag-ink-2);
-    background: var(--ag-surface-3);
+    background-color: var(--ag-surface-3);
     border-radius: var(--ag-radius-pill);
 }
 
@@ -2659,7 +4159,7 @@
     font-size: 0.75rem;
     font-weight: 600;
     color: var(--ag-ink-2);
-    background: var(--ag-surface-3);
+    background-color: var(--ag-surface-3);
     border-radius: var(--ag-radius-pill);
 }
 
@@ -2680,60 +4180,11 @@
     margin-top: 8px;
 }
 
-.aigrader-container .aigrader-critcheck-review,
-.aigrader-container .aigrader-critcheck-confirmall,
-.aigrader-container .aigrader-critedit-add,
-.aigrader-container .aigrader-critedit-save,
-.aigrader-container .aigrader-critedit-cancel,
-.aigrader-container .aigrader-critedit-reset,
-.aigrader-container .aigrader-critedit-remove {
-    padding: 5px 12px;
-    font-size: 0.8125rem;
-    font-weight: 600;
-    line-height: 1.4;
-    color: var(--ag-ink);
-    background: var(--ag-surface);
-    border: 1px solid var(--ag-line-strong);
-    border-radius: var(--ag-radius);
-    cursor: pointer;
-}
-
-.aigrader-container .aigrader-critcheck-review:hover,
-.aigrader-container .aigrader-critedit-add:hover,
-.aigrader-container .aigrader-critedit-cancel:hover,
-.aigrader-container .aigrader-critedit-reset:hover,
-.aigrader-container .aigrader-critedit-remove:hover {
-    background: var(--ag-surface-2);
-}
-
-.aigrader-container .aigrader-critcheck-review-primary,
-.aigrader-container .aigrader-critcheck-confirmall,
-.aigrader-container .aigrader-critedit-save {
-    color: #fff;
-    background: var(--ag-blue);
-    border-color: var(--ag-blue);
-}
-
-.aigrader-container .aigrader-critcheck-review-primary:hover,
-.aigrader-container .aigrader-critcheck-confirmall:hover,
-.aigrader-container .aigrader-critedit-save:hover {
-    background: var(--ag-blue-dark);
-    border-color: var(--ag-blue-dark);
-}
 
 .aigrader-container .aigrader-critedit-reset {
     margin-left: auto;
-    color: var(--ag-red-ink);
-    border-color: var(--ag-red-border);
 }
 
-.aigrader-container .aigrader-critcheck-review:focus-visible,
-.aigrader-container .aigrader-critcheck-confirmall:focus-visible,
-.aigrader-container .aigrader-critedit button:focus-visible,
-.aigrader-container .aigrader-critedit input:focus-visible {
-    outline: 2px solid var(--ag-blue);
-    outline-offset: 2px;
-}
 
 .aigrader-container .aigrader-critcheck-table button:disabled,
 .aigrader-container .aigrader-critcheck-bulk button:disabled {
@@ -2751,7 +4202,7 @@
 
 .aigrader-container .aigrader-critedit {
     padding: 14px 16px;
-    background: var(--ag-surface-2);
+    background-color: var(--ag-surface-2);
     border: 1px solid var(--ag-line);
     border-radius: var(--ag-radius);
 }
@@ -2788,7 +4239,7 @@
     padding: 6px 9px;
     font-size: 0.875rem;
     color: var(--ag-ink);
-    background: var(--ag-surface);
+    background-color: var(--ag-surface);
     border: 1px solid var(--ag-line-strong);
     border-radius: var(--ag-radius);
 }
@@ -2820,20 +4271,6 @@
     color: var(--ag-amber-ink);
 }
 
-.aigrader-container .aigrader-critedit-scale {
-    padding: 0;
-    font-size: 0.8125rem;
-    font-weight: 600;
-    color: var(--ag-blue);
-    background: none;
-    border: 0;
-    cursor: pointer;
-}
-
-.aigrader-container .aigrader-critedit-scale:hover,
-.aigrader-container .aigrader-critedit-scale:focus-visible {
-    text-decoration: underline;
-}
 
 .aigrader-container .aigrader-critedit-hint {
     color: var(--ag-ink-3);
@@ -2902,7 +4339,7 @@
 /* Setup and statistics, folded under one line above the queue (5.2.0). */
 .aigrader-container .aigrader-setup {
     margin: 0 0 16px;
-    background: var(--ag-surface);
+    background-color: var(--ag-surface);
     border: 1px solid var(--ag-line);
     border-radius: var(--ag-radius);
 }
@@ -2952,4 +4389,143 @@
 
 .aigrader-container .aigrader-setup[open] > .aigrader-setup-summary::before {
     transform: rotate(45deg);
+}
+
+/* ---------------------------------------------------------------------------
+ * Fields (5.3.0)
+ *
+ * Inputs, selects and text areas follow the MDS Input: 42px tall, an 8px radius, the
+ * interactive border, a darker border on hover and the soft blue focus halo. The two
+ * inline controls inside a marking card (the mark and a criterion's score) keep a compact
+ * height so the row stays one line; they share everything else.
+ * ------------------------------------------------------------------------ */
+
+.aigrader-container .aigrader-search-input,
+.aigrader-container .aigrader-filter-select,
+.aigrader-container .aigrader-filter-input,
+.aigrader-container .aigrader-date-filter-input,
+.aigrader-container .aigrader-language-select,
+.aigrader-container .aigrader-group-select,
+.aigrader-container .aigrader-group-filter-bar select,
+.aigrader-container .aigrader-instructions-textarea,
+.aigrader-container .aigrader-feedback-edit.is-editing,
+.aigrader-container .aigrader-grade-dropdown,
+.aigrader-container .aigrader-crit-input,
+.aigrader-container .aigrader-critedit input,
+.aigrader-report-container .aigrader-filter-control {
+    color: var(--mds-text-default);
+    background-color: var(--mds-bg-surface-default);
+    border: 1px solid var(--mds-border-interactive-secondary-default);
+    border-radius: var(--lx-radius-control);
+    box-shadow: var(--lx-shadow-xs);
+    transition: border-color var(--lx-fast) var(--lx-ease), box-shadow var(--lx-fast) var(--lx-ease);
+}
+
+.aigrader-container .aigrader-search-input,
+.aigrader-container .aigrader-filter-select,
+.aigrader-container .aigrader-filter-input,
+.aigrader-container .aigrader-date-filter-input,
+.aigrader-container .aigrader-language-select,
+.aigrader-container .aigrader-group-select,
+.aigrader-container .aigrader-group-filter-bar select,
+.aigrader-report-container .aigrader-filter-control {
+    min-height: 42px;
+    font-size: var(--mds-font-size-paragraph-default);
+}
+
+.aigrader-container .aigrader-grade-dropdown,
+.aigrader-container .aigrader-crit-input {
+    min-height: 34px;
+}
+
+.aigrader-container .aigrader-search-input:hover:not(:focus),
+.aigrader-container .aigrader-filter-select:hover:not(:focus),
+.aigrader-container .aigrader-filter-input:hover:not(:focus),
+.aigrader-container .aigrader-date-filter-input:hover:not(:focus),
+.aigrader-container .aigrader-language-select:hover:not(:focus),
+.aigrader-container .aigrader-group-filter-bar select:hover:not(:focus),
+.aigrader-container .aigrader-instructions-textarea:hover:not(:focus),
+.aigrader-container .aigrader-grade-dropdown:hover:not(:focus):not(:disabled),
+.aigrader-container .aigrader-crit-input:hover:not(:focus),
+.aigrader-report-container .aigrader-filter-control:hover:not(:focus) {
+    border-color: var(--mds-border-interactive-secondary-hover);
+}
+
+.aigrader-container .aigrader-grade-dropdown:disabled,
+.aigrader-container .aigrader-feedback-edit[readonly] {
+    box-shadow: none;
+}
+
+.aigrader-report-container .aigrader-submit-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--mds-spacing-sm);
+    margin-top: var(--mds-spacing-md);
+}
+
+.aigrader-report-container .aigrader-download-row .mds-btn.btn i {
+    font-size: 1rem;
+}
+
+.aigrader-report-container .aigrader-filter-select {
+    min-width: 12rem;
+}
+
+/* Selects carry Moodle's own select classes, so the theme draws the chevron on every
+   version; leave it room, since the plugin's field padding would otherwise cover it. */
+.aigrader-container select.custom-select,
+.aigrader-report-container select.custom-select {
+    padding-right: 2.25rem;
+    background-position: right 0.75rem center;
+}
+
+.aigrader-container .aigrader-filter-select {
+    min-width: 10rem;
+}
+
+.aigrader-container select.aigrader-grade-dropdown {
+    width: auto;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+/* ---------------------------------------------------------------------------
+ * Responsible AI (5.3.0)
+ * ------------------------------------------------------------------------ */
+
+/* Paused by the site: the AI Grade buttons go, the notice above says why. */
+.aigrader-container.aigrader-paused .aigrader-grade-btn,
+.aigrader-container.aigrader-paused #aigrader-gradeall-btn {
+    display: none;
+}
+
+.aigrader-container .aigrader-paused-notice {
+    margin: 0 0 var(--mds-spacing-md);
+}
+
+.aigrader-container .aigrader-responsible {
+    margin: var(--mds-spacing-md) 0 0;
+    padding: var(--mds-spacing-md) var(--mds-spacing-lg);
+}
+
+.aigrader-container .aigrader-responsible .aigrader-section-title i {
+    color: var(--ag-blue);
+}
+
+.aigrader-container .aigrader-responsible-list {
+    margin: var(--mds-spacing-xs) 0 0;
+    padding-left: var(--mds-spacing-lg);
+    font-size: 0.875rem;
+    color: var(--ag-ink-2);
+}
+
+.aigrader-container .aigrader-responsible-list li + li {
+    margin-top: var(--mds-spacing-xxs);
+}
+
+.aigrader-report-container .aigrader-stat-tile-detail {
+    margin-top: var(--mds-spacing-xxs);
+    font-size: 0.8125rem;
+    color: var(--ag-ink-3);
 }

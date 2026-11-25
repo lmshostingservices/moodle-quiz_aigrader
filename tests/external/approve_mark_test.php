@@ -126,6 +126,43 @@ final class approve_mark_test extends \externallib_advanced_testcase {
         $decision = $DB->get_record('quiz_aigrader_decisions', ['userid' => $this->learnera->id], '*', MUST_EXIST);
         $this->assertEquals(3, $decision->finalmark);
         $this->assertEquals($this->teacher->id, $decision->graderid);
+
+        // No suggestion was recorded for this response, so the learner is not told AI drafted it.
+        $this->assertStringNotContainsString(\quiz_aigrader\local\transparency::NOTICE_CLASS, $decision->finalfeedback);
+    }
+
+    /**
+     * When the service made a suggestion, the learner is told so, in what they receive and in the record.
+     *
+     * @return void
+     */
+    public function test_learner_told_when_ai_suggested(): void {
+        global $DB;
+        $attempt = $this->attempt($this->learnera);
+        $now = time();
+        $DB->insert_record('quiz_aigrader_attempt_ctx', (object)[
+            'quizid' => $this->quiz->id,
+            'userid' => $this->learnera->id,
+            'questionid' => \question_engine::load_questions_usage_by_activity($attempt->uniqueid)
+                ->get_question_attempt(1)->get_question_id(),
+            'slot' => 1,
+            'aigrade' => 75,
+            'aifeedback' => '<p>Well done.</p>',
+            'suggestedtime' => $now - 60,
+            'timecreated' => $now,
+            'timemodified' => $now,
+        ]);
+        $this->setUser($this->teacher);
+
+        $this->assertTrue($this->approve($attempt, '3')['ok']);
+
+        $decision = $DB->get_record('quiz_aigrader_decisions', ['userid' => $this->learnera->id], '*', MUST_EXIST);
+        $this->assertStringContainsString(\quiz_aigrader\local\transparency::NOTICE_CLASS, $decision->finalfeedback);
+        $this->assertStringContainsString(fullname($this->teacher), $decision->finalfeedback);
+        $this->assertEquals(0, $decision->markchanged);
+        $comment = \question_engine::load_questions_usage_by_activity($attempt->uniqueid)->get_question_attempt(1)
+            ->get_manual_comment()[0];
+        $this->assertStringContainsString(\quiz_aigrader\local\transparency::NOTICE_CLASS, $comment);
     }
 
     /**

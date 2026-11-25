@@ -64,19 +64,19 @@
                 <tr class="aigrader-qrow">
                     <td class="aigrader-q-expand">
                         <button type="button" class="aigrader-expand-btn" aria-expanded="false" aria-controls="detail-{{rowid}}" data-rowid="{{rowid}}">
-                            <svg class="aigrader-chevron" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+                            <i class="fa-solid fa-chevron-right aigrader-chevron" aria-hidden="true"></i>
                             <span class="accesshide aigrader-sr-only">{{fullname}}</span>
                         </button>
                     </td>
                     <td class="aigrader-q-student"{{#email}} title="{{email}}"{{/email}}>{{fullname}}</td>
-                    <td class="aigrader-q-preview"><span class="aigrader-q-badge">{{questionnum}}</span>{{truncated}}</td>
+                    <td class="aigrader-q-preview"><span class="aigrader-q-badge mds-badge badge mds-badge--primary mds-badge--subtle">{{questionnum}}</span>{{truncated}}</td>
                     <td class="aigrader-q-grade"><span class="aigrader-grade aigrader-grade-pending" id="grade-{{rowid}}">&mdash;</span></td>
-                    <td class="aigrader-q-status"><span class="aigrader-status aigrader-status-pending" id="status-{{rowid}}">{{#str}}status_pending, quiz_aigrader{{/str}}</span></td>
+                    <td class="aigrader-q-status"><span class="aigrader-status aigrader-status-pending mds-badge badge mds-badge--secondary mds-badge--subtle" id="status-{{rowid}}">{{#str}}status_pending, quiz_aigrader{{/str}}</span></td>
                     {{#essayguard}}
                     <td class="aigrader-q-eg">
                         {{#eg}}
                         <a href="{{url}}" target="_blank" rel="noopener" class="ag-eg-badge ag-eg-badge-{{level}}" title="{{title}}">
-                            <svg class="aigrader-eg-badge-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>{{label}} {{score}}
+                            <i class="fa-solid fa-shield-halved aigrader-eg-badge-icon" aria-hidden="true"></i>{{label}} {{score}}
                         </a>
                         {{/eg}}
                         {{^eg}}<span class="ag-eg-badge ag-eg-badge-nodata">{{#str}}essayguard_notassessed, quiz_aigrader{{/str}}</span>{{/eg}}
@@ -90,7 +90,7 @@
                                 <span class="aigrader-card-title"{{#email}} title="{{email}}"{{/email}}>{{fullname}} &middot; {{slotlabel}}</span>
                                 {{#eg}}
                                 <a href="{{url}}" target="_blank" rel="noopener" class="ag-eg-badge ag-eg-badge-{{level}}" title="{{title}}">
-                                    <svg class="aigrader-eg-badge-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>{{label}}
+                                    <i class="fa-solid fa-shield-halved aigrader-eg-badge-icon" aria-hidden="true"></i>{{label}}
                                 </a>
                                 {{/eg}}
                             </div>
@@ -98,7 +98,7 @@
                         </div>
                         {{#eg}}{{#advisory}}
                         <div class="ag-eg-advisory ag-eg-advisory-{{level}}">
-                            <svg class="aigrader-eg-advisory-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                            <i class="fa-solid fa-circle-info aigrader-eg-advisory-icon" aria-hidden="true"></i>
                             <span><strong>{{heading}}</strong> {{advice}} &nbsp;<a href="{{url}}" target="_blank" rel="noopener" class="aigrader-eg-link">{{#str}}essayguard_detail_link, quiz_aigrader{{/str}} &rarr;</a></span>
                         </div>
                         {{/advisory}}{{/eg}}
@@ -121,7 +121,7 @@
                                         <div class="aigrader-card-actions ag-flex-center ag-gap-md">
                                             <span class="aigrader-grade aigrader-grade-pending">&mdash;</span>
                                             {{^attachmentonly}}
-                                            <button class="aigrader-btn aigrader-btn-sm aigrader-btn-success aigrader-grade-btn ag-btn-base ag-btn-success"
+                                            <button type="button" class="aigrader-btn aigrader-grade-btn mds-btn btn btn-primary mds-btn--size-md"
                                                 data-qubaid="{{qubaid}}" data-slot="{{slot}}" data-cmid="{{cmid}}" data-maxmark="{{maxmark}}"
                                                 data-questiontext="{{questionfull}}">{{#str}}ai_grade, quiz_aigrader{{/str}}</button>
                                             {{/attachmentonly}}

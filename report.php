@@ -139,6 +139,7 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
 
         $this->render_container_start();
         $this->render_header($quiz, $context);
+        $this->render_paused_notice();
         // Setup and statistics fold away under one line, so the marking queue is the first thing
         // an assessor sees. Until 5.2.0 three open panels sat above the first essay.
         echo html_writer::start_tag('details', ['class' => 'aigrader-setup', 'id' => 'aigrader-setup']);
@@ -151,6 +152,7 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
         echo html_writer::start_div('aigrader-setup-body');
         $this->render_grading_stats();
         $this->render_document_section($quiz);
+        $this->render_responsible_use();
         echo html_writer::end_div();
         echo html_writer::end_tag('details');
         $this->render_action_buttons();
@@ -172,10 +174,57 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
     private function render_container_start() {
         global $CFG;
         $ajaxurl = $CFG->wwwroot . '/mod/quiz/report/aigrader/ajax.php';
-        echo html_writer::start_div('aigrader-container', [
+        $classes = 'aigrader-container' . (\quiz_aigrader\local\transparency::paused() ? ' aigrader-paused' : '');
+        echo html_writer::start_div(\quiz_aigrader\local\design::root_classes($classes), [
             'id' => 'aigrader-root',
             'data-ajaxurl' => $ajaxurl,
         ]);
+    }
+
+    /**
+     * Say so, at the top of the report, when the site has paused AI suggestions.
+     *
+     * An MDS warning alert: graders need to know why the AI Grade buttons are gone and that
+     * marking by hand still works.
+     *
+     * @return void
+     */
+    private function render_paused_notice() {
+        if (!\quiz_aigrader\local\transparency::paused()) {
+            return;
+        }
+        echo html_writer::div(
+            '<span class="mds-alert-icon-wrap" aria-hidden="true"><span class="mds-alert-icon">'
+                . '<i class="fa-solid fa-circle-pause"></i></span></span>'
+                . '<div class="mds-alert-content"><div class="mds-alert-text" role="status">'
+                . html_writer::tag('p', get_string('aipaused_title', 'quiz_aigrader'), ['class' => 'mds-alert-title'])
+                . html_writer::tag('p', get_string('aipaused_message', 'quiz_aigrader'), ['class' => 'mds-alert-message'])
+                . '</div></div>',
+            'aigrader-paused-notice mds-alert alert mds-alert--warning alert-warning'
+        );
+    }
+
+    /**
+     * Guidance on using AI suggestions well, in the setup panel.
+     *
+     * Supports the AI literacy of the people who mark with the plugin (EU AI Act, Article 4):
+     * what the suggestion is, what it is not, and what the grader stays responsible for.
+     *
+     * @return void
+     */
+    private function render_responsible_use() {
+        $items = '';
+        foreach (['check', 'criteria', 'limits', 'bias', 'learners', 'report'] as $key) {
+            $items .= html_writer::tag('li', get_string('responsible_' . $key, 'quiz_aigrader'));
+        }
+        echo html_writer::start_div('aigrader-responsible ag-card');
+        echo html_writer::tag(
+            'h3',
+            '<i class="fa-solid fa-scale-balanced" aria-hidden="true"></i> ' . get_string('responsible_heading', 'quiz_aigrader'),
+            ['class' => 'aigrader-section-title']
+        );
+        echo html_writer::tag('ul', $items, ['class' => 'aigrader-responsible-list']);
+        echo html_writer::end_div();
     }
 
     /**
@@ -199,9 +248,7 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
 
         echo html_writer::start_div('aigrader-brand ag-flex-center ag-gap-lg');
         echo html_writer::start_div('aigrader-logo ag-flex-center');
-        echo '<svg class="ag-icon-lg ag-icon-fixed" xmlns="http://www.w3.org/2000/svg" width="28" height="28"'
-            . ' fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><path d="M12 20h9"/>'
-            . '<path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>';
+        echo '<i class="fa-solid fa-pen-nib ag-icon-lg" aria-hidden="true"></i>';
         echo html_writer::end_div();
         echo html_writer::tag('h1', get_string('pluginname', 'quiz_aigrader'), ['class' => 'aigrader-title']);
         echo html_writer::tag(
@@ -216,9 +263,7 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
             ['id' => 'aigrader-credits-badge']
         );
         echo html_writer::start_div('aigrader-credits-icon ag-flex-center');
-        echo '<svg class="ag-icon-fixed" xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none"'
-            . ' stroke="white" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/>'
-            . '<path d="M12 6v12"/><path d="M8 10h8a2 2 0 1 1 0 4H10a2 2 0 0 0 0 4h6"/></svg>';
+        echo '<i class="fa-solid fa-coins ag-icon-xs" aria-hidden="true"></i>';
         echo html_writer::end_div();
         echo html_writer::tag(
             'span',
@@ -246,16 +291,13 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
         echo html_writer::start_div('aigrader-documents-header');
         echo html_writer::tag(
             'h3',
-            '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="currentColor"'
-            . ' stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>'
-            . '<polyline points="14 2 14 8 20 8"/></svg> '
+            '<i class="fa-regular fa-file-lines" aria-hidden="true"></i> '
             . get_string('reference_documents', 'quiz_aigrader'),
             ['class' => 'aigrader-documents-title']
         );
         echo html_writer::tag(
             'button',
-            '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="currentColor"'
-            . ' stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>',
+            '<i class="fa-solid fa-chevron-down" aria-hidden="true"></i>',
             ['class' => 'aigrader-documents-toggle', 'id' => 'aigrader-documents-toggle', 'type' => 'button']
         );
         echo html_writer::end_div();
@@ -279,11 +321,9 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
         ]);
         echo html_writer::tag(
             'label',
-            '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor"'
-            . ' stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>'
-            . '<polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> '
+            '<i class="fa-solid fa-upload" aria-hidden="true"></i> '
             . get_string('upload_document', 'quiz_aigrader'),
-            ['for' => 'aigrader-doc-input', 'class' => 'aigrader-upload-btn']
+            ['for' => 'aigrader-doc-input', 'class' => 'aigrader-upload-btn mds-btn btn btn-secondary mds-btn--size-md']
         );
         echo html_writer::tag(
             'span',
@@ -312,10 +352,7 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
         echo html_writer::start_div('aigrader-section-header', ['id' => 'aigrader-instructions-toggle']);
         echo html_writer::tag(
             'span',
-            '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="currentColor"'
-            . ' stroke-width="2" viewBox="0 0 24 24">'
-            . '<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>'
-            . '<path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> '
+            '<i class="fa-solid fa-pen-to-square" aria-hidden="true"></i> '
             . get_string('extra_instructions', 'quiz_aigrader'),
             ['class' => 'aigrader-section-title']
         );
@@ -341,7 +378,7 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
         $languages = \quiz_aigrader\local\formatter::feedback_languages();
         echo html_writer::start_tag(
             'select',
-            ['id' => 'aigrader-feedback-language', 'class' => 'aigrader-language-select']
+            ['id' => 'aigrader-feedback-language', 'class' => 'aigrader-language-select custom-select form-select']
         );
         foreach ($languages as $code => $name) {
             echo html_writer::tag('option', s($name), ['value' => $code]);
@@ -360,15 +397,12 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
         echo html_writer::start_div('aigrader-instructions-actions');
         echo html_writer::tag(
             'button',
-            '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="currentColor"'
-            . ' stroke-width="2" viewBox="0 0 24 24">'
-            . '<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>'
-            . '<polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> '
+            '<i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> '
             . get_string('save_instructions', 'quiz_aigrader'),
             [
                 'id' => 'aigrader-save-instructions',
                 'type' => 'button',
-                'class' => 'aigrader-btn aigrader-btn-secondary aigrader-btn-sm',
+                'class' => 'aigrader-btn mds-btn btn btn-secondary mds-btn--size-md',
             ]
         );
         echo html_writer::tag(
@@ -396,9 +430,7 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
         echo html_writer::start_div('aigrader-stats-header', ['id' => 'aigrader-stats-toggle']);
         echo html_writer::tag(
             'span',
-            '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="currentColor"'
-            . ' stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/>'
-            . '<polyline points="12 6 12 12 16 14"/></svg> '
+            '<i class="fa-regular fa-clock" aria-hidden="true"></i> '
             . get_string('grading_time_stats', 'quiz_aigrader'),
             ['class' => 'aigrader-stats-title']
         );
@@ -421,7 +453,7 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
         echo html_writer::tag(
             'select',
             '<option value="0">' . get_string('all_courses', 'quiz_aigrader') . '</option>',
-            ['id' => 'aigrader-filter-course', 'class' => 'aigrader-filter-select']
+            ['id' => 'aigrader-filter-course', 'class' => 'aigrader-filter-select custom-select form-select']
         );
         echo html_writer::end_div();
 
@@ -435,7 +467,7 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
         echo html_writer::tag(
             'select',
             '<option value="0">' . get_string('all_graders', 'quiz_aigrader') . '</option>',
-            ['id' => 'aigrader-filter-grader', 'class' => 'aigrader-filter-select']
+            ['id' => 'aigrader-filter-grader', 'class' => 'aigrader-filter-select custom-select form-select']
         );
         echo html_writer::end_div();
 
@@ -469,7 +501,7 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
         echo html_writer::tag('button', get_string('apply_filters', 'quiz_aigrader'), [
             'id' => 'aigrader-stats-apply',
             'type' => 'button',
-            'class' => 'aigrader-btn aigrader-btn-sm aigrader-btn-primary',
+            'class' => 'aigrader-btn mds-btn btn btn-secondary mds-btn--size-lg',
         ]);
 
         echo html_writer::end_div();
@@ -793,7 +825,7 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
 
         echo html_writer::empty_tag('input', [
             'type' => 'submit',
-            'class' => 'aigrader-date-filter-apply',
+            'class' => 'aigrader-date-filter-apply mds-btn btn btn-secondary mds-btn--size-lg',
             'value' => get_string('filter_apply', 'quiz_aigrader'),
         ]);
 
@@ -807,9 +839,18 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
         echo html_writer::end_tag('form');
 
         if ($datefrom || $dateto) {
+            // An MDS info alert without a title: it says what the queue shows, nothing to act on.
             echo html_writer::div(
-                get_string('filter_saved_notice', 'quiz_aigrader', $this->describe_date_filter($datefrom, $dateto)),
-                'aigrader-date-filter-notice'
+                '<span class="mds-alert-icon-wrap" aria-hidden="true"><span class="mds-alert-icon">'
+                . '<i class="fa-solid fa-circle-info"></i></span></span>'
+                . '<div class="mds-alert-content"><div class="mds-alert-text" role="status">'
+                . html_writer::tag(
+                    'p',
+                    get_string('filter_saved_notice', 'quiz_aigrader', $this->describe_date_filter($datefrom, $dateto)),
+                    ['class' => 'mds-alert-message']
+                )
+                . '</div></div>',
+                'aigrader-date-filter-notice mds-alert alert mds-alert--info alert-info mds-alert--no-title'
             );
         }
     }
@@ -848,37 +889,31 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
 
         echo html_writer::tag(
             'button',
-            '<svg class="ag-icon-sm ag-icon-fixed" xmlns="http://www.w3.org/2000/svg" width="16" height="16"'
-            . ' stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24">'
-            . '<polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>'
-            . '<path d="M3.5 9A9 9 0 0 1 18.4 5L23 10M1 14l4.6 4.4A9 9 0 0 0 20.5 15"/></svg> '
+            '<i class="fa-solid fa-rotate ag-icon-sm" aria-hidden="true"></i> '
             . get_string('refresh_credits', 'quiz_aigrader'),
             [
                 'id' => 'aigrader-refresh-btn',
                 'type' => 'button',
-                'class' => 'aigrader-btn aigrader-btn-secondary ag-btn-base',
+                'class' => 'aigrader-btn mds-btn btn btn-secondary mds-btn--size-lg',
             ]
         );
 
         echo html_writer::tag(
             'button',
-            '<svg class="ag-icon-sm ag-icon-fixed" xmlns="http://www.w3.org/2000/svg" width="16" height="16"'
-            . ' stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24">'
-            . '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10"/></svg> '
+            '<i class="fa-solid fa-bolt ag-icon-sm" aria-hidden="true"></i> '
             . get_string('grade_all', 'quiz_aigrader')
-            . ' <span id="aigrader-essay-count" class="aigrader-count-badge">0</span>',
+            . ' <span id="aigrader-essay-count"'
+            . ' class="aigrader-count-badge mds-badge badge mds-badge--primary mds-badge--pill">0</span>',
             [
                 'id' => 'aigrader-gradeall-btn',
                 'type' => 'button',
-                'class' => 'aigrader-btn aigrader-btn-primary ag-btn-base ag-btn-primary',
+                'class' => 'aigrader-btn mds-btn btn btn-primary mds-btn--size-lg',
             ]
         );
 
         // Search box.
         echo html_writer::start_div('aigrader-search-wrapper ag-flex-center');
-        echo '<svg class="aigrader-search-icon ag-icon-sm ag-icon-fixed" xmlns="http://www.w3.org/2000/svg"'
-            . ' width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">'
-            . '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>';
+        echo '<i class="fa-solid fa-magnifying-glass aigrader-search-icon ag-icon-sm" aria-hidden="true"></i>';
         echo html_writer::empty_tag('input', [
             'type' => 'text',
             'id' => 'aigrader-search',
@@ -1333,9 +1368,7 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
      */
     private function render_all_graded_state() {
         echo html_writer::start_div('aigrader-empty aigrader-all-graded');
-        echo '<svg class="aigrader-empty-icon" xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="none"'
-            . ' stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">'
-            . '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
+        echo '<i class="fa-regular fa-circle-check aigrader-empty-icon" aria-hidden="true"></i>';
         echo html_writer::tag('h3', get_string('all_graded', 'quiz_aigrader'), ['class' => 'aigrader-empty-title']);
         echo html_writer::tag(
             'p',
@@ -1573,28 +1606,32 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
                 if ($isconfirmed) {
                     $count = html_writer::span(
                         get_string('criteriacheck_confirmed', 'quiz_aigrader', count($state['criteria'])),
-                        'aigrader-critcheck-pill'
+                        'aigrader-critcheck-pill mds-badge badge mds-badge--subtle mds-badge--success'
                     );
                 } else {
                     $count = html_writer::span(
                         get_string($isstale ? 'criteriacheck_reconfirm' : 'criteriacheck_toconfirm', 'quiz_aigrader'),
                         'aigrader-critcheck-pill aigrader-critcheck-pill-attention'
+                            . ' mds-badge badge mds-badge--subtle mds-badge--warning'
                     );
                 }
             } else if ($none) {
                 $count = html_writer::span(
                     get_string('criteriacheck_none', 'quiz_aigrader'),
                     'aigrader-critcheck-pill aigrader-critcheck-pill-attention'
+                        . ' mds-badge badge mds-badge--subtle mds-badge--warning'
                 );
             } else if ($uncertain) {
                 $count = html_writer::span(
                     get_string('criteriacheck_uncertain', 'quiz_aigrader'),
                     'aigrader-critcheck-pill aigrader-critcheck-pill-attention'
+                        . ' mds-badge badge mds-badge--subtle mds-badge--warning'
                 );
             } else {
                 $count = html_writer::span(
                     (string)count($resolved['criteria']),
-                    'aigrader-critcheck-pill' . ($flagged ? ' aigrader-critcheck-pill-attention' : '')
+                    'aigrader-critcheck-pill mds-badge badge mds-badge--subtle'
+                        . ($flagged ? ' aigrader-critcheck-pill-attention mds-badge--warning' : ' mds-badge--success')
                 );
             }
 
@@ -1653,8 +1690,8 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
                     . html_writer::tag(
                         'button',
                         get_string($isconfirmed ? 'criteriacheck_editconfirmed' : 'criteriacheck_confirm', 'quiz_aigrader'),
-                        ['type' => 'button', 'class' => 'aigrader-critcheck-review'
-                            . ($isconfirmed ? '' : ' aigrader-critcheck-review-primary')]
+                        ['type' => 'button', 'class' => 'aigrader-critcheck-review mds-btn btn mds-btn--size-md'
+                            . ($isconfirmed ? ' btn-secondary' : ' btn-outline-primary aigrader-critcheck-review-primary')]
                     )
                     . '</div>';
             }
@@ -1715,7 +1752,7 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
                 . html_writer::tag(
                     'button',
                     get_string('criteriacheck_confirmall', 'quiz_aigrader', $exact),
-                    ['type' => 'button', 'class' => 'aigrader-critcheck-confirmall']
+                    ['type' => 'button', 'class' => 'aigrader-critcheck-confirmall mds-btn btn btn-primary mds-btn--size-md']
                 )
                 . '<span class="aigrader-critcheck-bulkhint">' . get_string('criteriacheck_confirmall_hint', 'quiz_aigrader')
                 . '</span></div>';
@@ -1762,7 +1799,7 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
      * @return void
      */
     private function render_loading_overlay() {
-        echo html_writer::start_div('aigrader-loading-overlay', [
+        echo html_writer::start_div(\quiz_aigrader\local\design::root_classes('aigrader-loading-overlay'), [
             'id' => 'aigrader-loading',
             'role' => 'status',
             'aria-live' => 'polite',

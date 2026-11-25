@@ -26,7 +26,8 @@
  * @copyright  2026 LMS Hosting Services
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/log'], function($, Ajax, Str, Notification, Log) {
+define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/log', 'core/toast'],
+    function($, Ajax, Str, Notification, Log, Toast) {
 
     let config = {};
     let strings = {};
@@ -73,51 +74,42 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/log'], fun
     }
 
     /**
-     * Replace any current alert with a new one above the report.
+     * Tell the grader what happened.
      *
-     * @param {String} type One of success, warning, error or info; selects the icon and colour.
+     * Confirmations are Moodle toasts (core/toast): brief, announced, and gone by themselves.
+     * Problems are Moodle Design System alerts above the report, and stay until dismissed,
+     * because a message that vanishes while it is being read is not an accessible error.
+     *
+     * @param {String} type One of success, warning, error or info.
      * @param {String} title The heading, already translated.
      * @param {String} message The body, which may have come from the grading service.
      * @return {void}
      */
     function showAlert(type, title, message) {
-        $('.aigrader-alert').remove();
-
-        const typeClass = 'aigrader-alert-' + type;
-
-        let icon = '';
-        if (type === 'error') {
-            icon = '<circle cx="12" cy="12" r="10"></circle>' +
-                   '<line x1="9" y1="9" x2="15" y2="15"></line>' +
-                   '<line x1="15" y1="9" x2="9" y2="15"></line>';
-        } else if (type === 'success') {
-            icon = '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>' +
-                   '<polyline points="22 4 12 14.01 9 11.01"/>';
-        } else {
-            icon = '<circle cx="12" cy="12" r="10"></circle>' +
-                   '<line x1="12" y1="8" x2="12" y2="12"></line>' +
-                   '<line x1="12" y1="16" x2="12.01" y2="16"></line>';
+        if (type === 'success' || type === 'info') {
+            Toast.add(message, {type: type, title: title});
+            return;
         }
-
+        $('.aigrader-alert').remove();
+        const mdstype = type === 'error' ? 'danger' : 'warning';
+        const glyph = type === 'error' ? 'fa-circle-exclamation' : 'fa-triangle-exclamation';
         const html =
-            `<div class="aigrader-alert ${typeClass} ag-flex-center ag-gap-md">
-                <svg class="aigrader-alert-icon ag-icon-md ag-icon-fixed" xmlns="http://www.w3.org/2000/svg"
-                     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    ${icon}
-                </svg>
-                <div class="aigrader-alert-content">
-                    <p class="aigrader-alert-title">${escapeHtml(title)}</p>
-                    <p class="aigrader-alert-message">${escapeHtml(message)}</p>
+            `<div class="aigrader-alert mds-alert alert mds-alert--${mdstype} alert-${mdstype}">
+                <span class="mds-alert-icon-wrap" aria-hidden="true"><span class="mds-alert-icon"
+                    ><i class="fa-solid ${glyph}"></i></span></span>
+                <div class="mds-alert-content">
+                    <div class="mds-alert-text" role="alert">
+                        <p class="mds-alert-title">${escapeHtml(title)}</p>
+                        <p class="mds-alert-message">${escapeHtml(message)}</p>
+                    </div>
+                </div>
+                <div class="mds-alert-dismiss">
+                    <button type="button" class="mds-alert-dismiss-button mds-close-button btn-close"
+                            aria-label="${escapeHtml(strings.dismiss)}"
+                            ><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
                 </div>
             </div>`;
-
         $('.aigrader-header').after(html);
-
-        setTimeout(() => {
-            $('.aigrader-alert').fadeOut(300, function() {
-                $(this).remove();
-            });
-        }, 4000);
     }
 
     /**
@@ -1278,9 +1270,9 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/log'], fun
         const attemptNum = resp.attemptnum || 1;
         const maxAttempts = resp.maxattempts || 0;
         return maxAttempts > 0
-            ? `<span class="aigrader-attempt-badge ag-badge ag-badge-info">${escapeHtml(
+            ? `<span class="aigrader-attempt-badge mds-badge badge mds-badge--info mds-badge--subtle">${escapeHtml(
                 strings.attemptnumberofmax.replace('{$a->num}', attemptNum).replace('{$a->total}', maxAttempts))}</span>`
-            : `<span class="aigrader-attempt-badge ag-badge ag-badge-info">${escapeHtml(
+            : `<span class="aigrader-attempt-badge mds-badge badge mds-badge--info mds-badge--subtle">${escapeHtml(
                 strings.attemptnumber.replace('{$a}', attemptNum))}</span>`;
 
     }
@@ -1303,16 +1295,14 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/log'], fun
         // because it says what is still to come, not that the learner failed.
         const prevGradeNum = prevGrade === null ? null : parseFloat(prevGrade);
         const prevGradeBadgeClass = prevGradeNum !== null && prevGradeNum >= 100
-            ? 'ag-badge-success' : 'ag-badge-warning';
+            ? 'mds-badge--success' : 'mds-badge--warning';
         return `
             <div class="aigrader-previous-attempt">
                 <button type="button" class="aigrader-previous-toggle" data-expanded="false">
-                    <svg class="aigrader-chevron ag-icon-xs" xmlns="http://www.w3.org/2000/svg"
-                         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="9 18 15 12 9 6"/>
-                    </svg>
+                    <i class="fa-solid fa-chevron-right aigrader-chevron ag-icon-xs" aria-hidden="true"></i>
                     <span>${escapeHtml(strings.previousattempt)}</span>
-                    <span class="aigrader-previous-grade ag-badge ${prevGradeBadgeClass}">${prevGradeDisplay}</span>
+                    <span class="aigrader-previous-grade mds-badge badge mds-badge--subtle ${prevGradeBadgeClass}"
+                          >${prevGradeDisplay}</span>
                 </button>
                 <div class="aigrader-previous-content" style="display: none;">
                     <div class="aigrader-previous-feedback">${renderPreviousSummary(prevFeedback)}</div>
@@ -1436,37 +1426,33 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/log'], fun
                             <span class="aigrader-feedback-label">${escapeHtml(strings.feedback_to_learner)}</span>
                             <span class="aigrader-feedback-barline-right">
                                 ${resp.languagelabel
-                                    ? `<span class="aigrader-lang-pill">`
+                                    ? `<span class="aigrader-lang-pill mds-badge badge mds-badge--secondary mds-badge--subtle">`
                                         + `${escapeHtml(resp.languagelabel)}</span>`
                                     : ''}
-                                <span class="aigrader-saved-pill" id="saved-pill-${id}"
+                                <span class="aigrader-saved-pill mds-badge badge mds-badge--success mds-badge--subtle"
+                                      id="saved-pill-${id}"
                                       hidden>${escapeHtml(strings.changes_saved)}</span>
                                 <span class="aigrader-grade-select">
                                     <label for="grade-select-${id}">${strings.grade_label}</label>
-                                    <select class="aigrader-grade-dropdown" id="grade-select-${id}">
+                                    <select id="grade-select-${id}"
+                                        class="aigrader-grade-dropdown custom-select custom-select-sm form-select form-select-sm">
                                         ${gradeOptions}
                                     </select>
                                 </span>
                                 <button type="button" data-id="${id}"
-                                        class="aigrader-btn aigrader-btn-sm aigrader-btn-outline aigrader-toggle-edit-btn">
-                                    <svg class="ag-icon-xs" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                                         fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                                    </svg>
+                                        class="aigrader-btn aigrader-toggle-edit-btn mds-btn btn btn-secondary mds-btn--size-md">
+                                    <i class="fa-solid fa-pen-to-square ag-icon-xs" aria-hidden="true"></i>
                                     ${escapeHtml(strings.edit)}
                                 </button>
                                 <span class="aigrader-edit-actions" id="edit-actions-${id}" hidden>
                                     <button type="button" data-id="${id}"
-                                            class="aigrader-btn aigrader-btn-sm aigrader-btn-primary aigrader-save-edit-btn">
-                                        <svg class="ag-icon-xs" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                                             fill="none" stroke="currentColor" stroke-width="2">
-                                            <polyline points="20 6 9 17 4 12"/>
-                                        </svg>
+                                            class="aigrader-btn aigrader-save-edit-btn mds-btn btn btn-primary mds-btn--size-md">
+                                        <i class="fa-solid fa-check ag-icon-xs" aria-hidden="true"></i>
                                         ${escapeHtml(strings.save_changes)}
                                     </button>
                                     <button type="button" data-id="${id}"
-                                            class="aigrader-btn aigrader-btn-sm aigrader-btn-outline aigrader-cancel-edit-btn">
+                                            class="aigrader-btn aigrader-cancel-edit-btn mds-btn btn btn-secondary
+                                                   mds-btn--size-md">
                                         ${escapeHtml(strings.cancel)}
                                     </button>
                                 </span>
@@ -1477,15 +1463,9 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/log'], fun
                             <span class="aigrader-review-hint" id="review-hint-${id}"
                                   hidden>${escapeHtml(strings.read_answer_first)}</span>
                             <button type="button"
-                                    class="aigrader-btn aigrader-btn-primary aigrader-approve-btn
-                                           ag-btn-base ag-btn-primary"
+                                    class="aigrader-btn aigrader-approve-btn mds-btn btn btn-primary mds-btn--size-lg"
                                     data-qubaid="${qubaid}" data-slot="${slot}" data-id="${id}">
-                                <svg class="ag-icon-sm ag-icon-fixed" xmlns="http://www.w3.org/2000/svg"
-                                     width="16" height="16" fill="none" stroke="currentColor"
-                                     stroke-width="2" viewBox="0 0 24 24">
-                                    <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3z
-                                             M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>
-                                </svg>
+                                <i class="fa-solid fa-thumbs-up ag-icon-sm" aria-hidden="true"></i>
                                 ${strings.approve_save}
                             </button>
                         </div>
@@ -1510,7 +1490,7 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/log'], fun
             // The headline figure belongs in the card header, top right, per the reference.
             $('#suggested-' + id)
                 .text(suggestedLabel)
-                .addClass('aigrader-suggested-grade');
+                .addClass('aigrader-suggested-grade mds-badge badge mds-badge--success mds-badge--subtle');
 
             // Update grade label to show pending
             $('#grade-' + id)
@@ -1625,10 +1605,7 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/log'], fun
             // The reference shows the button keeping its own label with the remaining time
             // appended, behind a padlock, rather than being replaced by a countdown.
             $btn.html(
-                '<svg class="ag-icon-sm ag-icon-fixed" xmlns="http://www.w3.org/2000/svg" width="16"'
-                + ' height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">'
-                + '<rect x="3" y="11" width="18" height="11" rx="2"/>'
-                + '<path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> '
+                '<i class="fa-solid fa-lock ag-icon-sm" aria-hidden="true"></i> '
                 + escapeHtml(label) + ' \u00b7 ' + clockFace(remaining)
             );
             remaining--;
@@ -1717,10 +1694,20 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/log'], fun
             approved: strings.status_approved,
             manual: strings.status_manual
         };
+        // Each state is an MDS Badge variant: grey until something happens, blue while the
+        // suggestion is being made or waits for a decision, green once it is approved.
+        const variants = {
+            pending: 'secondary',
+            grading: 'info',
+            graded: 'primary',
+            approved: 'success',
+            manual: 'warning'
+        };
         $('#status-' + id)
             .removeClass('aigrader-status-pending aigrader-status-grading '
-                + 'aigrader-status-graded aigrader-status-approved aigrader-status-manual')
-            .addClass('aigrader-status-' + state)
+                + 'aigrader-status-graded aigrader-status-approved aigrader-status-manual '
+                + 'mds-badge--secondary mds-badge--info mds-badge--primary mds-badge--success mds-badge--warning')
+            .addClass('aigrader-status-' + state + ' mds-badge--' + (variants[state] || 'secondary'))
             .text(labels[state] || labels.pending);
     }
 
@@ -1824,13 +1811,10 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/log'], fun
             $('#feedback-edit-' + id).prop('readonly', true).removeClass('is-editing');
             $('#suggested-' + id).text(gradeLabel);
 
-            $btn.removeClass('aigrader-btn-primary ag-btn-primary')
+            $btn.removeClass('btn-primary')
                 .addClass('aigrader-btn-saved')
                 .prop('disabled', true)
-                .html(`<svg class="ag-icon-sm ag-icon-fixed" xmlns="http://www.w3.org/2000/svg"
-                        width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
-                        viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/>
-                        <polyline points="16 10 11 15 8 12"/></svg> `
+                .html(`<i class="fa-solid fa-circle-check ag-icon-sm" aria-hidden="true"></i> `
                     + escapeHtml(strings.savedtogradebook));
 
             // Update grade column
@@ -1988,11 +1972,7 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/log'], fun
                     // Show "all graded" message
                     $('.aigrader-cards').html(`
                         <div class="aigrader-empty aigrader-all-graded">
-                            <svg class="aigrader-empty-icon" xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="none"
-                                    stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                                        <polyline points="22 4 12 14.01 9 11.01"/>
-                                    </svg>
+                            <i class="fa-regular fa-circle-check aigrader-empty-icon" aria-hidden="true"></i>
                             <h3 class="aigrader-empty-title">${escapeHtml(strings.all_graded)}</h3>
                             <p class="aigrader-empty-message">${escapeHtml(strings.all_graded_message)}</p>
                         </div>
@@ -2027,31 +2007,27 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/log'], fun
 
             let html = '';
             resp.documents.forEach(doc => {
-                const statusClass = 'aigrader-doc-status-' + String(doc.status || '').replace(/[^a-z_-]/gi, '');
+                const statusKey = String(doc.status || '').replace(/[^a-z_-]/gi, '');
+                const statusVariant = {ready: 'success', processing: 'warning', failed: 'danger'}[statusKey] || 'secondary';
+                const statusClass = 'aigrader-doc-status-' + statusKey + ' mds-badge badge mds-badge--subtle mds-badge--'
+                    + statusVariant;
                 const statusText = strings['document_' + doc.status] || doc.status;
                 const sizeKB = Math.round((parseInt(doc.sizeBytes, 10) || 0) / 1024);
 
                 html += `<div class="aigrader-doc-item" data-docid="${escapeHtml(doc.id)}">
                     <div class="aigrader-doc-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-                             fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                            <polyline points="14 2 14 8 20 8"/>
-                        </svg>
+                        <i class="fa-regular fa-file-lines" aria-hidden="true"></i>
                     </div>
                     <div class="aigrader-doc-info">
                         <div class="aigrader-doc-name">${escapeHtml(doc.filename)}</div>
                         <div class="aigrader-doc-meta">${sizeKB} KB</div>
                     </div>
                     <span class="aigrader-doc-status ${escapeHtml(statusClass)}">${escapeHtml(statusText)}</span>
-                    <button class="aigrader-doc-delete" data-docid="${escapeHtml(doc.id)}"
-                            title="${escapeHtml(strings.document_delete)}">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-                             fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <polyline points="3 6 5 6 21 6"/>
-                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6
-                                     m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                        </svg>
+                    <button type="button" data-docid="${escapeHtml(doc.id)}"
+                            class="aigrader-doc-delete mds-btn btn btn-ghost mds-btn--size-md mds-btn--icon-only"
+                            title="${escapeHtml(strings.document_delete)}"
+                            aria-label="${escapeHtml(strings.document_delete)}">
+                        <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
                     </button>
                 </div>`;
             });
@@ -2229,11 +2205,8 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/log'], fun
 
             if (resp.ok) {
                 $status.html(
-                    `<svg class="aigrader-saved-icon" xmlns="http://www.w3.org/2000/svg"
-                          width="16" height="16" fill="none" stroke="#22c55e"
-                          stroke-width="2" viewBox="0 0 24 24">
-                        <polyline points="20 6 9 17 4 12"/>
-                    </svg> ${escapeHtml(strings.instructions_saved)}`
+                    '<i class="fa-solid fa-check aigrader-saved-icon" aria-hidden="true"></i> '
+                    + escapeHtml(strings.instructions_saved)
                 );
                 setTimeout(() => $status.html(''), 3000);
             } else {
@@ -2338,7 +2311,8 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/log'], fun
             {key: 'status_manual', component: 'quiz_aigrader'},
             {key: 'criteria_total', component: 'quiz_aigrader'},
             {key: 'grading_complete_message', component: 'quiz_aigrader'},
-            {key: 'learner_preview', component: 'quiz_aigrader'}
+            {key: 'learner_preview', component: 'quiz_aigrader'},
+            {key: 'dismiss', component: 'quiz_aigrader'}
         ]).then(result => {
             // Assigned by name: the keys match the language strings, which are snake_case.
             [
@@ -2359,7 +2333,7 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/log'], fun
                 'policy_not_applied', 'suggested_grade', 'feedback_to_learner', 'edit', 'save_changes',
                 'cancel', 'changes_saved', 'savedtogradebook', 'read_answer_first', 'status_pending',
                 'status_grading', 'status_graded', 'status_approved', 'status_manual', 'criteria_total',
-                'grading_complete_message', 'learner_preview'
+                'grading_complete_message', 'learner_preview', 'dismiss'
             ].forEach((name, index) => {
                 strings[name] = result[index];
             });
@@ -2391,6 +2365,9 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/log'], fun
             });
         }
         $(document).on('click', '#aigrader-refresh-btn', fetchCredits);
+        $(document).on('click', '.aigrader-alert .mds-alert-dismiss-button', function() {
+            $(this).closest('.aigrader-alert').remove();
+        });
 
         $(document).on('click', '.aigrader-expand-btn', function(e) {
             e.preventDefault();

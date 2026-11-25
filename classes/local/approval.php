@@ -205,8 +205,20 @@ class approval {
             // elsewhere, and format_float() would use the site's decimal separator.
             $scorelabel = \quiz_aigrader\local\formatter::score_label($mark, $maxmark);
 
+            // The learner is told the feedback was drafted with AI and approved by a named
+            // person (EU AI Act, Article 26(11)). Added here, not in the browser, so it cannot
+            // be left out, and in the learner's own language. Only when the service actually
+            // made a suggestion for this response: a mark the grader gave without one is not
+            // AI-assisted, and saying it was would mislead the learner.
+            $learnerfeedback = $feedbacktext;
+            $aisuggested = $approvectx && ($approvectx->aigrade !== null || trim((string)$approvectx->aifeedback) !== '');
+            if ($aisuggested) {
+                $learnerlang = $attemptrec ? (string)$DB->get_field('user', 'lang', ['id' => $attemptrec->userid]) : '';
+                $learnerfeedback = \quiz_aigrader\local\transparency::add_learner_notice($feedbacktext, $USER, $learnerlang);
+            }
+
             // Save the grade and feedback into the question engine.
-            $qa->manual_grade($feedbacktext, $mark, FORMAT_HTML);
+            $qa->manual_grade($learnerfeedback, $mark, FORMAT_HTML);
             question_engine::save_questions_usage_by_activity($usage);
 
             // Update the quiz attempt's total grade. The attempt owning this usage has already
@@ -419,7 +431,7 @@ class approval {
                     $decision->markchanged = ($aimark === null || abs($aimark - $mark) > 0.0001) ? 1 : 0;
                     $decision->feedbackchanged = ($aiplain !== '' && $aiplain !== $finalplain) ? 1 : 0;
                     $decision->aifeedback = $aifeedback;
-                    $decision->finalfeedback = $feedbacktext;
+                    $decision->finalfeedback = $learnerfeedback;
                     // Prefer the assessor's scored criteria over the AI's met/not-met list.
                     // Validated as JSON before storing so a malformed post cannot put
                     // unparseable text into the record.

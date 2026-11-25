@@ -398,6 +398,17 @@ try {
         // Requesting a grade consumes credits and writes plugin table rows.
         quiz_aigrader_require_grading($context);
 
+        // A site can pause every AI suggestion at once (EU AI Act, Article 26(5)). Marking by
+        // hand and approving what is already on screen carry on.
+        if (\quiz_aigrader\local\transparency::paused()) {
+            echo json_encode([
+                'ok' => false,
+                'message' => get_string('error_aipaused', 'quiz_aigrader'),
+                'error_code' => 'AI_PAUSED',
+            ]);
+            exit;
+        }
+
         // Wrap the entire grading action in try/catch to ensure we always return JSON.
         try {
             if (!$qubaid || !$slot) {

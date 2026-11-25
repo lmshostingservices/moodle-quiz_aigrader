@@ -426,7 +426,7 @@ $totals = service::get_grader_totals($startdate, $enddate, $graderid);
 
 echo $OUTPUT->header();
 
-echo html_writer::start_div('aigrader-report-container');
+echo html_writer::start_div(\quiz_aigrader\local\design::root_classes('aigrader-report-container'));
 
 echo html_writer::tag('h2', get_string('grader_report', 'quiz_aigrader'), ['class' => 'aigrader-report-title']);
 echo html_writer::tag('p', get_string('grader_report_desc', 'quiz_aigrader'), ['class' => 'aigrader-report-desc']);
@@ -487,7 +487,7 @@ echo html_writer::tag(
 );
 echo html_writer::select($graderoptions, 'graderid', $graderid, false, [
     'id' => 'graderid',
-    'class' => 'aigrader-filter-control aigrader-filter-select',
+    'class' => 'aigrader-filter-control aigrader-filter-select custom-select form-select',
 ]);
 echo html_writer::end_div();
 
@@ -495,7 +495,7 @@ echo html_writer::start_div('aigrader-filter-action');
 echo html_writer::empty_tag('input', [
     'type' => 'submit',
     'value' => get_string('filter', 'quiz_aigrader'),
-    'class' => 'aigrader-btn-submit',
+    'class' => 'aigrader-btn-submit mds-btn btn btn-secondary mds-btn--size-lg',
 ]);
 echo html_writer::end_div();
 
@@ -507,15 +507,15 @@ echo html_writer::start_div('aigrader-download-row');
 $csvurl = new moodle_url($baseurl, ['download' => 'csv']);
 echo html_writer::link(
     $csvurl,
-    get_string('download_csv', 'quiz_aigrader'),
-    ['class' => 'btn aigrader-btn-download']
+    '<i class="fa-solid fa-file-csv" aria-hidden="true"></i> ' . get_string('download_csv', 'quiz_aigrader'),
+    ['class' => 'aigrader-btn-download mds-btn btn btn-secondary mds-btn--size-md']
 );
 
 $pdfurl = new moodle_url($baseurl, ['download' => 'pdf']);
 echo html_writer::link(
     $pdfurl,
-    get_string('download_pdf', 'quiz_aigrader'),
-    ['class' => 'btn aigrader-btn-download aigrader-btn-download-primary']
+    '<i class="fa-solid fa-file-pdf" aria-hidden="true"></i> ' . get_string('download_pdf', 'quiz_aigrader'),
+    ['class' => 'aigrader-btn-download mds-btn btn btn-secondary mds-btn--size-md']
 );
 
 echo html_writer::end_div();
@@ -587,6 +587,31 @@ if (!empty($totals)) {
         $overallavgformatted,
         ['class' => 'aigrader-stat-tile-value aigrader-num-amber']
     );
+    echo html_writer::end_div();
+
+    // Human oversight: how often graders changed the AI's suggested mark.
+    $oversight = service::get_oversight_stats($startdate, $enddate, $graderid);
+    echo html_writer::start_div('aigrader-stat-tile');
+    echo html_writer::tag(
+        'div',
+        get_string('marks_changed', 'quiz_aigrader'),
+        ['class' => 'aigrader-stat-tile-label']
+    );
+    echo html_writer::tag(
+        'div',
+        $oversight['decisions'] > 0 ? round(100 * $oversight['markschanged'] / $oversight['decisions']) . '%' : '-',
+        ['class' => 'aigrader-stat-tile-value aigrader-num-dark']
+    );
+    if ($oversight['decisions'] > 0) {
+        echo html_writer::tag(
+            'div',
+            get_string('marks_changed_detail', 'quiz_aigrader', (object)[
+                'changed' => $oversight['markschanged'],
+                'total' => $oversight['decisions'],
+            ]),
+            ['class' => 'aigrader-stat-tile-detail']
+        );
+    }
     echo html_writer::end_div();
 
     echo html_writer::end_div();
@@ -677,7 +702,9 @@ if (empty($data)) {
         echo html_writer::tag(
             'td',
             $avgperq > 0
-                ? html_writer::tag('span', $avgperqformatted, ['class' => 'aigrader-time-pill'])
+                ? html_writer::tag('span', $avgperqformatted, [
+                    'class' => 'aigrader-time-pill mds-badge badge mds-badge--success mds-badge--subtle',
+                ])
                 : $avgperqformatted,
             ['class' => 'aigrader-report-td aigrader-report-td-right']
         );
@@ -718,7 +745,7 @@ $freqoptions = [
 ];
 echo html_writer::select($freqoptions, 'frequency', $schedule ? $schedule->frequency : 'weekly', false, [
     'id' => 'frequency',
-    'class' => 'aigrader-filter-control aigrader-frequency-select',
+    'class' => 'aigrader-filter-control aigrader-frequency-select custom-select form-select',
 ]);
 echo html_writer::end_div();
 
@@ -764,7 +791,7 @@ echo html_writer::start_div('aigrader-submit-row');
 echo html_writer::empty_tag('input', [
     'type' => 'submit',
     'value' => get_string('save_schedule', 'quiz_aigrader'),
-    'class' => 'aigrader-btn-submit',
+    'class' => 'aigrader-btn-submit mds-btn btn btn-primary mds-btn--size-md',
 ]);
 
 if ($schedule && $schedule->enabled && $schedule->nextrun) {

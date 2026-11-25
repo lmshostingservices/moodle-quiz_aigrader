@@ -208,6 +208,8 @@ define([], function() {
         if (pill) {
             pill.textContent = confirmed ? str('criteriacheck_confirmed', criteria.length) : str('criteriacheck_toconfirm');
             pill.classList.toggle('aigrader-critcheck-pill-attention', !confirmed);
+            pill.classList.toggle('mds-badge--warning', !confirmed);
+            pill.classList.toggle('mds-badge--success', confirmed);
         }
 
         const cell = row.querySelector('.aigrader-critcheck-notescell');
@@ -246,6 +248,8 @@ define([], function() {
         if (button) {
             button.textContent = confirmed ? str('criteriacheck_editconfirmed') : str('criteriacheck_confirm');
             button.classList.toggle('aigrader-critcheck-review-primary', !confirmed);
+            button.classList.toggle('btn-outline-primary', !confirmed);
+            button.classList.toggle('btn-secondary', confirmed);
         }
         updateSummary();
     }
@@ -332,7 +336,7 @@ define([], function() {
         const lines = el('div', 'aigrader-critedit-lines');
         list.appendChild(lines);
 
-        const add = el('button', 'aigrader-critedit-add', str('critedit_add'));
+        const add = el('button', 'aigrader-critedit-add mds-btn btn btn-secondary mds-btn--size-md', str('critedit_add'));
         add.type = 'button';
         box.appendChild(add);
 
@@ -341,7 +345,7 @@ define([], function() {
         const hint = el('span', 'aigrader-critedit-hint');
         const message = el('div', 'aigrader-critedit-message');
         message.setAttribute('role', 'alert');
-        const scale = el('button', 'aigrader-critedit-scale');
+        const scale = el('button', 'aigrader-critedit-scale mds-btn btn btn-ghost mds-btn--size-md');
         scale.type = 'button';
         footer.appendChild(total);
         footer.appendChild(scale);
@@ -350,15 +354,15 @@ define([], function() {
         box.appendChild(message);
 
         const buttons = el('div', 'aigrader-critedit-buttons');
-        const save = el('button', 'aigrader-critedit-save', str('critedit_save'));
+        const save = el('button', 'aigrader-critedit-save mds-btn btn btn-primary mds-btn--size-md', str('critedit_save'));
         save.type = 'button';
-        const cancel = el('button', 'aigrader-critedit-cancel', str('critedit_cancel'));
+        const cancel = el('button', 'aigrader-critedit-cancel mds-btn btn btn-secondary mds-btn--size-md', str('critedit_cancel'));
         cancel.type = 'button';
         buttons.appendChild(save);
         buttons.appendChild(cancel);
         let reset = null;
         if (row.dataset.state === 'confirmed') {
-            reset = el('button', 'aigrader-critedit-reset', str('critedit_reset'));
+            reset = el('button', 'aigrader-critedit-reset mds-btn btn btn-ghost mds-btn--size-md', str('critedit_reset'));
             reset.type = 'button';
             buttons.appendChild(reset);
         }
@@ -420,7 +424,8 @@ define([], function() {
             mark.value = value.max;
             mark.setAttribute('aria-label', str('critedit_marks'));
             mark.placeholder = str('critedit_marks');
-            const remove = el('button', 'aigrader-critedit-remove', str('critedit_remove'));
+            const remove = el('button', 'aigrader-critedit-remove mds-btn btn btn-outline-danger mds-btn--size-md',
+                str('critedit_remove'));
             remove.type = 'button';
             remove.addEventListener('click', () => {
                 line.remove();

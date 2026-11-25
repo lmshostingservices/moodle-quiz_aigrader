@@ -178,6 +178,45 @@ class service {
     }
 
     /**
+     * How often graders changed what the AI suggested, for human oversight and monitoring.
+     *
+     * Read from the decision record, so it covers exactly the approvals made with the plugin.
+     * A rate near zero can mean graders accept suggestions without checking them; a high
+     * rate can mean the suggestions are off. Either is worth a look (EU AI Act, Articles 14
+     * and 26(5)).
+     *
+     * @param int $startdate Earliest approval time, inclusive.
+     * @param int $enddate Latest approval time, inclusive.
+     * @param int|null $graderid Only this grader's decisions, or all graders when null.
+     * @return array{decisions:int, markschanged:int, feedbackchanged:int}
+     */
+    public static function get_oversight_stats($startdate, $enddate, $graderid = null): array {
+        global $DB;
+        $params = ['startdate' => $startdate, 'enddate' => $enddate];
+        $graderwhere = '';
+        if ($graderid) {
+            $graderwhere = 'AND graderid = :graderid';
+            $params['graderid'] = $graderid;
+        }
+        $row = $DB->get_record_sql(
+            "SELECT COUNT(id) AS decisions,
+                    COALESCE(SUM(markchanged), 0) AS markschanged,
+                    COALESCE(SUM(feedbackchanged), 0) AS feedbackchanged
+               FROM {quiz_aigrader_decisions}
+              WHERE aimark IS NOT NULL
+                AND timecreated >= :startdate
+                AND timecreated <= :enddate
+                    $graderwhere",
+            $params
+        );
+        return [
+            'decisions' => (int)$row->decisions,
+            'markschanged' => (int)$row->markschanged,
+            'feedbackchanged' => (int)$row->feedbackchanged,
+        ];
+    }
+
+    /**
      * Get summary totals by grader.
      *
      * @param int $startdate Unix timestamp for start of date range

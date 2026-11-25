@@ -1,5 +1,46 @@
 # Changelog
 
+## 5.3.0 - 2026-11-24
+
+Version: `2026112501`. The screens are rebuilt on the Moodle Design System (MDS), finished in the
+LMS Labs premium style. No database changes. Tested on Moodle 4.5, 5.1 and 5.3, light and dark.
+
+## Added: responsible AI (EU AI Act)
+
+- Learners are told when AI drafted their feedback (only when the service made a suggestion for that response): one line, in the learner's language, naming the grader who approved it. Added on the server at approval, marked with the class `quiz-aigrader-ai-notice`. On by default (setting *Tell learners when AI drafted their feedback*).
+- New setting *Pause AI suggestions* stops every suggestion on the site at once; graders keep marking by hand and the AI Grade buttons are hidden while paused.
+- "Using AI suggestions well" panel on the grading screen: responsibility, limits, bias, criteria and how to report problems.
+- Activity report: new "Marks changed by graders" tile for human oversight.
+- Wording: the plugin now says "grader" throughout, where it mixed "assessor" and "grader".
+- New `docs/eu-ai-act.md`: classification, dates, provider and deployer duties, feature matrix and instructions for use.
+
+## Changed
+- **Moodle Design System throughout.** Every button is an MDS Button (primary, secondary, ghost,
+  outline-primary, outline-danger; md by default, lg beside 42px fields), every status an MDS Badge
+  and every message an MDS Alert. Colours, radii, spacing and type come from MDS tokens; the
+  plugin's own `--ag-*` tokens are now aliases of the MDS semantic tokens.
+- **Moodle blue and Font Awesome.** The Google-blue accent is replaced by Moodle blue (#0f6cbf),
+  and the inline SVG icons on the grading screens by Font Awesome 6, the icon set Moodle ships.
+  The feedback written to the learner keeps its inline styles, as before.
+- **Row status is a badge**: Pending, Grading, Graded, Approved and Mark by hand each have their
+  own MDS Badge variant. Question numbers, attempt numbers, document status, criteria counts and
+  the feedback language are badges too.
+- **Fields** follow the MDS Input: 42px, 8px radius, a darker border on hover and a soft focus halo.
+- **Dropdowns** carry Moodle's own select classes, so the theme draws the same chevron as core on
+  every supported version (4.4 to 5.3).
+- **Confirmations are Moodle toasts** (`core/toast`) and disappear by themselves; problems are MDS
+  danger or warning alerts and stay until dismissed, so an error is never gone before it is read.
+- The submitted-date notice is an MDS info alert.
+
+### Added
+- **Dark mode on Moodle 5.3.** From 5.3 core ships the MDS tokens and a dark palette, and the plugin
+  uses them, so it follows the site's light or dark colour mode. On earlier releases the plugin
+  supplies the tokens itself (`\quiz_aigrader\local\design`, class `aigrader-mds-fallback`).
+- The MDS Button, Badge, Alert and Close button styles (@moodlehq/design-system 5.5.0, GPL-3.0),
+  scoped to the plugin's containers so they never restyle the rest of the site. Moodle does not
+  allow `data:` URLs in CSS, so their icons are Font Awesome glyphs in the markup.
+- PHPUnit tests for the design system support. 159 tests in total.
+
 ## 5.2.0 - 2026-11-24
 
 Version: `2026112400`. Every recommendation from the 5.1.0 production readiness audit, built and

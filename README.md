@@ -7,7 +7,7 @@ with a teacher approval step before any mark reaches the gradebook.
 |---|---|
 | Plugin type | Quiz report (`quiz_aigrader`) |
 | Install path | `mod/quiz/report/aigrader/` |
-| Moodle | 4.4 - 5.2 (`2024042200` or later) |
+| Moodle | 4.4 - 5.3 (`2024042200` or later) |
 | PHP | 8.1 or later |
 | Databases | MySQL, MariaDB, PostgreSQL |
 | Licence | GNU GPL v3 or later |
@@ -49,7 +49,7 @@ Service terms and privacy policy: https://lms-labs.com
 
 ## Installation
 
-Install as any other Moodle plugin, either from the Moodle plugins directory
+Install as any other Moodle plugin, either from Moodle Marketplace (download the ZIP)
 through *Site administration > Plugins > Install plugins*, or manually:
 
 1. Copy the plugin directory to `mod/quiz/report/aigrader/`.
@@ -65,13 +65,30 @@ through *Site administration > Plugins > Install plugins*, or manually:
 | Site ID | Identifier issued for this Moodle site. |
 | API key | Key issued for this Moodle site. Stored write-only. |
 | Student notifications | Notify the student when all their essays are marked. |
-| Minimum review time | Seconds a marker must spend before approving. |
-| Assessors confirm each question's criteria | On by default. Only confirmed criteria drive the breakdown. |
+| Minimum review time | Seconds a grader must spend before approving. |
+| Default feedback language | The language new quizzes start from; each quiz can change it. |
+| Reference documents | Let graders upload PDF and Word marking guides. |
+| Graders confirm each question's criteria | On by default. Only confirmed criteria drive the breakdown. |
 | When a question has no marking criteria | Derive criteria from the question, one overall mark, or mark by hand. |
 | Fewest / most criteria per question | The recommended range, 3 to 5 by default. |
+| Tell learners when AI drafted their feedback | On by default. Adds a line, in the learner's language, naming the grader who approved it. |
+| Pause AI suggestions | Stops every suggestion on the site at once; marking by hand carries on. |
 
 If the `local_aiconfig` plugin is installed, the site ID and API key are read
 from there and the values above are used only as a fallback.
+
+## Responsible AI and the EU AI Act
+
+A grader approves every mark before it reaches the gradebook, and can change the
+mark and the feedback first. Learners are told when AI drafted their feedback, an
+administrator can pause all suggestions at once, every decision is logged, and the
+activity report shows how often graders changed what the AI suggested.
+
+Where marks count toward a qualification, the EU AI Act treats AI that evaluates
+learning outcomes as high-risk (Annex III, point 3(b)), with deployer duties from
+2 December 2027. `docs/eu-ai-act.md` sets out the classification, who is
+responsible for what, how each feature supports those duties, and the instructions
+for use.
 
 ## Capabilities
 

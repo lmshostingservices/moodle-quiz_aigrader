@@ -27,8 +27,8 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'quiz_aigrader';
-$plugin->version = 2026112400;
+$plugin->version = 2026112501;
 $plugin->requires = 2024042200;
 $plugin->supported = [404, 503];
 $plugin->maturity = MATURITY_STABLE;
-$plugin->release = '5.2.0';
+$plugin->release = '5.3.0';

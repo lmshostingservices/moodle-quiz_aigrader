@@ -164,6 +164,30 @@ if ($ADMIN->fulltree) {
         1
     ));
 
+    // Responsible AI.
+    //
+    // Transparency to learners and a site-wide pause, for the EU AI Act and good practice
+    // anywhere. See \quiz_aigrader\local\transparency and docs/eu-ai-act.md.
+    $settingspage->add(new admin_setting_heading(
+        'quiz_aigrader/responsibleai_heading',
+        get_string('responsibleai_heading', 'quiz_aigrader'),
+        get_string('responsibleai_heading_desc', 'quiz_aigrader')
+    ));
+
+    $settingspage->add(new admin_setting_configcheckbox(
+        'quiz_aigrader/learner_ai_notice',
+        get_string('learner_ai_notice_setting', 'quiz_aigrader'),
+        get_string('learner_ai_notice_setting_desc', 'quiz_aigrader'),
+        1
+    ));
+
+    $settingspage->add(new admin_setting_configcheckbox(
+        'quiz_aigrader/ai_paused',
+        get_string('ai_paused', 'quiz_aigrader'),
+        get_string('ai_paused_desc', 'quiz_aigrader'),
+        0
+    ));
+
     // Marking criteria.
     //
     // How many criteria a question should have, and what happens to a question that has
