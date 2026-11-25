@@ -15,6 +15,17 @@ LMS Labs premium style. No database changes. Tested on Moodle 4.5, 5.1 and 5.3, 
   many were graded and how many were not, instead of reporting all as graded.
 - Running out of credits now shows the credits message.
 
+## Large cohorts, accessibility
+
+- The grading queue is paged: 50 responses by default (25, 50, 100 or 250), with Moodle's paging
+  bar. With 1,000 learners the page went from 16.6 MB and 3.7 s to 0.5 MB and 0.6 s; database
+  queries stay flat as the cohort grows. Press Enter in the search box to search every page.
+- Timeouts say the service took too long, instead of pointing at firewall settings.
+- Accessibility: no axe-core WCAG 2.2 AA violations on any screen, light or dark. Fixed: a
+  missing button name, a skipped heading level, an unlabelled feedback box, dark-mode button
+  contrast (white on blue now 4.9:1) and blue text on dark surfaces. The statistics panel opens
+  from the keyboard, and every control shows a visible focus ring.
+
 ## Security and privacy
 
 - Approved feedback is cleaned on the server before it is saved, because Moodle shows question

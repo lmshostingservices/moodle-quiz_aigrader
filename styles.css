@@ -1420,9 +1420,10 @@
     --mds-text-muted: #8f959e;
     --mds-text-inverse: #fff;
     --mds-text-danger: #e7837a;
-    --mds-bg-interactive-primary-default: #3f89cc;
-    --mds-bg-interactive-primary-hover: #5b9bd5;
-    --mds-bg-interactive-primary-active: #2f78ba;
+    /* White text on these meets WCAG AA (4.9:1 and higher); hover and press go darker. */
+    --mds-bg-interactive-primary-default: #2d74b5;
+    --mds-bg-interactive-primary-hover: #2668a3;
+    --mds-bg-interactive-primary-active: #215c91;
     --mds-bg-interactive-primary-disabled: #1f3a55;
     --mds-bg-interactive-primary-default-light: rgba(63, 137, 204, 0.16);
     --mds-bg-interactive-secondary-default: #252b32;
@@ -1997,7 +1998,7 @@
 }
 
 .aigrader-container .aigrader-credits-unlimited {
-    color: var(--ag-blue);
+    color: var(--ag-link);
     background: var(--ag-blue-soft);
     border-color: var(--ag-blue-border);
 }
@@ -2178,7 +2179,7 @@
 /* A count inside the primary Grade all essays button. */
 .aigrader-container .mds-btn.btn-primary .mds-badge.aigrader-count-badge {
     padding-block: 0;
-    color: var(--mds-bg-interactive-primary-default);
+    color: var(--ag-link);
     background-color: var(--mds-bg-surface-default);
     line-height: 1.4;
 }
@@ -2189,7 +2190,7 @@
 
 /* The plugin's mark, in the brand blue. */
 .aigrader-container .aigrader-logo {
-    color: var(--ag-blue);
+    color: var(--ag-link);
 }
 
 /* Labels in a filter row read at the same size as the fields beside them. */
@@ -2527,7 +2528,7 @@
 }
 
 .aigrader-container .aigrader-num-blue {
-    color: var(--ag-blue);
+    color: var(--ag-link);
 }
 
 .aigrader-container .aigrader-num-green {
@@ -2718,7 +2719,7 @@
     padding: 0;
     font-size: 0.8125rem;
     font-weight: 600;
-    color: var(--ag-blue);
+    color: var(--ag-link);
     cursor: pointer;
     background: none;
     border: 0;
@@ -2921,7 +2922,7 @@
     margin: 0 0 12px;
     font-size: 0.9375rem;
     font-weight: 600;
-    color: var(--ag-blue);
+    color: var(--ag-link);
 }
 
 .aigrader-container .aigrader-crit {
@@ -3687,7 +3688,7 @@
     height: 28px;
     font-size: 0.6875rem;
     font-weight: 700;
-    color: var(--ag-blue);
+    color: var(--ag-link);
     background: var(--ag-blue-soft);
     border-radius: 50%;
 }
@@ -3790,7 +3791,7 @@
 }
 
 .aigrader-report-container .aigrader-num-blue {
-    color: var(--ag-blue);
+    color: var(--ag-link);
 }
 
 .aigrader-report-container .aigrader-num-green {
@@ -3932,7 +3933,7 @@
     width: 16px;
     height: 16px;
     margin-top: 2px;
-    color: var(--ag-blue);
+    color: var(--ag-link);
 }
 
 .aigrader-container .aigrader-critctx-body {
@@ -4083,7 +4084,7 @@
     text-decoration: none;
     font-weight: 600;
     white-space: nowrap;
-    color: var(--ag-blue);
+    color: var(--ag-link);
 }
 
 
@@ -4510,7 +4511,7 @@
 }
 
 .aigrader-container .aigrader-responsible .aigrader-section-title i {
-    color: var(--ag-blue);
+    color: var(--ag-link);
 }
 
 .aigrader-container .aigrader-responsible-list {
@@ -4528,4 +4529,54 @@
     margin-top: var(--mds-spacing-xxs);
     font-size: 0.8125rem;
     color: var(--ag-ink-3);
+}
+
+/* ---------------------------------------------------------------------------
+ * Queue paging (5.3.0)
+ * ------------------------------------------------------------------------ */
+
+.aigrader-container .aigrader-queue-summary {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--mds-spacing-sm) var(--mds-spacing-lg);
+    margin: var(--mds-spacing-md) 0 var(--mds-spacing-xs);
+    font-size: 0.875rem;
+    color: var(--ag-ink-2);
+}
+
+.aigrader-container .aigrader-queue-count {
+    font-weight: 600;
+    color: var(--ag-ink);
+}
+
+.aigrader-container .aigrader-perpage {
+    margin-left: auto;
+}
+
+.aigrader-container .aigrader-perpage form {
+    display: flex;
+    align-items: center;
+    gap: var(--mds-spacing-xs);
+}
+
+.aigrader-container .aigrader-perpage label {
+    margin: 0;
+}
+
+.aigrader-container .aigrader-perpage select {
+    min-height: 34px;
+    padding-top: 0;
+    padding-bottom: 0;
+    border-radius: var(--lx-radius-control);
+}
+
+.aigrader-container .pagination {
+    margin: var(--mds-spacing-md) 0;
+}
+
+.aigrader-container .aigrader-stats-header:focus-visible {
+    outline: 2px solid var(--mds-focus-default);
+    outline-offset: 2px;
+    box-shadow: var(--lx-ring);
 }

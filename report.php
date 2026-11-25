@@ -219,7 +219,7 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
         }
         echo html_writer::start_div('aigrader-responsible ag-card');
         echo html_writer::tag(
-            'h3',
+            'h2',
             '<i class="fa-solid fa-scale-balanced" aria-hidden="true"></i> ' . get_string('responsible_heading', 'quiz_aigrader'),
             ['class' => 'aigrader-section-title']
         );
@@ -290,7 +290,7 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
 
         echo html_writer::start_div('aigrader-documents-header');
         echo html_writer::tag(
-            'h3',
+            'h2',
             '<i class="fa-regular fa-file-lines" aria-hidden="true"></i> '
             . get_string('reference_documents', 'quiz_aigrader'),
             ['class' => 'aigrader-documents-title']
@@ -298,7 +298,14 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
         echo html_writer::tag(
             'button',
             '<i class="fa-solid fa-chevron-down" aria-hidden="true"></i>',
-            ['class' => 'aigrader-documents-toggle', 'id' => 'aigrader-documents-toggle', 'type' => 'button']
+            [
+                'class' => 'aigrader-documents-toggle',
+                'id' => 'aigrader-documents-toggle',
+                'type' => 'button',
+                'aria-label' => get_string('reference_documents', 'quiz_aigrader'),
+                'aria-controls' => 'aigrader-documents-content',
+                'aria-expanded' => 'true',
+            ]
         );
         echo html_writer::end_div();
 
@@ -427,7 +434,14 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
         echo html_writer::start_div('aigrader-stats-box', ['id' => 'aigrader-stats-box']);
 
         // Header with toggle.
-        echo html_writer::start_div('aigrader-stats-header', ['id' => 'aigrader-stats-toggle']);
+        // A keyboard control as well as a click target: role, focus and the expanded state.
+        echo html_writer::start_div('aigrader-stats-header', [
+            'id' => 'aigrader-stats-toggle',
+            'role' => 'button',
+            'tabindex' => '0',
+            'aria-expanded' => 'true',
+            'aria-controls' => 'aigrader-stats-content',
+        ]);
         echo html_writer::tag(
             'span',
             '<i class="fa-regular fa-clock" aria-hidden="true"></i> '
@@ -907,6 +921,7 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
             [
                 'id' => 'aigrader-gradeall-btn',
                 'type' => 'button',
+                'title' => get_string('grade_all_hint', 'quiz_aigrader'),
                 'class' => 'aigrader-btn mds-btn btn btn-primary mds-btn--size-lg',
             ]
         );
@@ -919,6 +934,9 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
             'id' => 'aigrader-search',
             'class' => 'aigrader-search-input',
             'placeholder' => get_string('search_student', 'quiz_aigrader'),
+            'value' => optional_param('search', '', PARAM_TEXT),
+            'title' => get_string('search_hint', 'quiz_aigrader'),
+            'aria-label' => get_string('search_student', 'quiz_aigrader'),
         ]);
         echo html_writer::end_div();
 
@@ -1205,6 +1223,33 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
             return strcasecmp($a['fullname'], $b['fullname']);
         });
 
+        // Search across every page, not only the one on screen: name, question and answer.
+        $search = trim(optional_param('search', '', PARAM_TEXT));
+        if ($search !== '') {
+            $needle = core_text::strtolower($search);
+            $rows = array_values(array_filter($rows, function ($r) use ($needle) {
+                return strpos(core_text::strtolower($r['fullname']), $needle) !== false
+                    || strpos(core_text::strtolower($r['questionfull']), $needle) !== false
+                    || strpos(core_text::strtolower($r['full']), $needle) !== false;
+            }));
+        }
+
+        // One page of responses at a time. A large cohort sent every response and question
+        // at once: 1,000 learners made a 16 MB page that took seconds to arrive and to draw.
+        $perpageoptions = [25, 50, 100, 250];
+        $perpage = optional_param('perpage', 50, PARAM_INT);
+        if (!in_array($perpage, $perpageoptions, true)) {
+            $perpage = 50;
+        }
+        $total = count($rows);
+        $page = max(0, optional_param('page', 0, PARAM_INT));
+        if ($page * $perpage >= $total) {
+            $page = 0;
+        }
+        $rows = array_slice($rows, $page * $perpage, $perpage);
+        $pageurl = new moodle_url(qualified_me());
+        $pageurl->remove_params('page');
+
         // Queue layout: a compact table, one row per response, each expanding in place to
         // the full marking card. The previous layout rendered every response as an open
         // card, so a quiz with 150 attempts was 150 expanded cards deep and there was no
@@ -1239,6 +1284,16 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
             }
         }
         $this->render_criteria_check($criteriaquestions, $cm, $context);
+
+        $this->render_queue_paging_summary($pageurl, $search, $page, $perpage, $perpageoptions, $total);
+        if ($total === 0) {
+            echo html_writer::div(
+                s(get_string('search_nomatch', 'quiz_aigrader', $search)) . ' '
+                    . html_writer::link(new moodle_url($pageurl, ['search' => '']), get_string('search_clear', 'quiz_aigrader')),
+                'aigrader-search-nomatch alert alert-info mds-alert'
+            );
+            return;
+        }
 
         global $OUTPUT;
 
@@ -1320,6 +1375,63 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
             'colcount' => $colcount,
             'rows' => $templaterows,
         ]);
+        echo $OUTPUT->paging_bar($total, $page, $perpage, $pageurl);
+    }
+
+    /**
+     * The line above the queue: how many responses are shown, the page size, and the pages.
+     *
+     * @param moodle_url $pageurl This page's address, without the page number.
+     * @param string $search The active search, '' for none.
+     * @param int $page The page shown, from 0.
+     * @param int $perpage Responses per page.
+     * @param int[] $perpageoptions The page sizes offered.
+     * @param int $total Responses matching the filters.
+     * @return void
+     */
+    private function render_queue_paging_summary(
+        moodle_url $pageurl,
+        string $search,
+        int $page,
+        int $perpage,
+        array $perpageoptions,
+        int $total
+    ) {
+        global $OUTPUT;
+        echo html_writer::start_div('aigrader-queue-summary');
+        if ($total > 0) {
+            echo html_writer::div(get_string('queue_showing', 'quiz_aigrader', (object)[
+                'from' => $page * $perpage + 1,
+                'to' => min($total, ($page + 1) * $perpage),
+                'total' => $total,
+            ]), 'aigrader-queue-count');
+        }
+        if ($search !== '') {
+            echo html_writer::div(
+                s(get_string('search_active', 'quiz_aigrader', $search)) . ' '
+                    . html_writer::link(new moodle_url($pageurl, ['search' => '']), get_string('search_clear', 'quiz_aigrader')),
+                'aigrader-queue-search'
+            );
+        }
+        $options = [];
+        foreach ($perpageoptions as $n) {
+            $options[$n] = $n;
+        }
+        $selecturl = new moodle_url($pageurl);
+        $selecturl->remove_params('perpage');
+        $select = new single_select(
+            $selecturl,
+            'perpage',
+            $options,
+            $perpage,
+            null,
+            'aigrader-perpage'
+        );
+        $select->set_label(get_string('queue_perpage', 'quiz_aigrader'));
+        $select->class = 'aigrader-perpage';
+        echo $OUTPUT->render($select);
+        echo html_writer::end_div();
+        echo $OUTPUT->paging_bar($total, $page, $perpage, $pageurl);
     }
 
     /**
@@ -1369,7 +1481,7 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
     private function render_all_graded_state() {
         echo html_writer::start_div('aigrader-empty aigrader-all-graded');
         echo '<i class="fa-regular fa-circle-check aigrader-empty-icon" aria-hidden="true"></i>';
-        echo html_writer::tag('h3', get_string('all_graded', 'quiz_aigrader'), ['class' => 'aigrader-empty-title']);
+        echo html_writer::tag('h2', get_string('all_graded', 'quiz_aigrader'), ['class' => 'aigrader-empty-title']);
         echo html_writer::tag(
             'p',
             get_string('all_graded_message', 'quiz_aigrader'),
@@ -1415,7 +1527,7 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
 
         echo html_writer::start_div('aigrader-empty aigrader-no-results');
         echo html_writer::tag(
-            'h3',
+            'h2',
             get_string('filter_no_results', 'quiz_aigrader'),
             ['class' => 'aigrader-empty-title']
         );

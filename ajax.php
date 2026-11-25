@@ -83,6 +83,8 @@ function quiz_aigrader_fetch($url, $apikey, $post = false, $payload = null) {
             'body' => null,
             'error' => $error ? $error : 'Connection failed (curl)',
             'httpcode' => $httpcode,
+            // 28 is curl's timeout: the service was reached, or may have been, but did not answer in time.
+            'timedout' => (int)$curl->get_errno() === 28,
         ];
     }
 
@@ -790,9 +792,11 @@ try {
 
             if (!$res['success']) {
                 debugging('AI Essay Grader: grading request failed: ' . $res['error'], DEBUG_DEVELOPER);
+                $timedout = !empty($res['timedout']);
                 echo json_encode([
                     'ok' => false,
-                    'message' => get_string('connectionfailed', 'quiz_aigrader'),
+                    'message' => get_string($timedout ? 'error_servicetimeout' : 'connectionfailed', 'quiz_aigrader'),
+                    'error_code' => $timedout ? 'SERVICE_TIMEOUT' : 'CONNECTION',
                 ]);
                 exit;
             }

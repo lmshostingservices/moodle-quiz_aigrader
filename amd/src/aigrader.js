@@ -1435,7 +1435,8 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/log', 'cor
                                 </span>
                             </span>
                         </div>
-                        <textarea class="aigrader-feedback-edit" id="feedback-edit-${id}" readonly></textarea>
+                        <textarea class="aigrader-feedback-edit" id="feedback-edit-${id}" readonly
+                                  aria-label="${escapeHtml(strings.feedback_to_learner)}"></textarea>
                         <div class="aigrader-approval-actions">
                             <span class="aigrader-review-hint" id="review-hint-${id}"
                                   hidden>${escapeHtml(strings.read_answer_first)}</span>
@@ -1498,7 +1499,7 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/log', 'cor
             $btn.prop('disabled', false).text(strings.ai_grade);
             setRowStatus(id, 'pending');
             if (callback) {
-                callback({ok: false, error_code: 'CONNECTION', message: strings.error_connection});
+                callback({ok: false, 'error_code': 'CONNECTION', message: strings.error_connection});
             } else {
                 showAlert('error', strings.error, strings.error_connection);
             }
@@ -1973,7 +1974,7 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/log', 'cor
                     $('.aigrader-cards').html(`
                         <div class="aigrader-empty aigrader-all-graded">
                             <i class="fa-regular fa-circle-check aigrader-empty-icon" aria-hidden="true"></i>
-                            <h3 class="aigrader-empty-title">${escapeHtml(strings.all_graded)}</h3>
+                            <h2 class="aigrader-empty-title">${escapeHtml(strings.all_graded)}</h2>
                             <p class="aigrader-empty-message">${escapeHtml(strings.all_graded_message)}</p>
                         </div>
                     `);
@@ -2449,6 +2450,29 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/log', 'cor
             }
         });
 
+        // A new page size applies at once, from the first page.
+        $(document).on('change', '#aigrader-perpage select', function() {
+            this.form.submit();
+        });
+
+        // Enter searches every page: the queue is paged, so the live filter below only sees
+        // the responses on screen.
+        $(document).on('keydown', '#aigrader-search', function(e) {
+            if (e.key !== 'Enter') {
+                return;
+            }
+            e.preventDefault();
+            const url = new URL(window.location.href);
+            const term = $(this).val().trim();
+            if (term === '') {
+                url.searchParams.delete('search');
+            } else {
+                url.searchParams.set('search', term);
+            }
+            url.searchParams.delete('page');
+            window.location.href = url.toString();
+        });
+
         // Search handler - works with new card-based layout
         // Searches student name, question text, and answer content
         $(document).on('input', '#aigrader-search', function() {
@@ -2481,7 +2505,8 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/log', 'cor
         // Document section toggle
         $(document).on('click', '#aigrader-documents-header, #aigrader-documents-toggle', function(e) {
             e.stopPropagation();
-            $('#aigrader-documents').toggleClass('is-collapsed');
+            const collapsed = $('#aigrader-documents').toggleClass('is-collapsed').hasClass('is-collapsed');
+            $('#aigrader-documents-toggle').attr('aria-expanded', collapsed ? 'false' : 'true');
         });
 
         // Document upload handler
@@ -2649,8 +2674,18 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/log', 'cor
 
         // Grading stats toggle
         $(document).on('click', '#aigrader-stats-toggle', function() {
-            $('#aigrader-stats-content').slideToggle(200);
-            $(this).find('svg').toggleClass('aigrader-chevron-rotated');
+            const $toggle = $(this);
+            $('#aigrader-stats-content').slideToggle(200, function() {
+                $toggle.attr('aria-expanded', $(this).is(':visible') ? 'true' : 'false');
+            });
+            $toggle.find('svg').toggleClass('aigrader-chevron-rotated');
+        });
+        // Enter and Space open and close it from the keyboard, as on a button.
+        $(document).on('keydown', '#aigrader-stats-toggle', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                $(this).trigger('click');
+            }
         });
 
         // Grading stats apply filters
