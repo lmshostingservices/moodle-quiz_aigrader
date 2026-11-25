@@ -46,6 +46,26 @@ class design {
         return (int)($CFG->branch ?? 0) >= self::CORE_MDS_BRANCH;
     }
 
+    /** @var int First Moodle branch on Bootstrap 5, where selects are styled with form-select. */
+    public const BOOTSTRAP5_BRANCH = 500;
+
+    /**
+     * Moodle's own class for a select, for this version.
+     *
+     * Bootstrap 4 (Moodle 4.4 and 4.5) styles selects with custom-select; Bootstrap 5 (Moodle 5.0
+     * and later) with form-select, and marks custom-select as deprecated.
+     *
+     * @param bool $small The compact size.
+     * @return string
+     */
+    public static function select_class(bool $small = false): string {
+        global $CFG;
+        if ((int)($CFG->branch ?? 0) >= self::BOOTSTRAP5_BRANCH) {
+            return $small ? 'form-select form-select-sm' : 'form-select';
+        }
+        return $small ? 'custom-select custom-select-sm' : 'custom-select';
+    }
+
     /**
      * Classes for one of the plugin's root containers.
      *

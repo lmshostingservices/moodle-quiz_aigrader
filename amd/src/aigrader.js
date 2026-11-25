@@ -1415,7 +1415,7 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/log', 'cor
                                 <span class="aigrader-grade-select">
                                     <label for="grade-select-${id}">${strings.grade_label}</label>
                                     <select id="grade-select-${id}"
-                                        class="aigrader-grade-dropdown custom-select custom-select-sm form-select form-select-sm">
+                                        class="aigrader-grade-dropdown ${config.selectClass || 'form-select form-select-sm'}">
                                         ${gradeOptions}
                                     </select>
                                 </span>

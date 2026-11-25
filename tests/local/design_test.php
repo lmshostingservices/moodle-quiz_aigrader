@@ -56,4 +56,18 @@ final class design_test extends \advanced_testcase {
         $this->assertStringNotContainsString(':root', $css);
         $this->assertDoesNotMatchRegularExpression('/^\s*(html|body)\b/m', $css);
     }
+
+    /**
+     * Selects get Bootstrap 4's class before Moodle 5.0 and Bootstrap 5's from then on.
+     */
+    public function test_select_class(): void {
+        global $CFG;
+        $this->resetAfterTest();
+        $CFG->branch = '405';
+        $this->assertSame('custom-select', design::select_class());
+        $this->assertSame('custom-select custom-select-sm', design::select_class(true));
+        $CFG->branch = '500';
+        $this->assertSame('form-select', design::select_class());
+        $this->assertSame('form-select form-select-sm', design::select_class(true));
+    }
 }

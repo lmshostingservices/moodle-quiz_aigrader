@@ -4476,7 +4476,9 @@
 /* Selects carry Moodle's own select classes, so the theme draws the chevron on every
    version; leave it room, since the plugin's field padding would otherwise cover it. */
 .aigrader-container select.custom-select,
-.aigrader-report-container select.custom-select {
+.aigrader-container select.form-select,
+.aigrader-report-container select.custom-select,
+.aigrader-report-container select.form-select {
     padding-right: 2.25rem;
     background-position: right 0.75rem center;
 }

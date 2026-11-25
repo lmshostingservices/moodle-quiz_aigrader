@@ -112,6 +112,8 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
                 'ajaxurl' => $CFG->wwwroot . '/mod/quiz/report/aigrader/ajax.php',
                 'language' => $userlang,
                 'minReviewTime' => $minreviewtime,
+                // Moodle's select class for this version (Bootstrap 4 or 5).
+                'selectClass' => \quiz_aigrader\local\design::select_class(true),
                 'fullMarksFeedback' => $fullmarksfeedback,
                 // Diagnostic logging is off unless the site is in developer debug mode.
                 // The module's log lines carry the graded response and the feedback with
@@ -385,7 +387,10 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
         $languages = \quiz_aigrader\local\formatter::feedback_languages();
         echo html_writer::start_tag(
             'select',
-            ['id' => 'aigrader-feedback-language', 'class' => 'aigrader-language-select custom-select form-select']
+            [
+                'id' => 'aigrader-feedback-language',
+                'class' => 'aigrader-language-select ' . \quiz_aigrader\local\design::select_class(),
+            ]
         );
         foreach ($languages as $code => $name) {
             echo html_writer::tag('option', s($name), ['value' => $code]);
@@ -467,7 +472,10 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
         echo html_writer::tag(
             'select',
             '<option value="0">' . get_string('all_courses', 'quiz_aigrader') . '</option>',
-            ['id' => 'aigrader-filter-course', 'class' => 'aigrader-filter-select custom-select form-select']
+            [
+                'id' => 'aigrader-filter-course',
+                'class' => 'aigrader-filter-select ' . \quiz_aigrader\local\design::select_class(),
+            ]
         );
         echo html_writer::end_div();
 
@@ -481,7 +489,10 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
         echo html_writer::tag(
             'select',
             '<option value="0">' . get_string('all_graders', 'quiz_aigrader') . '</option>',
-            ['id' => 'aigrader-filter-grader', 'class' => 'aigrader-filter-select custom-select form-select']
+            [
+                'id' => 'aigrader-filter-grader',
+                'class' => 'aigrader-filter-select ' . \quiz_aigrader\local\design::select_class(),
+            ]
         );
         echo html_writer::end_div();
 

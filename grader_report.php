@@ -487,7 +487,7 @@ echo html_writer::tag(
 );
 echo html_writer::select($graderoptions, 'graderid', $graderid, false, [
     'id' => 'graderid',
-    'class' => 'aigrader-filter-control aigrader-filter-select custom-select form-select',
+    'class' => 'aigrader-filter-control aigrader-filter-select ' . \quiz_aigrader\local\design::select_class(),
 ]);
 echo html_writer::end_div();
 
@@ -782,7 +782,7 @@ $freqoptions = [
 ];
 echo html_writer::select($freqoptions, 'frequency', $schedule ? $schedule->frequency : 'weekly', false, [
     'id' => 'frequency',
-    'class' => 'aigrader-filter-control aigrader-frequency-select custom-select form-select',
+    'class' => 'aigrader-filter-control aigrader-frequency-select ' . \quiz_aigrader\local\design::select_class(),
 ]);
 echo html_writer::end_div();
 
