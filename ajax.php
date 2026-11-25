@@ -49,6 +49,10 @@ require_once($CFG->libdir . '/filelib.php');
  * @return array Result with keys success (bool), body (string|null), error (string|null), httpcode (int).
  */
 function quiz_aigrader_fetch($url, $apikey, $post = false, $payload = null) {
+    // Behat acceptance tests only: see \quiz_aigrader\local\service_stub.
+    if (\quiz_aigrader\local\service_stub::applies($url)) {
+        return \quiz_aigrader\local\service_stub::handle($url, (string)$apikey);
+    }
     $curl = new \curl();
     // Use a 90s timeout for grading (the AI service can take 60s+ for complex essays).
     $timeout = $post ? 90 : 30;

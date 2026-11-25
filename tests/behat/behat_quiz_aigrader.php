@@ -57,6 +57,65 @@ class behat_quiz_aigrader extends behat_base {
     }
 
     /**
+     * Point the plugin at the stand-in grading service and remove the review delay.
+     *
+     * @Given /^the Essay Grader service is simulated$/
+     * @return void
+     */
+    public function the_essay_grader_service_is_simulated(): void {
+        set_config('apiurl', \quiz_aigrader\local\service_stub::URL, 'quiz_aigrader');
+        set_config('siteid', 'behat-site', 'quiz_aigrader');
+        set_config('apikey', \quiz_aigrader\local\service_stub::KEY, 'quiz_aigrader');
+        set_config('min_review_time', 0, 'quiz_aigrader');
+    }
+
+    /**
+     * Make the stand-in service refuse the site's key.
+     *
+     * @Given /^the Essay Grader service refuses the site key$/
+     * @return void
+     */
+    public function the_essay_grader_service_refuses_the_site_key(): void {
+        $this->the_essay_grader_service_is_simulated();
+        set_config('apikey', 'not-the-right-key', 'quiz_aigrader');
+    }
+
+    /**
+     * Pause AI suggestions for the whole site.
+     *
+     * @Given /^AI suggestions are paused on the site$/
+     * @return void
+     */
+    public function ai_suggestions_are_paused_on_the_site(): void {
+        set_config('ai_paused', 1, 'quiz_aigrader');
+    }
+
+    /**
+     * Open a learner's marking card in the queue and ask for a suggestion.
+     *
+     * @When /^I ask the Essay Grader to suggest a mark for "(?P<fullname_string>(?:[^"]|\\")*)"$/
+     * @param string $fullname The learner's full name as shown in the queue.
+     * @return void
+     */
+    public function i_ask_the_essay_grader_to_suggest_a_mark_for(string $fullname): void {
+        $row = $this->row_xpath($fullname);
+        $this->execute('behat_general::i_click_on', [$row . "//button[contains(@class,'aigrader-expand-btn')]", 'xpath_element']);
+        $this->execute('behat_general::i_click_on', [$row . "//button[contains(@class,'aigrader-grade-btn')]", 'xpath_element']);
+    }
+
+    /**
+     * The queue rows for one learner.
+     *
+     * @param string $fullname The learner's full name.
+     * @return string An XPath expression.
+     */
+    protected function row_xpath(string $fullname): string {
+        $literal = behat_context_helper::escape($fullname);
+        return "//tbody[contains(concat(' ', normalize-space(@class), ' '), ' aigrader-card ')]"
+            . "[.//td[contains(@class, 'aigrader-q-student')][normalize-space(.) = $literal]]";
+    }
+
+    /**
      * Find a quiz course module by name or idnumber.
      *
      * @param string $identifier The quiz name or idnumber.
