@@ -78,7 +78,7 @@ if ($ADMIN->fulltree) {
 
     $fallbacknotice = $centralconfiginstalled ? ' ' . get_string('centralconfig_fallback', 'quiz_aigrader') : '';
 
-    $settingspage->add(new admin_setting_configtext(
+    $settingspage->add(new \quiz_aigrader\admin\setting_serviceurl(
         'quiz_aigrader/apiurl',
         get_string('apiurl', 'quiz_aigrader'),
         get_string('apiurl_desc', 'quiz_aigrader'),
@@ -94,16 +94,11 @@ if ($ADMIN->fulltree) {
         PARAM_TEXT
     ));
 
-    $settingspage->add(new admin_setting_configpasswordunmask(
+    // Stored encrypted with the site's key, and never written back into the page.
+    $settingspage->add(new admin_setting_encryptedpassword(
         'quiz_aigrader/apikey',
         get_string('apikey', 'quiz_aigrader'),
-        get_string('apikey_desc', 'quiz_aigrader') . $fallbacknotice,
-        '',
-        // An API key is an opaque credential. Any param cleaning could silently alter or
-        // truncate it, so it is stored exactly as issued.
-        // phpcs:ignore moodle.Commenting.InlineComment.NotCapital
-        PARAM_RAW, // pipeline-ignore: PARAM_RAW - opaque API credential.
-        255
+        get_string('apikey_desc', 'quiz_aigrader') . $fallbacknotice
     ));
 
     $settingspage->add(new admin_setting_configcheckbox(

@@ -177,7 +177,7 @@ class send_report_task extends \core\task\scheduled_task {
 
         $this->reschedule($schedule, $now);
 
-        mtrace('Schedule ' . $schedule->id . ': Report sent to ' . $user->email);
+        mtrace('Schedule ' . $schedule->id . ': report sent.');
     }
 
     /**

@@ -2,8 +2,36 @@
 
 ## 5.3.0 - 2026-11-24
 
-Version: `2026112501`. The screens are rebuilt on the Moodle Design System (MDS), finished in the
+Version: `2026112502`. The screens are rebuilt on the Moodle Design System (MDS), finished in the
 LMS Labs premium style. No database changes. Tested on Moodle 4.5, 5.1 and 5.3, light and dark.
+
+## Fixed: grading service failures
+
+- A refused key, a server error or a reply with no readable score was shown as a suggested mark
+  of zero with an Approve button. It is now an error that says what went wrong, and the row stays
+  ready to grade.
+- "Grade all essays" stops at the first failure that would repeat for every essay (key refused,
+  no credits, suggestions paused, service down) and says why. When only some fail, it reports how
+  many were graded and how many were not, instead of reporting all as graded.
+- Running out of credits now shows the credits message.
+
+## Security and privacy
+
+- Approved feedback is cleaned on the server before it is saved, because Moodle shows question
+  comments without cleaning them again. The learner feedback card was rebuilt from markup that
+  survives cleaning (no SVG or flex layout), so it looks the same.
+- The learner notice cannot be suppressed by feedback that already contains an element of its
+  class, and a suggestion made for an earlier attempt is no longer treated as AI help on a later one.
+- The API key is stored encrypted (existing keys are encrypted on upgrade) and is no longer written
+  into the settings page. The service address must use https (plain http only to this machine),
+  and redirects are never followed, so the key cannot be forwarded to another host.
+- Records are removed when the quiz, attempt or user they describe is deleted, with a daily task
+  for what Moodle's events do not cover (a quiz deleted with its course, a course reset). When a
+  grader is deleted, the learner's decision record stays, without the grader.
+- Privacy metadata now lists every stored field and everything sent to the grading service.
+- Write actions are accepted only as POST; the unused legacy approve action was removed; grading
+  statistics, which cover the whole course, need a course-level capability; service replies are
+  reduced to known, cleaned fields before they reach the browser; unused code removed.
 
 ## Added: responsible AI (EU AI Act)
 

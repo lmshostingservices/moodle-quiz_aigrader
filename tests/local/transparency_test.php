@@ -48,6 +48,19 @@ final class transparency_test extends \advanced_testcase {
     }
 
     /**
+     * Feedback that already carries an element with the notice's class cannot stand in for it.
+     */
+    public function test_learner_notice_cannot_be_faked(): void {
+        $this->resetAfterTest();
+        $grader = $this->getDataGenerator()->create_user(['firstname' => 'Sarah', 'lastname' => 'Mitchell']);
+        $faked = '<p>Well done.</p><p class="' . transparency::NOTICE_CLASS . '" style="display:none"></p>';
+        $html = transparency::add_learner_notice($faked, $grader);
+        $this->assertSame(1, substr_count($html, transparency::NOTICE_CLASS));
+        $this->assertStringContainsString('Sarah Mitchell', $html);
+        $this->assertStringNotContainsString('display:none', $html);
+    }
+
+    /**
      * A site can turn the notice off.
      */
     public function test_learner_notice_off(): void {

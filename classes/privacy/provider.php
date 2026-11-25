@@ -69,6 +69,10 @@ class provider implements
                 'criteriamet' => 'privacy:metadata:quiz_aigrader_attempt_ctx:criteriamet',
                 'feedbacksummary' => 'privacy:metadata:quiz_aigrader_attempt_ctx:feedbacksummary',
                 'aicriteria' => 'privacy:metadata:quiz_aigrader_attempt_ctx:aicriteria',
+                'aigrade' => 'privacy:metadata:quiz_aigrader_attempt_ctx:aigrade',
+                'aicriteriamet' => 'privacy:metadata:quiz_aigrader_attempt_ctx:aicriteriamet',
+                'aifeedback' => 'privacy:metadata:quiz_aigrader_attempt_ctx:aifeedback',
+                'suggestedtime' => 'privacy:metadata:quiz_aigrader_attempt_ctx:suggestedtime',
                 'lastgrade' => 'privacy:metadata:quiz_aigrader_attempt_ctx:lastgrade',
                 'humanreview' => 'privacy:metadata:quiz_aigrader_attempt_ctx:humanreview',
                 'autolocked' => 'privacy:metadata:quiz_aigrader_attempt_ctx:autolocked',
@@ -98,7 +102,17 @@ class provider implements
                 'courseid' => 'privacy:metadata:quiz_aigrader_decisions:courseid',
                 'userid' => 'privacy:metadata:quiz_aigrader_decisions:userid',
                 'graderid' => 'privacy:metadata:quiz_aigrader_decisions:graderid',
+                'qubaid' => 'privacy:metadata:quiz_aigrader_decisions:qubaid',
+                'questionid' => 'privacy:metadata:quiz_aigrader_decisions:questionid',
                 'slot' => 'privacy:metadata:quiz_aigrader_decisions:slot',
+                'maxmark' => 'privacy:metadata:quiz_aigrader_decisions:maxmark',
+                'markchanged' => 'privacy:metadata:quiz_aigrader_decisions:markchanged',
+                'feedbackchanged' => 'privacy:metadata:quiz_aigrader_decisions:feedbackchanged',
+                'humanreview' => 'privacy:metadata:quiz_aigrader_decisions:humanreview',
+                'autolocked' => 'privacy:metadata:quiz_aigrader_decisions:autolocked',
+                'policymode' => 'privacy:metadata:quiz_aigrader_decisions:policymode',
+                'criteriasource' => 'privacy:metadata:quiz_aigrader_decisions:criteriasource',
+                'graderinfohash' => 'privacy:metadata:quiz_aigrader_decisions:graderinfohash',
                 'attemptnum' => 'privacy:metadata:quiz_aigrader_decisions:attemptnum',
                 'aimark' => 'privacy:metadata:quiz_aigrader_decisions:aimark',
                 'finalmark' => 'privacy:metadata:quiz_aigrader_decisions:finalmark',
@@ -173,6 +187,10 @@ class provider implements
                 'previouslymetcriteria' => 'privacy:metadata:essaygraderai_api:previouslymetcriteria',
                 'attemptnumber' => 'privacy:metadata:essaygraderai_api:attemptnumber',
                 'referencedocuments' => 'privacy:metadata:essaygraderai_api:referencedocuments',
+                'attemptidentifiers' => 'privacy:metadata:essaygraderai_api:attemptidentifiers',
+                'language' => 'privacy:metadata:essaygraderai_api:language',
+                'markingguidance' => 'privacy:metadata:essaygraderai_api:markingguidance',
+                'criteria' => 'privacy:metadata:essaygraderai_api:criteria',
             ],
             'privacy:metadata:essaygraderai_api'
         );
@@ -509,14 +527,24 @@ class provider implements
                     'quiz_aigrader_grading_logs',
                     ['quizid' => $cm->instance, 'graderid' => $userid]
                 );
-                // A decision row names both the learner assessed and the assessor who
-                // approved it, so a deletion request from either removes it.
+                // A decision row names the learner assessed and the grader who approved it. The
+                // learner's request removes it. The grader's request removes the grader from
+                // it but keeps the record, which is the learner's evidence of how a result was
+                // reached.
                 $DB->delete_records(
                     'quiz_aigrader_decisions',
                     ['quizid' => $cm->instance, 'userid' => $userid]
                 );
-                $DB->delete_records(
+                $DB->set_field(
                     'quiz_aigrader_decisions',
+                    'acknowledgement',
+                    null,
+                    ['quizid' => $cm->instance, 'graderid' => $userid]
+                );
+                $DB->set_field(
+                    'quiz_aigrader_decisions',
+                    'graderid',
+                    0,
                     ['quizid' => $cm->instance, 'graderid' => $userid]
                 );
                 $DB->set_field(
@@ -570,8 +598,17 @@ class provider implements
                 "quizid = :quizid AND userid {$insql}",
                 $params
             );
-            $DB->delete_records_select(
+            $DB->set_field_select(
                 'quiz_aigrader_decisions',
+                'acknowledgement',
+                null,
+                "quizid = :quizid AND graderid {$insql}",
+                $params
+            );
+            $DB->set_field_select(
+                'quiz_aigrader_decisions',
+                'graderid',
+                0,
                 "quizid = :quizid AND graderid {$insql}",
                 $params
             );

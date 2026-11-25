@@ -65,9 +65,13 @@ class transparency {
      * @return string The feedback the learner receives.
      */
     public static function add_learner_notice(string $html, stdClass $grader, string $learnerlang = ''): string {
-        if (!self::learner_notice_enabled() || strpos($html, 'class="' . self::NOTICE_CLASS . '"') !== false) {
+        if (!self::learner_notice_enabled()) {
             return $html;
         }
+        // Remove any notice already in the HTML, then add the real one. Checking for the class
+        // instead would let feedback carrying an empty or hidden element of that class stand in
+        // for the notice; replacing it also keeps the call idempotent.
+        $html = preg_replace('~<p\b[^>]*\bclass="' . preg_quote(self::NOTICE_CLASS, '~') . '"[^>]*>.*?</p>~is', '', $html);
         $text = get_string_manager()->get_string(
             'learner_ai_notice',
             'quiz_aigrader',

@@ -289,8 +289,10 @@ final class privacy_provider_test extends \core_privacy\tests\provider_testcase 
 
         $this->assertEquals(1, $DB->count_records('quiz_aigrader_attempt_ctx'));
         $this->assertEquals(0, $DB->count_records('quiz_aigrader_grading_logs'));
-        // The assessor's deletion removes it too: the row names them as well.
-        $this->assertEquals(0, $DB->count_records('quiz_aigrader_decisions'));
+        // The grader's deletion keeps the learner's decision record, without the grader in it.
+        $this->assertEquals(1, $DB->count_records('quiz_aigrader_decisions'));
+        $this->assertEquals(0, $DB->count_records('quiz_aigrader_decisions', ['graderid' => $this->teacher->id]));
+        $this->assertNull($DB->get_field('quiz_aigrader_decisions', 'acknowledgement', ['userid' => $this->student->id]));
     }
 
     /**

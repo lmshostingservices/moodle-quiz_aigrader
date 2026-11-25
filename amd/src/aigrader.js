@@ -667,13 +667,15 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/log', 'cor
 
             return `<div style="margin:0 0 10px;padding:13px 16px;background:#ffffff;`
                 + `border:1px solid #e3e8ef;border-radius:8px;">`
-                + `<div style="display:flex;justify-content:space-between;align-items:baseline;`
-                + `gap:12px;margin:0 0 9px;">`
-                + `<span style="font-size:14.5px;font-weight:600;color:#202124;">`
-                + escapeHtml(c.label) + `</span>`
-                + `<span style="font-size:14.5px;font-weight:700;color:#202124;white-space:nowrap;">`
-                + escapeHtml(scoreLabel) + `</span>`
-                + `</div>`
+                // A two-cell table, not flex: this HTML is cleaned before it is saved, and the
+                // cleaner removes display rules.
+                + `<table role="presentation" style="border-collapse:collapse;width:100%;margin:0 0 9px;"><tr>`
+                + `<td style="padding:0;vertical-align:bottom;font-size:14.5px;font-weight:600;color:#202124;">`
+                + escapeHtml(c.label) + `</td>`
+                + `<td style="padding:0 0 0 12px;vertical-align:bottom;text-align:right;white-space:nowrap;`
+                + `font-size:14.5px;font-weight:700;color:#202124;">`
+                + escapeHtml(scoreLabel) + `</td>`
+                + `</tr></table>`
                 + `<div role="img" aria-label="${escapeHtml(c.label)}: ${escapeHtml(scoreLabel)}"`
                 + ` style="height:6px;background:#e8eaed;border-radius:999px;overflow:hidden;">`
                 + `<div style="height:6px;width:${pct}%;background:#21a44a;border-radius:999px;"></div>`
@@ -1060,8 +1062,8 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/log', 'cor
         if (typeof text !== 'string') {
             log('formatFeedbackHtml received non-string:', typeof text, text);
             if (text === null || text === undefined) {
-                return '<div style="font-family:Inter,system-ui,-apple-system,sans-serif;font-size:14px;' +
-                    'color:#626c7a;font-style:italic;">' + escapeHtml(strings.feedback_none) + '</div>';
+                return '<div style="font-size:14px;color:#626c7a;font-style:italic;">' +
+                    escapeHtml(strings.feedback_none) + '</div>';
             }
             // Try to stringify objects
             try {
@@ -1073,36 +1075,12 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/log', 'cor
 
         const {sections, preamble} = parseFeedbackSections(text);
 
-        // SVG icons for each section type (inline SVG so they work everywhere)
-        const icons = {
-            success: '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"'
-                + ' fill="none" stroke="currentColor" stroke-width="2.5"'
-                + ' stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">'
-                + '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>'
-                + '<polyline points="22 4 12 14.01 9 11.01"/></svg>',
-            warning: '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"'
-                + ' fill="none" stroke="currentColor" stroke-width="2.5"'
-                + ' stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">'
-                + '<circle cx="12" cy="12" r="10"/>'
-                + '<line x1="12" y1="8" x2="12" y2="12"/>'
-                + '<line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
-            info: '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"'
-                + ' fill="none" stroke="currentColor" stroke-width="2.5"'
-                + ' stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">'
-                + '<line x1="12" y1="16" x2="12" y2="12"/>'
-                + '<line x1="12" y1="8" x2="12.01" y2="8"/>'
-                + '<circle cx="12" cy="12" r="10"/></svg>'
-        };
-
-        // Item icons, one per section type, drawn in the section's accent colour.
-        const svg = (path) => '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"'
-            + ' fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"'
-            + ' stroke-linejoin="round">' + path + '</svg>';
-        const bullets = {
-            success: svg('<polyline points="20 6 9 17 4 12"/>'),
-            warning: svg('<line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/>'),
-            info: svg('<line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>')
-        };
+        // Section and item markers are plain characters in a tinted chip. The HTML is cleaned
+        // on the server before it is saved (Moodle's HTML cleaner removes SVG, flex layout and
+        // display rules), so everything here uses only markup that survives cleaning: a small
+        // presentational table for alignment, colours, borders and radii.
+        const icons = {success: '&#10003;', warning: '!', info: '&#8594;'};
+        const bullets = {success: '&#10003;', warning: '&#8599;', info: '&#8594;'};
 
         // Palette for the section cards.
         // Palette from the LMS Labs design system. Values are precomputed rather than
@@ -1136,11 +1114,10 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/log', 'cor
             }
         };
 
-        const FONT = "Inter, system-ui, -apple-system, 'Segoe UI', sans-serif";
+        // No font family: the card takes the site's own font, as the rest of the review page does.
         const TEXT = '#1d2129';
 
-        let html = '<div class="aigrader-feedback" style="font-family:' + FONT +
-            ';line-height:1.6;color:' + TEXT + ';">';
+        let html = '<div class="aigrader-feedback" style="line-height:1.6;color:' + TEXT + ';">';
 
         // Anything written above the first heading - including the competency and
         // assessor-review notices the service prepends - is shown as a notice card rather
@@ -1162,30 +1139,29 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/log', 'cor
             html += '<div class="' + s.cardClass + '" style="background:' + s.bg + ';border:' + s.border +
                 ';border-radius:12px;padding:16px 18px;margin:0 0 12px 0;">';
 
-            // Title row: a tinted chip holding the icon, then the heading.
-            html += '<div class="feedback-card-title" style="display:flex;align-items:center;gap:10px;' +
-                'margin:0 0 10px 0;">';
-            html += '<span style="display:inline-flex;align-items:center;justify-content:center;' +
-                'width:24px;height:24px;border-radius:999px;background:' + s.chipBg + ';color:' +
-                s.accent + ';flex:0 0 auto;">' + icon + '</span>';
-            html += '<span style="font-size:14px;font-weight:700;letter-spacing:-0.01em;color:' +
-                s.titleColor + ';">' + escapeHtml(section.title) + '</span>';
-            html += '</div>';
+            // Title row: a tinted chip holding the marker, then the heading.
+            html += '<p class="feedback-card-title" style="margin:0 0 10px 0;">';
+            html += '<span style="background:' + s.chipBg + ';color:' + s.accent + ';border-radius:999px;' +
+                'padding:2px 7px;margin-right:8px;font-size:12px;font-weight:700;">' + icon + '</span>';
+            html += '<span style="font-size:14px;font-weight:700;color:' + s.titleColor + ';">' +
+                escapeHtml(section.title) + '</span>';
+            html += '</p>';
 
             if (section.items.length > 0) {
-                html += '<div class="feedback-card-list" style="margin:0;padding:0;list-style:none;">';
+                // Each item carries a small marker in the section's colour: a tick for what went
+                // well, an upward arrow for what to improve, a forward arrow for next time.
+                html += '<table class="feedback-card-list" role="presentation" ' +
+                    'style="border-collapse:collapse;width:100%;margin:0;">';
                 for (const item of section.items) {
-                    html += '<div class="feedback-card-item" style="display:flex;align-items:flex-start;' +
-                        'gap:10px;margin:0 0 6px 0;font-size:14px;line-height:1.65;color:' + TEXT + ';">';
-                    // Each item carries a small line icon in the section's colour: a tick for
-                    // what went well, an upward arrow for what to improve, a forward arrow for
-                    // next time. It reads as one designed system rather than emoji bullets.
-                    html += '<span class="feedback-bullet" style="flex:0 0 auto;display:inline-flex;' +
-                        'margin-top:4px;color:' + s.accent + ';">' + (bullets[section.type] || bullets.info) + '</span>';
-                    html += '<span>' + escapeHtml(item) + '</span>';
-                    html += '</div>';
+                    html += '<tr class="feedback-card-item">';
+                    html += '<td class="feedback-bullet" style="width:22px;padding:0 0 6px 0;vertical-align:top;' +
+                        'font-weight:700;font-size:14px;line-height:1.65;color:' + s.accent + ';">' +
+                        (bullets[section.type] || bullets.info) + '</td>';
+                    html += '<td style="padding:0 0 6px 0;vertical-align:top;font-size:14px;line-height:1.65;' +
+                        'color:' + TEXT + ';">' + escapeHtml(item) + '</td>';
+                    html += '</tr>';
                 }
-                html += '</div>';
+                html += '</table>';
             }
 
             html += '</div>';
@@ -1196,8 +1172,7 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/log', 'cor
         // If no sections found, show as formatted plain text with paragraph breaks
         if (sections.length === 0) {
             const paragraphs = text.split('\n').filter(p => p.trim());
-            html = '<div class="feedback-plain" style="font-family:' + FONT +
-                ';font-size:14px;line-height:1.65;color:' + TEXT + ';">';
+            html = '<div class="feedback-plain" style="font-size:14px;line-height:1.65;color:' + TEXT + ';">';
             for (const p of paragraphs) {
                 html += '<p style="margin:0 0 10px 0;">' + escapeHtml(p.trim()) + '</p>';
             }
@@ -1352,8 +1327,10 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/log', 'cor
                 setRowStatus(id, resp.error_code === 'NO_CRITERIA' ? 'manual' : 'pending');
                 if (callback) {
                     // Grading the whole queue: stay quiet and move to the next response,
-                    // rather than stacking one alert per failure on top of the assessor.
-                    callback();
+                    // rather than stacking one alert per failure on top of the grader. The
+                    // queue reads the reply, so it can stop and say why when every request
+                    // would fail the same way.
+                    callback(resp);
                 } else {
                     showAlert('error', strings.error_grading, resp.message);
                 }
@@ -1367,7 +1344,7 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/log', 'cor
                 $btn.prop('disabled', false).text(strings.ai_grade);
                 showAlert('error', strings.error_grading, strings.error_nomaxmark);
                 if (callback) {
-                    callback();
+                    callback({ok: false});
                 }
                 return;
             }
@@ -1513,14 +1490,15 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/log', 'cor
             }
 
             if (callback) {
-                callback();
+                callback({ok: true});
             }
         })
         .fail((xhr) => {
             log('GRADE ajax failure:', xhr.responseText);
             $btn.prop('disabled', false).text(strings.ai_grade);
+            setRowStatus(id, 'pending');
             if (callback) {
-                callback();
+                callback({ok: false, error_code: 'CONNECTION', message: strings.error_connection});
             } else {
                 showAlert('error', strings.error, strings.error_connection);
             }
@@ -1889,6 +1867,12 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/log', 'cor
         // last few all arrive at the finished branch. Announcing completion there once per
         // arrival showed the assessor the same success alert two or three times.
         let announced = false;
+        let succeeded = 0;
+        let failed = 0;
+        // Set when a reply shows every remaining request would fail the same way (key refused,
+        // no credits, suggestions paused, service down): the queue stops and says why.
+        let stopped = null;
+        const STOPCODES = ['SERVICE_AUTH', 'INSUFFICIENT_CREDITS', 'AI_PAUSED', 'SERVICE_UNAVAILABLE', 'CONNECTION'];
 
         showLoading(true, `${strings.grading} 0/${total}`);
 
@@ -1898,21 +1882,28 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/log', 'cor
          * @return {void}
          */
         function gradeNext() {
-            if (completed >= total) {
+            if (completed >= total || (stopped && activerequests === 0)) {
                 if (announced) {
                     return;
                 }
                 announced = true;
                 showLoading(false);
-                showAlert(
-                    'success',
-                    strings.grading_complete,
-                    strings.grading_complete_message.replace('{$a}', total)
-                );
+                if (stopped) {
+                    showAlert('error', strings.error_grading, stopped.message || strings.error_connection);
+                } else if (failed) {
+                    showAlert('warning', strings.grading_complete, strings.grading_partial_message
+                        .replace('{$a->done}', succeeded).replace('{$a->failed}', failed));
+                } else {
+                    showAlert(
+                        'success',
+                        strings.grading_complete,
+                        strings.grading_complete_message.replace('{$a}', succeeded)
+                    );
+                }
                 return;
             }
 
-            while (activerequests < parallellimit && currentindex < total) {
+            while (!stopped && activerequests < parallellimit && currentindex < total) {
                 const $btn = $(buttons[currentindex]);
                 currentindex++;
                 activerequests++;
@@ -1926,9 +1917,18 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/log', 'cor
          * Declared outside the loop so every request shares the one set of counters, which
          * is what the progress figure is read from.
          *
+         * @param {Object} resp The reply for this response: ok, and on failure error_code and message.
          * @return {void}
          */
-        function oneFinished() {
+        function oneFinished(resp) {
+            if (resp && resp.ok) {
+                succeeded++;
+            } else {
+                failed++;
+                if (resp && STOPCODES.indexOf(resp.error_code) !== -1) {
+                    stopped = stopped || resp;
+                }
+            }
             completed++;
             activerequests--;
             showLoading(true, `${strings.grading} ${completed}/${total}`);
@@ -2074,7 +2074,7 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/log', 'cor
                 showAlert('success', strings.success, strings.document_uploaded);
                 loadDocuments();
             } else {
-                showAlert('error', strings.error, resp.error || strings.document_upload_error);
+                showAlert('error', strings.error, resp.message || strings.document_upload_error);
             }
         })
         .fail(() => {
@@ -2312,7 +2312,8 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/log', 'cor
             {key: 'criteria_total', component: 'quiz_aigrader'},
             {key: 'grading_complete_message', component: 'quiz_aigrader'},
             {key: 'learner_preview', component: 'quiz_aigrader'},
-            {key: 'dismiss', component: 'quiz_aigrader'}
+            {key: 'dismiss', component: 'quiz_aigrader'},
+            {key: 'grading_partial_message', component: 'quiz_aigrader'}
         ]).then(result => {
             // Assigned by name: the keys match the language strings, which are snake_case.
             [
@@ -2333,7 +2334,7 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/log', 'cor
                 'policy_not_applied', 'suggested_grade', 'feedback_to_learner', 'edit', 'save_changes',
                 'cancel', 'changes_saved', 'savedtogradebook', 'read_answer_first', 'status_pending',
                 'status_grading', 'status_graded', 'status_approved', 'status_manual', 'criteria_total',
-                'grading_complete_message', 'learner_preview', 'dismiss'
+                'grading_complete_message', 'learner_preview', 'dismiss', 'grading_partial_message'
             ].forEach((name, index) => {
                 strings[name] = result[index];
             });

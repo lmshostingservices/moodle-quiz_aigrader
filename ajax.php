@@ -57,9 +57,9 @@ function quiz_aigrader_fetch($url, $apikey, $post = false, $payload = null) {
         'CURLOPT_RETURNTRANSFER' => true,
         'CURLOPT_SSL_VERIFYPEER' => true,
         'CURLOPT_SSL_VERIFYHOST' => 2,
-        'CURLOPT_FOLLOWLOCATION' => true,
-        // Bounded, so a misconfigured service URL cannot bounce the request indefinitely.
-        'CURLOPT_MAXREDIRS' => 3,
+        // Never follow a redirect: the site key travels in a header, and Moodle's curl wrapper
+        // would send it on to whatever host the redirect names.
+        'CURLOPT_FOLLOWLOCATION' => false,
     ]);
 
     $headers = ['Accept: application/json', 'Authorization: Bearer ' . $apikey];
@@ -92,6 +92,36 @@ function quiz_aigrader_fetch($url, $apikey, $post = false, $payload = null) {
         'error' => null,
         'httpcode' => $httpcode,
     ];
+}
+
+/**
+ * Reduce a service reply to the fields the browser uses.
+ *
+ * Nothing the service sends is passed through unread: only a success flag, a plain-text
+ * message and, for an uploaded document, its known fields.
+ *
+ * @param array $data The decoded reply.
+ * @param int $httpcode The HTTP status of the reply.
+ * @return array
+ */
+function quiz_aigrader_service_reply(array $data, int $httpcode): array {
+    $ok = !empty($data['ok']) && $httpcode < 400;
+    $reply = ['ok' => $ok];
+    if (!$ok) {
+        $reply['message'] = ($httpcode === 401 || $httpcode === 403)
+            ? get_string('error_serviceauth', 'quiz_aigrader')
+            : get_string('error_servererror', 'quiz_aigrader');
+    }
+    if ($ok && isset($data['document']) && is_array($data['document'])) {
+        $doc = $data['document'];
+        $reply['document'] = [
+            'id' => clean_param((string)($doc['id'] ?? ''), PARAM_ALPHANUMEXT),
+            'filename' => clean_param((string)($doc['filename'] ?? ''), PARAM_FILE),
+            'sizeBytes' => (int)($doc['sizeBytes'] ?? 0),
+            'status' => clean_param((string)($doc['status'] ?? ''), PARAM_ALPHA),
+        ];
+    }
+    return $reply;
 }
 
 /**
@@ -197,6 +227,17 @@ try {
         exit;
     }
 
+    // Actions that change something, or spend credits, are accepted only as a POST.
+    $writeactions = ['suggest', 'confirmcriteria', 'resetcriteria', 'uploaddoc', 'deletedoc', 'savesettings'];
+    if (in_array(optional_param('action', '', PARAM_ALPHANUMEXT), $writeactions, true) && !data_submitted()) {
+        echo json_encode([
+            'ok' => false,
+            'message' => get_string('error_missingparams', 'quiz_aigrader'),
+            'error_code' => 'post_required',
+        ]);
+        exit;
+    }
+
     // Get params with defaults.
     $cmid   = optional_param('cmid', 0, PARAM_INT);
     $action = optional_param('action', '', PARAM_ALPHA);
@@ -262,7 +303,7 @@ try {
 
     // Suggesting and approving act on one learner's attempt, so the attempt must be finished
     // and, under separate groups, belong to a learner in a group this assessor can see.
-    if (($action === 'suggest' || $action === 'approve') && $attemptrec) {
+    if ($action === 'suggest' && $attemptrec) {
         quiz_aigrader_refuse_if(\quiz_aigrader\local\access::attempt_problem($attemptrec, $cm, $context));
     }
 
@@ -287,7 +328,7 @@ try {
         $siteid = trim(get_config('quiz_aigrader', 'siteid') ?? '');
     }
     if (empty($apikey)) {
-        $apikey = trim(get_config('quiz_aigrader', 'apikey') ?? '');
+        $apikey = \quiz_aigrader\local\service_url::api_key();
     }
 
     // Base URL of the remote grading service, configurable by the administrator.
@@ -296,6 +337,17 @@ try {
         $apibase = 'https://lms-labs.com';
     }
     $apibase = rtrim($apibase, '/');
+
+    // The site key and learners' answers travel to this address, so it must be https. Plain
+    // http is accepted only for a service on this machine (a local test service).
+    if (!\quiz_aigrader\local\service_url::is_safe($apibase)) {
+        echo json_encode([
+            'ok' => false,
+            'message' => get_string('error_apiurl_https', 'quiz_aigrader'),
+            'error_code' => 'SERVICE_AUTH',
+        ]);
+        exit;
+    }
 
     // Release the session lock before long-running API calls to prevent blocking other requests.
     \core\session\manager::write_close();
@@ -759,6 +811,29 @@ try {
                 exit;
             }
 
+            // The service refused the request: a wrong or revoked key, or the service itself failing.
+            // These arrive as JSON without "ok", so they are caught on the HTTP status; otherwise
+            // the reply would be read as a suggestion with no score, and offered as a mark of zero.
+            $httpcode = (int)$res['httpcode'];
+            if ($httpcode === 401 || $httpcode === 403) {
+                debugging('AI Essay Grader: grading service refused the API key (HTTP ' . $httpcode . ')', DEBUG_DEVELOPER);
+                echo json_encode([
+                    'ok' => false,
+                    'message' => get_string('error_serviceauth', 'quiz_aigrader'),
+                    'error_code' => 'SERVICE_AUTH',
+                ]);
+                exit;
+            }
+            if ($httpcode >= 500 || ($httpcode >= 400 && !isset($data['ok']) && $httpcode !== 402)) {
+                debugging('AI Essay Grader: grading service failed (HTTP ' . $httpcode . ')', DEBUG_DEVELOPER);
+                echo json_encode([
+                    'ok' => false,
+                    'message' => get_string('error_servererror', 'quiz_aigrader'),
+                    'error_code' => 'SERVICE_UNAVAILABLE',
+                ]);
+                exit;
+            }
+
             // Handle API errors.
             if (isset($data['ok']) && !$data['ok']) {
                 // Check for insufficient credits (can come as 'error' or 'error_code').
@@ -770,6 +845,8 @@ try {
                     echo json_encode([
                         'ok' => false,
                         'error' => 'insufficient_credits',
+                        'error_code' => 'INSUFFICIENT_CREDITS',
+                        'message' => get_string('insufficient_credits', 'quiz_aigrader'),
                         'credits' => isset($data['credits']) ? $data['credits'] : 0,
                     ]);
                     exit;
@@ -801,9 +878,20 @@ try {
 
             // Build data for output. The grade is not saved until the teacher approves it.
             // Score format: "X/Y" where Y matches the question's max mark.
-            $score = isset($data['score']) && is_scalar($data['score'])
-                ? (string)$data['score']
-                : \quiz_aigrader\local\formatter::score_label(0, $maxmark);
+            // A reply without a readable score is not a suggestion: say so, rather than offer
+            // the grader a mark of zero the service never gave.
+            $scorereadable = isset($data['score']) && is_scalar($data['score'])
+                && preg_match('~^\s*-?\d+(\.\d+)?\s*(/\s*\d+(\.\d+)?\s*)?$~', (string)$data['score']);
+            if (!$scorereadable) {
+                debugging('AI Essay Grader: grading response had no readable score', DEBUG_DEVELOPER);
+                echo json_encode([
+                    'ok' => false,
+                    'message' => get_string('invalidresponse', 'quiz_aigrader'),
+                    'error_code' => 'INVALID_RESPONSE',
+                ]);
+                exit;
+            }
+            $score = (string)$data['score'];
             $parts = explode('/', $score);
             $num = isset($parts[0]) ? floatval($parts[0]) : 0;
             $den = isset($parts[1]) ? floatval($parts[1]) : $maxmark;
@@ -859,7 +947,7 @@ try {
                 }
                 $feedbacktext = implode("\n\n", $parts);
             }
-            $gradelabel = isset($data['grade']) ? $data['grade'] : '';
+            $gradelabel = isset($data['grade']) && is_scalar($data['grade']) ? clean_param((string)$data['grade'], PARAM_TEXT) : '';
 
             // Extract criteriaMet and feedbackSummary from the API response.
             $newcriteriamet = isset($data['criteriaMet']) ? $data['criteriaMet'] : [];
@@ -1218,8 +1306,10 @@ try {
                 // Whether this question's criteria are confirmed, so the card can say so.
                 'criteriaconfirmation' => $resolved['confirmation'],
                 'suggestedtime' => time(),
-                'modelversion' => isset($data['modelVersion']) ? (string)$data['modelVersion'] : null,
-                'requestid' => isset($data['requestId']) ? (string)$data['requestId'] : null,
+                'modelversion' => isset($data['modelVersion']) && is_scalar($data['modelVersion'])
+                    ? core_text::substr(clean_param((string)$data['modelVersion'], PARAM_TEXT), 0, 100) : null,
+                'requestid' => isset($data['requestId']) && is_scalar($data['requestId'])
+                    ? core_text::substr(clean_param((string)$data['requestId'], PARAM_ALPHANUMEXT), 0, 100) : null,
                 // Shown as a pill beside the feedback, so an assessor who does not read
                 // the language can see at a glance which one they are approving.
                 'languagelabel' => \quiz_aigrader\local\formatter::language_label($language),
@@ -1266,66 +1356,6 @@ try {
             ]);
             exit;
         }
-    }
-
-    // Action: approve / save grade.
-    if ($action === 'approve') {
-        // Writing a grade is gated on the plugin's own capability, not on the read capability
-        // that merely opens the report.
-        quiz_aigrader_require_grading($context);
-
-        if (!$qubaid || !$slot) {
-            echo json_encode(['ok' => false, 'message' => get_string('error_missingparams', 'quiz_aigrader')]);
-            exit;
-        }
-
-        // The assessor's chosen mark, as an absolute mark.
-        //
-        // Releases up to 4.3.0 sent an integer percentage and reconstructed the mark from it,
-        // which cannot represent 2/3 or 5/7: a selected 2/3 was stored as 2.01 and 5/7 as
-        // 4.97, so the gradebook did not hold the mark the assessor picked. grade100 is still
-        // accepted so that a browser holding a cached copy of the previous AMD build keeps
-        // working until its cache clears, but it is never the preferred source.
-        // PARAM_TEXT, not raw: the value is an absolute mark and is rejected below
-        // unless it is numeric. The empty default is what distinguishes "not supplied"
-        // from a deliberate zero, which a numeric param type could not express.
-        $marksupplied = optional_param('mark', '', PARAM_TEXT);
-        $legacygrade100 = optional_param('grade100', null, PARAM_FLOAT);
-        // Rich HTML feedback produced by the grader UI. It must arrive raw because param
-        // cleaning would strip the markup. It is NOT passed through clean_text() here:
-        // clean_text() removes the inline SVG icons the feedback cards are built from, and
-        // the value is stored as FORMAT_HTML, so Moodle sanitises it through format_text()
-        // every time it is rendered.
-        // phpcs:ignore moodle.Commenting.InlineComment.NotCapital
-        $feedbacktext = optional_param('feedbackhtml', '', PARAM_RAW); // pipeline-ignore: PARAM_RAW - HTML feedback.
-        $gradelabel = optional_param('gradelabel', '', PARAM_TEXT);
-        // The assessor's stated reason, required only when approving under a human-review
-        // flag. Its presence is never taken as proof the flag applied - the server decides
-        // that from its own stored context.
-        $acknowledgement = optional_param('acknowledgement', '', PARAM_TEXT);
-        // Which full-marks feedback policy the browser applied, recorded on the decision so
-        // the delivered feedback can be explained later.
-        $policymode = optional_param('policymode', '', PARAM_ALPHA);
-        // The assessor's per-criterion scores, as JSON. Recorded verbatim on the decision:
-        // this is the breakdown behind the mark and it is the thing an auditor asks to see.
-        // phpcs:ignore moodle.Commenting.InlineComment.NotCapital
-        $criteriajson = optional_param('criteria', '', PARAM_RAW_TRIMMED); // pipeline-ignore: PARAM_RAW - JSON blob.
-
-        echo json_encode(\quiz_aigrader\local\approval::approve(
-            $cm,
-            $context,
-            $attemptrec,
-            (int)$qubaid,
-            (int)$slot,
-            (string)$marksupplied,
-            $legacygrade100,
-            (string)$feedbacktext,
-            (string)$acknowledgement,
-            (string)$policymode,
-            (string)$criteriajson
-        ));
-
-        exit;
     }
 
     // Action: list documents.
@@ -1476,7 +1506,16 @@ try {
         if (isset($data['ok']) && $data['ok']) {
             echo json_encode([
                 'ok' => true,
-                'documents' => isset($data['documents']) ? $data['documents'] : [],
+                // Only the fields the list shows, each cleaned.
+                'documents' => array_values(array_map(function ($doc) {
+                    $doc = is_array($doc) ? $doc : [];
+                    return [
+                        'id' => clean_param((string)($doc['id'] ?? ''), PARAM_ALPHANUMEXT),
+                        'filename' => clean_param((string)($doc['filename'] ?? ''), PARAM_FILE),
+                        'sizeBytes' => (int)($doc['sizeBytes'] ?? 0),
+                        'status' => clean_param((string)($doc['status'] ?? ''), PARAM_ALPHA),
+                    ];
+                }, isset($data['documents']) && is_array($data['documents']) ? $data['documents'] : [])),
             ]);
         } else {
             echo json_encode([
@@ -1556,6 +1595,7 @@ try {
             'CURLOPT_RETURNTRANSFER' => true,
             'CURLOPT_SSL_VERIFYPEER' => true,
             'CURLOPT_SSL_VERIFYHOST' => 2,
+            'CURLOPT_FOLLOWLOCATION' => false,
         ]);
 
         $postdata = [
@@ -1583,7 +1623,7 @@ try {
             exit;
         }
 
-        echo json_encode($data);
+        echo json_encode(quiz_aigrader_service_reply($data, (int)$httpcode));
         exit;
     }
 
@@ -1644,6 +1684,7 @@ try {
             'CURLOPT_RETURNTRANSFER' => true,
             'CURLOPT_SSL_VERIFYPEER' => true,
             'CURLOPT_SSL_VERIFYHOST' => 2,
+            'CURLOPT_FOLLOWLOCATION' => false,
         ]);
 
         $body = $curl->delete($url);
@@ -1665,7 +1706,7 @@ try {
             exit;
         }
 
-        echo json_encode($data);
+        echo json_encode(quiz_aigrader_service_reply($data, (int)$httpcode));
         exit;
     }
 
@@ -1771,7 +1812,7 @@ try {
             exit;
         }
 
-        echo json_encode($data);
+        echo json_encode(quiz_aigrader_service_reply($data, (int)$res['httpcode']));
         exit;
     }
 
@@ -1785,6 +1826,9 @@ try {
         $filterdatefrom = optional_param('datefrom', 0, PARAM_INT);
         $filterdateto = optional_param('dateto', 0, PARAM_INT);
 
+        // The statistics cover every quiz in the course and name every grader in it, so they
+        // need a course-level right, not only the quiz-level one that opens this report.
+        require_capability('moodle/grade:viewall', context_course::instance($cm->course));
         $canselectcourse = has_capability('moodle/site:config', context_system::instance());
         if (!$canselectcourse || $filtercourseid <= 0) {
             $filtercourseid = (int)$cm->course;

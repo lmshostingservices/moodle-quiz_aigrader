@@ -163,6 +163,16 @@ class approval {
             } catch (\Exception $ctxerror) {
                 debugging('AI Essay Grader: attempt_ctx read failed: ' . $ctxerror->getMessage(), DEBUG_DEVELOPER);
             }
+            // The record is kept per question, not per attempt. A suggestion made for an earlier
+            // attempt is not a suggestion for this one: drop it, so the learner is not told AI
+            // drafted this feedback and the decision record does not compare against it.
+            $staleattempt = $approvectx && $attemptrec && (int)$approvectx->attemptnum > 0
+                && (int)$approvectx->attemptnum !== (int)$attemptrec->attempt;
+            if ($staleattempt) {
+                $approvectx->aigrade = null;
+                $approvectx->aifeedback = '';
+                $approvectx->aicriteria = null;
+            }
 
             // Minimum review time, enforced here and not only in the browser.
             //
@@ -210,6 +220,11 @@ class approval {
             // be left out, and in the learner's own language. Only when the service actually
             // made a suggestion for this response: a mark the grader gave without one is not
             // AI-assisted, and saying it was would mislead the learner.
+            // Clean the feedback before it is stored. Moodle shows question comments without
+            // cleaning them again (question_behaviour::format_comment() sets noclean), so this is
+            // the one place to make sure nothing but safe markup reaches the learner's review
+            // page, whatever the browser sent.
+            $feedbacktext = clean_text($feedbacktext, FORMAT_HTML);
             $learnerfeedback = $feedbacktext;
             $aisuggested = $approvectx && ($approvectx->aigrade !== null || trim((string)$approvectx->aifeedback) !== '');
             if ($aisuggested) {

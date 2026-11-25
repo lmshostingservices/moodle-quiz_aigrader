@@ -364,5 +364,14 @@ function xmldb_quiz_aigrader_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026102705, 'quiz', 'aigrader');
     }
 
+    if ($oldversion < 2026112502) {
+        // The API key is now stored encrypted. Encrypt a key saved by an earlier release.
+        $key = trim((string)get_config('quiz_aigrader', 'apikey'));
+        if ($key !== '' && !\quiz_aigrader\local\service_url::is_encrypted($key)) {
+            set_config('apikey', \core\encryption::encrypt($key), 'quiz_aigrader');
+        }
+        upgrade_plugin_savepoint(true, 2026112502, 'quiz', 'aigrader');
+    }
+
     return true;
 }
