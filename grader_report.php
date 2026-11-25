@@ -109,6 +109,10 @@ $savedgrader = (int) get_user_preferences('quiz_aigrader_report_graderid', 0);
 
 $startdate = $chosenstart ?: ($savedstart ?: strtotime('-2 weeks'));
 $enddate = $chosenend ?: ($savedend ?: time());
+// A chosen day always runs to its last second, however the end date reached this page.
+if ($chosenend && usergetmidnight($chosenend) >= usergetmidnight(time())) {
+    $enddate = max($enddate, time());
+}
 $graderid = $chosengrader >= 0 ? $chosengrader : $savedgrader;
 
 // The download branch runs before admin_externalpage_setup() so that nothing is sent to
@@ -132,7 +136,11 @@ if (empty($download) && $validsesskey) {
         set_user_preference('quiz_aigrader_report_startdate', $chosenstart);
     }
     if ($chosenend) {
-        set_user_preference('quiz_aigrader_report_enddate', $chosenend);
+        // An end date of today means "up to now": save nothing fixed, so the report keeps
+        // rolling forward. Saving the timestamp froze the report at the time of day the
+        // filter was applied, and approvals made later that day were left out.
+        $endsaved = usergetmidnight($chosenend) >= usergetmidnight(time()) ? 0 : $chosenend;
+        set_user_preference('quiz_aigrader_report_enddate', $endsaved);
     }
     if ($chosengrader >= 0) {
         set_user_preference('quiz_aigrader_report_graderid', $chosengrader);

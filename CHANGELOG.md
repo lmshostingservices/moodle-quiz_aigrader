@@ -15,6 +15,12 @@ LMS Labs premium style. No database changes. Tested on Moodle 4.5, 5.1 and 5.3, 
   many were graded and how many were not, instead of reporting all as graded.
 - Running out of credits now shows the credits message.
 
+## Fixed: activity report dates
+
+- **Activity report stopped at the time a filter was applied.** Choosing an end date of today saved
+  that exact time, so approvals made later the same day were left out of the report until the
+  date was changed. Today now means "up to now", and the report keeps rolling forward.
+
 ## Added: suggestion accuracy
 
 - The activity report shows how the AI's suggested marks compared with the marks graders approved,
