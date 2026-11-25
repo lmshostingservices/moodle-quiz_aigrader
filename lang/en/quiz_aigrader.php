@@ -27,6 +27,14 @@ defined('MOODLE_INTERNAL') || die();
 
 // General.
 
+$string['accuracy_aihigher'] = 'AI higher than grader';
+$string['accuracy_ailower'] = 'AI lower than grader';
+$string['accuracy_avgdiff'] = 'Average difference';
+$string['accuracy_decisions'] = 'Approved suggestions';
+$string['accuracy_heading'] = 'Suggestion accuracy';
+$string['accuracy_intro'] = 'How the AI\'s suggested marks compared with the marks graders approved, by the learner\'s language. The average difference is a share of each question\'s full mark. Use these figures as the accuracy evidence in your instructions for use, and look for languages where the AI does noticeably worse.';
+$string['accuracy_lang'] = 'Learner\'s language';
+$string['accuracy_none'] = 'No approved AI suggestions in this date range yet.';
 $string['actions'] = 'Actions';
 $string['active_graders'] = 'Active graders';
 $string['ai_grade'] = 'AI grade';

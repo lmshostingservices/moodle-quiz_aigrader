@@ -217,6 +217,61 @@ class service {
     }
 
     /**
+     * How closely the AI's suggested marks matched the marks graders approved, by learner language.
+     *
+     * The evidence for the accuracy declared in the instructions for use (EU AI Act, Articles 13(3)(b)
+     * and 15), read from real decisions on this site. Split by the learner's language so a
+     * difference for second-language writers shows up.
+     *
+     * @param int $startdate Earliest approval time, inclusive.
+     * @param int $enddate Latest approval time, inclusive.
+     * @param int|null $graderid Only this grader's decisions, or all graders when null.
+     * @return array[] One row per language: lang, decisions, avgdiff (share of the mark, 0 to 1),
+     *                 aihigher, ailower. Sorted by number of decisions, largest first.
+     */
+    public static function get_accuracy_stats($startdate, $enddate, $graderid = null): array {
+        global $DB;
+        $params = ['startdate' => $startdate, 'enddate' => $enddate];
+        $graderwhere = '';
+        if ($graderid) {
+            $graderwhere = 'AND d.graderid = :graderid';
+            $params['graderid'] = $graderid;
+        }
+        $rows = $DB->get_records_sql(
+            "SELECT u.lang,
+                    COUNT(d.id) AS decisions,
+                    SUM(ABS(d.finalmark - d.aimark) / d.maxmark) AS sumdiff,
+                    SUM(CASE WHEN d.aimark > d.finalmark + 0.001 THEN 1 ELSE 0 END) AS aihigher,
+                    SUM(CASE WHEN d.aimark < d.finalmark - 0.001 THEN 1 ELSE 0 END) AS ailower
+               FROM {quiz_aigrader_decisions} d
+               JOIN {user} u ON u.id = d.userid
+              WHERE d.aimark IS NOT NULL
+                AND d.finalmark IS NOT NULL
+                AND d.maxmark > 0
+                AND d.timecreated >= :startdate
+                AND d.timecreated <= :enddate
+                    $graderwhere
+           GROUP BY u.lang",
+            $params
+        );
+        $out = [];
+        foreach ($rows as $row) {
+            $n = (int)$row->decisions;
+            $out[] = [
+                'lang' => (string)$row->lang,
+                'decisions' => $n,
+                'avgdiff' => $n > 0 ? (float)$row->sumdiff / $n : 0.0,
+                'aihigher' => (int)$row->aihigher,
+                'ailower' => (int)$row->ailower,
+            ];
+        }
+        usort($out, function ($a, $b) {
+            return $b['decisions'] <=> $a['decisions'];
+        });
+        return $out;
+    }
+
+    /**
      * Get summary totals by grader.
      *
      * @param int $startdate Unix timestamp for start of date range

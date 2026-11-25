@@ -617,6 +617,43 @@ if (!empty($totals)) {
     echo html_writer::end_div();
 }
 
+// Suggestion accuracy: how the AI's marks compared with the marks graders approved.
+$accuracy = service::get_accuracy_stats($startdate, $enddate, $graderid);
+echo html_writer::tag('h3', get_string('accuracy_heading', 'quiz_aigrader'), ['class' => 'aigrader-section-heading']);
+echo html_writer::tag('p', get_string('accuracy_intro', 'quiz_aigrader'), ['class' => 'aigrader-accuracy-intro']);
+if (!$accuracy) {
+    echo html_writer::div(get_string('accuracy_none', 'quiz_aigrader'), 'aigrader-empty-notice');
+} else {
+    $languages = get_string_manager()->get_list_of_translations();
+    echo html_writer::start_div('aigrader-table-card');
+    echo html_writer::start_tag('table', ['class' => 'generaltable aigrader-report-table aigrader-accuracy-table']);
+    echo html_writer::start_tag('thead');
+    echo html_writer::start_tag('tr', ['class' => 'aigrader-report-headrow']);
+    echo html_writer::tag('th', get_string('accuracy_lang', 'quiz_aigrader'), ['class' => 'aigrader-report-th']);
+    foreach (['accuracy_decisions', 'accuracy_avgdiff', 'accuracy_aihigher', 'accuracy_ailower'] as $key) {
+        echo html_writer::tag('th', get_string($key, 'quiz_aigrader'), ['class' => 'aigrader-report-th aigrader-report-th-right']);
+    }
+    echo html_writer::end_tag('tr');
+    echo html_writer::end_tag('thead');
+    echo html_writer::start_tag('tbody');
+    foreach ($accuracy as $row) {
+        echo html_writer::start_tag('tr');
+        echo html_writer::tag('td', s($languages[$row['lang']] ?? $row['lang']), ['class' => 'aigrader-report-td']);
+        echo html_writer::tag('td', $row['decisions'], ['class' => 'aigrader-report-td aigrader-report-td-right']);
+        echo html_writer::tag(
+            'td',
+            format_float(100 * $row['avgdiff'], 1) . '%',
+            ['class' => 'aigrader-report-td aigrader-report-td-right aigrader-num-blue']
+        );
+        echo html_writer::tag('td', $row['aihigher'], ['class' => 'aigrader-report-td aigrader-report-td-right']);
+        echo html_writer::tag('td', $row['ailower'], ['class' => 'aigrader-report-td aigrader-report-td-right']);
+        echo html_writer::end_tag('tr');
+    }
+    echo html_writer::end_tag('tbody');
+    echo html_writer::end_tag('table');
+    echo html_writer::end_div();
+}
+
 echo html_writer::tag(
     'h3',
     get_string('detailed_report', 'quiz_aigrader'),

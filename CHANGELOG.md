@@ -15,6 +15,13 @@ LMS Labs premium style. No database changes. Tested on Moodle 4.5, 5.1 and 5.3, 
   many were graded and how many were not, instead of reporting all as graded.
 - Running out of credits now shows the credits message.
 
+## Added: suggestion accuracy
+
+- The activity report shows how the AI's suggested marks compared with the marks graders approved,
+  by learner language: approved suggestions, average difference (as a share of the full mark), and
+  how often the AI was higher or lower. This is the accuracy evidence for the instructions for use
+  (EU AI Act, Articles 13 and 15), and shows whether second-language writers are marked differently.
+
 ## Large cohorts, accessibility
 
 - The grading queue is paged: 50 responses by default (25, 50, 100 or 250), with Moodle's paging

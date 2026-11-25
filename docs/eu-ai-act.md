@@ -103,6 +103,10 @@ without human review, to rank or select learners, to detect cheating, or to prof
 - Accuracy can be lower for answers written in a second language, using local or workplace
   terms, or very short or very long answers.
 - Its output is only as good as the confirmed criteria and reference documents.
+- Accuracy is measured on each site: the activity report's **Suggestion accuracy** panel shows,
+  for every learner language, how far the AI's suggested marks were from the marks graders
+  approved, and in which direction. Quote those figures, for a period of at least a few hundred
+  approvals, as the accuracy this site can expect.
 - It does not see diagrams, images or attachments in the response.
 
 **Human oversight.** Graders must read the learner's answer, not only the suggestion; change
@@ -125,7 +129,8 @@ every result, and how to ask for an explanation or a review.
 ## 6. Provider work still to do before 2 December 2027
 
 - Formal risk management file and quality management system
-- Accuracy testing across languages and answer types, published in the instructions for use
+- Accuracy figures across languages and answer types, from the Suggestion accuracy panel on
+  pilot sites, published in the instructions for use
 - Technical documentation to Annex IV
 - Internal-control conformity assessment, EU declaration of conformity, CE marking
 - Registration in the EU database
