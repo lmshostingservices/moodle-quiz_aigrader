@@ -2,8 +2,20 @@
 
 ## 5.3.0 - 2026-11-24
 
-Version: `2026112502`. The screens are rebuilt on the Moodle Design System (MDS), finished in the
+Version: `2026112600`. The screens are rebuilt on the Moodle Design System (MDS), finished in the
 LMS Labs premium style. No database changes. Tested on Moodle 4.5, 5.1 and 5.3, light and dark.
+
+## Added: bring your own API key
+
+- **Bring your own API key (BYOK).** With an LMS Labs BYOK subscription (USD $500 plus GST a year
+  for this plugin, or the All plugins plan) and AI Connect (local_aiconfig 1.1.0 or later) set so
+  Text runs on Moodle AI or the site's own key, essays are graded on the site itself with the same
+  prompt, rubric rules and feedback format as LMS Labs credits. The learner's answer goes from the
+  site straight to the site's own AI provider. No credits are used, the credit balance shows as
+  unlimited, and no Client Portal usage is reported for those grades. If the provider fails, the
+  grader sees a clear message and no credits are spent as a fallback.
+- Privacy metadata for the question and answer sent to the site's own AI provider.
+- Known limitation: reference documents uploaded to LMS Labs are only used when grading on credits.
 
 ## Fixed: grading service failures
 

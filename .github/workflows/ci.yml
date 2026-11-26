@@ -99,7 +99,10 @@ jobs:
         run: rm -rf plugin/.git
 
       - name: Install moodle-plugin-ci
-        run: moodle-plugin-ci install --plugin ./plugin --db-host=127.0.0.1
+        run: |
+          # AI Grader Central Config provides Bring your own AI; its tests skip when it is absent.
+          moodle-plugin-ci add-plugin --branch main lmshostingservices/moodle-local_aiconfig
+          moodle-plugin-ci install --plugin ./plugin --db-host=127.0.0.1
         env:
           DB: ${{ matrix.database }}
           MOODLE_BRANCH: ${{ matrix.moodle-branch }}
