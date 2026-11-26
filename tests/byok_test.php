@@ -44,7 +44,7 @@ final class byok_test extends \advanced_testcase {
         set_config('testpublickey', base64_encode(sodium_crypto_sign_publickey($pair)), 'local_aiconfig');
         $payload = json_encode(['v' => 1, 'id' => 'lic_t', 'site' => \local_aiconfig\byok\licence::site_host(),
             'plan' => 'pro', 'byok' => true, 'products' => ['*'], 'sub' => 'sub_t', 'exp' => time() + DAYSECS]);
-        $b64 = function(string $s): string {
+        $b64 = function (string $s): string {
             return rtrim(strtr(base64_encode($s), '+/', '-_'), '=');
         };
         set_config('licencekey', $b64($payload) . '.' .
@@ -69,7 +69,7 @@ final class byok_test extends \advanced_testcase {
      */
     protected function answer(array $answer): void {
         $this->requests = [];
-        $GLOBALS['local_aiconfig_byok_mock'] = function($url, $headers, $body) use ($answer) {
+        $GLOBALS['local_aiconfig_byok_mock'] = function ($url, $headers, $body) use ($answer) {
             $this->requests[] = $body;
             return ['content' => [['type' => 'text', 'text' => json_encode($answer)]]];
         };
@@ -114,7 +114,8 @@ final class byok_test extends \advanced_testcase {
         ];
         $this->answer(['grade' => 'Satisfactory', 'score' => '4/4', 'feedback' => 'ok', 'criteria_results' => [
             ['label' => 'Identifies hazard', 'met' => true, 'evidence_quote' => 'q', 'comment' => 'c', 'improve' => 'x'],
-            ['label' => 'States control', 'met' => false, 'evidence_quote' => 'none', 'comment' => 'c', 'improve' => 'Name one'],
+            ['label' => 'States control', 'met' => false, 'evidence_quote' => 'none', 'comment' => 'c', 'improve' => 'Name ' .
+                'one'],
         ]]);
         $out = byok::grade_essay(['questionText' => 'Q', 'studentAnswer' => 'A', 'maxMark' => 4, 'rubricCriteria' => $rubric]);
         $this->assertTrue($out['ok']);
@@ -123,8 +124,10 @@ final class byok_test extends \advanced_testcase {
         $this->assertSame(2, $out['totalCriteria']);
         $this->assertSame('', $out['criteria'][0]['improve'], 'Met criteria carry no improvement note.');
         $this->assertSame('Name one', $out['criteria'][1]['improve']);
-        $this->assertStringContainsString('AUTHORITATIVE RUBRIC_CRITERIA',
-            $this->requests[0]['messages'][0]['content'][0]['text']);
+        $this->assertStringContainsString(
+            'AUTHORITATIVE RUBRIC_CRITERIA',
+            $this->requests[0]['messages'][0]['content'][0]['text']
+        );
     }
 
     public function test_missing_criterion_is_an_error_not_a_grade(): void {
@@ -138,7 +141,7 @@ final class byok_test extends \advanced_testcase {
     }
 
     public function test_provider_failure_reports_byok_error(): void {
-        $GLOBALS['local_aiconfig_byok_mock'] = function() {
+        $GLOBALS['local_aiconfig_byok_mock'] = function () {
             throw new \moodle_exception('byok_callfailed', 'local_aiconfig', '', (object) [
                 'vendor' => 'Anthropic', 'detail' => 'invalid x-api-key',
             ]);
