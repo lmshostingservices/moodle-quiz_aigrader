@@ -912,16 +912,19 @@ class quiz_aigrader_report extends quiz_aigrader_report_base {
     private function render_action_buttons() {
         echo html_writer::start_div('aigrader-actions ag-flex-center ag-flex-wrap ag-gap-md');
 
-        echo html_writer::tag(
-            'button',
-            '<i class="fa-solid fa-rotate ag-icon-sm" aria-hidden="true"></i> '
-            . get_string('refresh_credits', 'quiz_aigrader'),
-            [
-                'id' => 'aigrader-refresh-btn',
-                'type' => 'button',
-                'class' => 'aigrader-btn mds-btn btn btn-secondary mds-btn--size-lg',
-            ]
-        );
+        // On the site's own AI there are no credits to refresh.
+        if (!\quiz_aigrader\local\byok::enabled()) {
+            echo html_writer::tag(
+                'button',
+                '<i class="fa-solid fa-rotate ag-icon-sm" aria-hidden="true"></i> '
+                . get_string('refresh_credits', 'quiz_aigrader'),
+                [
+                    'id' => 'aigrader-refresh-btn',
+                    'type' => 'button',
+                    'class' => 'aigrader-btn mds-btn btn btn-secondary mds-btn--size-lg',
+                ]
+            );
+        }
 
         echo html_writer::tag(
             'button',
