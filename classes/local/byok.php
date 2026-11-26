@@ -302,22 +302,28 @@ Keep each feedback section to 2-3 concise, actionable sentences.";
         if (!is_array($source) || count($source) !== count($rubric) || !$source) {
             throw new \coding_exception('Grading response must include every marking-guide criterion');
         }
-        $normalise = function(string $label): string {
+        $normalise = function (string $label): string {
             return strtolower(trim(preg_replace('/[^a-z0-9]+/i', '_', $label), '_'));
         };
-        if (count(array_unique(array_column($rubric, 'key'))) !== count($rubric)
-                || count(array_unique(array_map($normalise, array_column($rubric, 'label')))) !== count($rubric)) {
+        if (
+            count(array_unique(array_column($rubric, 'key'))) !== count($rubric)
+                || count(array_unique(array_map($normalise, array_column($rubric, 'label')))) !== count($rubric)
+        ) {
             throw new \coding_exception('Marking guide contains duplicate or ambiguous criteria');
         }
         $labels = array_column($rubric, 'label');
         $bylabel = [];
         foreach ($source as $item) {
-            if (!is_array($item) || !is_string($item['label'] ?? null) || isset($bylabel[$item['label']])
-                    || !in_array($item['label'], $labels, true)) {
+            if (
+                !is_array($item) || !is_string($item['label'] ?? null) || isset($bylabel[$item['label']])
+                    || !in_array($item['label'], $labels, true)
+            ) {
                 throw new \coding_exception('Grading response contains an unknown or duplicate criterion label');
             }
-            if (!is_bool($item['met'] ?? null) || !is_string($item['evidence_quote'] ?? null)
-                    || !is_string($item['comment'] ?? null) || !is_string($item['improve'] ?? null)) {
+            if (
+                !is_bool($item['met'] ?? null) || !is_string($item['evidence_quote'] ?? null)
+                    || !is_string($item['comment'] ?? null) || !is_string($item['improve'] ?? null)
+            ) {
                 throw new \coding_exception('Grading criterion must contain a binary judgement and feedback');
             }
             $bylabel[$item['label']] = $item;
@@ -380,8 +386,11 @@ Keep each feedback section to 2-3 concise, actionable sentences.";
         $text = strip_tags((string) $feedback);
         $text = str_ireplace(['&nbsp;', '&#160;', '&#xa0;'], ' ', $text);
         $text = str_replace("\u{00A0}", ' ', $text);
-        $text = str_replace(['&amp;', '&#38;', '&lt;', '&#60;', '&gt;', '&#62;', '&quot;', '&#34;', '&apos;', '&#39;'],
-            ['&', '&', '<', '<', '>', '>', '"', '"', "'", "'"], $text);
+        $text = str_replace(
+            ['&amp;', '&#38;', '&lt;', '&#60;', '&gt;', '&#62;', '&quot;', '&#34;', '&apos;', '&#39;'],
+            ['&', '&', '<', '<', '>', '>', '"', '"', "'", "'"],
+            $text
+        );
         $text = preg_replace([
             '/\s*\((?:Australian|British|American)\s+(?:English|spelling)\)/i',
             '/\s*\(in\s+(?:Australian|British|American)?\s*English\)/i',
@@ -414,10 +423,14 @@ Keep each feedback section to 2-3 concise, actionable sentences.";
         require_once($CFG->libdir . '/filelib.php');
         $curl = new \curl();
         $curl->setHeader(['Accept: application/json', 'Authorization: Bearer ' . $apikey]);
-        $body = $curl->get($apibase . '/api/quiz-settings', ['siteId' => $siteid, 'apiKey' => $apikey, 'quizId' => $quizid],
-            ['CURLOPT_TIMEOUT' => 8]);
+        $body = $curl->get(
+            $apibase . '/api/quiz-settings',
+            ['siteId' => $siteid, 'apiKey' => $apikey, 'quizId' => $quizid],
+            ['CURLOPT_TIMEOUT' => 8]
+        );
         $data = json_decode((string) $body, true);
-        return (!$curl->get_errno() && !empty($data['ok'])) ? trim((string) ($data['settings']['extraInstructions'] ?? '')) : '';
+        return (!$curl->get_errno() && !empty($data['ok'])) ? trim((string) ($data['settings']['extraInstructions'] ?? '')) :
+            '';
     }
 
     /**
