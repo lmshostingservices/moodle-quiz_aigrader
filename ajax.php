@@ -274,8 +274,16 @@ try {
     // Release the session lock before long-running API calls to prevent blocking other requests.
     \core\session\manager::write_close();
 
+    // Bring your own AI: essays are graded on the site's own AI, with no LMS Labs credits.
+    $byok = \quiz_aigrader\local\byok::enabled();
+
     // Action: get credits.
     if ($action === 'credits_status' || $action === 'creditsstatus') {
+        if ($byok) {
+            // Nothing to count: the site pays its own AI provider. Shown as unlimited.
+            echo json_encode(['ok' => true, 'credits' => -1, 'isUnlimited' => true, 'byok' => true]);
+            exit;
+        }
         if (!$siteid || !$apikey) {
             echo json_encode([
                 'ok' => false,
@@ -380,7 +388,7 @@ try {
                 exit;
             }
 
-            if (!$siteid || !$apikey) {
+            if (!$byok && (!$siteid || !$apikey)) {
                 echo json_encode(['ok' => false, 'message' => get_string('notconfigured', 'quiz_aigrader')]);
                 exit;
             }
@@ -698,7 +706,23 @@ try {
                 );
             }
 
-            $res = quiz_aigrader_fetch($apibase . '/api/grade-essay', $apikey, true, $payload);
+            if ($byok) {
+                // The service reads the teacher's saved extra instructions itself; here they are fetched
+                // (no student data is sent) and the essay is graded on the site's own AI.
+                $payload['extraInstructions'] = \quiz_aigrader\local\byok::extra_instructions(
+                    $apibase,
+                    (string)$siteid,
+                    (string)$apikey,
+                    (int)$quiz->id
+                );
+                $res = [
+                    'success' => true,
+                    'httpcode' => 200,
+                    'body' => json_encode(\quiz_aigrader\local\byok::grade_essay($payload)),
+                ];
+            } else {
+                $res = quiz_aigrader_fetch($apibase . '/api/grade-essay', $apikey, true, $payload);
+            }
 
             if (!$res['success']) {
                 debugging('AI Grader: grading request failed: ' . $res['error'], DEBUG_DEVELOPER);
@@ -739,14 +763,18 @@ try {
                 debugging('AI Grader: grading API returned error code ' . $errorcode, DEBUG_DEVELOPER);
                 echo json_encode([
                     'ok' => false,
-                    'message' => get_string('error_grading', 'quiz_aigrader'),
+                    // On the site's own AI, say what the provider said (a wrong key, no quota), so an
+                    // admin can fix it. The message comes from local_aiconfig and is already escaped.
+                    'message' => ($byok && $errorcode === 'BYOK_ERROR' && !empty($data['message']))
+                        ? get_string('error_byok', 'quiz_aigrader', clean_param($data['message'], PARAM_TEXT))
+                        : get_string('error_grading', 'quiz_aigrader'),
                     'error_code' => clean_param($errorcode, PARAM_ALPHANUMEXT),
                 ]);
                 exit;
             }
 
             // Client Portal (when installed) bills the client: 1 credit per essay, re-grades are free.
-            if (!$regrade && method_exists('\\local_clientportal\\api', 'record_lmslabs_call')) {
+            if (!$regrade && !$byok && method_exists('\\local_clientportal\\api', 'record_lmslabs_call')) {
                 $billcm = get_coursemodule_from_instance('quiz', $quiz->id, $quiz->course, false, IGNORE_MISSING);
                 $billctx = $billcm ? context_module::instance($billcm->id) : context_course::instance($quiz->course);
                 \local_clientportal\api::record_lmslabs_call(

@@ -177,6 +177,16 @@ class provider implements
             'privacy:metadata:essaygraderai_api'
         );
 
+        // Bring your own AI: with it on, the question and answer go to the site's own AI provider instead.
+        $collection->add_external_location_link(
+            'byok_aiprovider',
+            [
+                'questiontext' => 'privacy:metadata:byok_aiprovider:questiontext',
+                'answer' => 'privacy:metadata:byok_aiprovider:answer',
+            ],
+            'privacy:metadata:byok_aiprovider'
+        );
+
         return $collection;
     }
 
