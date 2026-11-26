@@ -27,12 +27,15 @@ defined('MOODLE_INTERNAL') || die();
 
 // General.
 
+$string['accuracy_ai'] = 'AI used';
+$string['accuracy_ai_lmslabs'] = 'LMS Labs';
+$string['accuracy_ai_own'] = 'Your own AI ({$a})';
 $string['accuracy_aihigher'] = 'AI higher than grader';
 $string['accuracy_ailower'] = 'AI lower than grader';
 $string['accuracy_avgdiff'] = 'Average difference';
 $string['accuracy_decisions'] = 'Approved suggestions';
 $string['accuracy_heading'] = 'Suggestion accuracy';
-$string['accuracy_intro'] = 'How the AI\'s suggested marks compared with the marks graders approved, by the learner\'s language. The average difference is a share of each question\'s full mark. Use these figures as the accuracy evidence in your instructions for use, and look for languages where the AI does noticeably worse.';
+$string['accuracy_intro'] = 'How the AI\'s suggested marks compared with the marks graders approved, by the learner\'s language and the AI used. The average difference is a share of each question\'s full mark. Use these figures as the accuracy evidence in your instructions for use, and look for languages where the AI does noticeably worse. After moving to your own AI, compare it with LMS Labs before relying on it.';
 $string['accuracy_lang'] = 'Learner\'s language';
 $string['accuracy_none'] = 'No approved AI suggestions in this date range yet.';
 $string['actions'] = 'Actions';
@@ -68,6 +71,20 @@ $string['avg_per_essay'] = 'Avg/Essay';
 $string['avg_per_grader'] = 'Avg per Grader';
 $string['avg_time_per_essay'] = 'Avg per Essay';
 $string['avg_time_per_question'] = 'Avg time / question';
+$string['byok_badge_label'] = 'AI';
+$string['byok_badge_title'] = 'Essays are graded on this site\'s own AI provider. No LMS Labs credits are used.';
+$string['byok_badge_value'] = 'Your own key';
+$string['byok_desc_active'] = 'Essays are graded on this site\'s own AI, set in AI Grader Central Config (Moodle AI or your own key). Learners\' answers go from this site straight to your AI provider, and no LMS Labs credits are used. Check the suggestion accuracy report after changing AI models.';
+$string['byok_desc_credits'] = 'Your Bring your own API key subscription covers the AI Essay Grader, but Text is set to LMS Labs credits, or the chosen AI is not ready. Set Text to Moodle AI or your own key in AI Grader Central Config.';
+$string['byok_desc_noconnect'] = 'Grade essays on your own AI (Moodle AI, or your own Anthropic, OpenAI or Google key) instead of LMS Labs credits, for US${$a} plus GST a year. Ideal for universities and teams that already hold their own API keys. Install AI Grader Central Config (local_aiconfig 1.1.0 or later) to subscribe.';
+$string['byok_desc_none'] = 'Grade essays on your own AI (Moodle AI, or your own Anthropic, OpenAI or Google key) instead of LMS Labs credits, for US${$a} plus GST a year. Ideal for universities and teams that already hold their own API keys. LMS Labs credits stay available if you would rather not manage keys.';
+$string['byok_heading'] = 'Bring your own API key';
+$string['byok_manage'] = 'Open AI Grader Central Config';
+$string['byok_state_active'] = 'Using your own AI';
+$string['byok_state_credits'] = 'Subscribed, using credits';
+$string['byok_state_noconnect'] = 'AI Grader Central Config not installed';
+$string['byok_state_none'] = 'Not subscribed';
+$string['byok_subscribe'] = 'Subscribe for US${$a} plus GST a year';
 $string['cancel'] = 'Cancel';
 $string['cc_recipients'] = 'CC recipients';
 $string['cc_recipients_help'] = 'Comma-separated email addresses to CC on scheduled reports (e.g., finance@example.com)';

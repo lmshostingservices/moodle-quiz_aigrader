@@ -237,8 +237,12 @@ class service {
             $graderwhere = 'AND d.graderid = :graderid';
             $params['graderid'] = $graderid;
         }
-        $rows = $DB->get_records_sql(
+        // Suggestions made on the site's own AI (Bring your own API key) are logged as "own-ai:<source>", so
+        // they are compared separately from LMS Labs: a new model needs its own accuracy evidence.
+        $ai = "CASE WHEN d.modelversion LIKE 'own-ai%' THEN d.modelversion ELSE 'lmslabs' END";
+        $rs = $DB->get_recordset_sql(
             "SELECT u.lang,
+                    $ai AS ai,
                     COUNT(d.id) AS decisions,
                     SUM(ABS(d.finalmark - d.aimark) / d.maxmark) AS sumdiff,
                     SUM(CASE WHEN d.aimark > d.finalmark + 0.001 THEN 1 ELSE 0 END) AS aihigher,
@@ -251,24 +255,41 @@ class service {
                 AND d.timecreated >= :startdate
                 AND d.timecreated <= :enddate
                     $graderwhere
-           GROUP BY u.lang",
+           GROUP BY u.lang, $ai",
             $params
         );
         $out = [];
-        foreach ($rows as $row) {
+        foreach ($rs as $row) {
             $n = (int)$row->decisions;
             $out[] = [
                 'lang' => (string)$row->lang,
+                'ai' => (string)$row->ai,
                 'decisions' => $n,
                 'avgdiff' => $n > 0 ? (float)$row->sumdiff / $n : 0.0,
                 'aihigher' => (int)$row->aihigher,
                 'ailower' => (int)$row->ailower,
             ];
         }
+        $rs->close();
         usort($out, function ($a, $b) {
             return $b['decisions'] <=> $a['decisions'];
         });
         return $out;
+    }
+
+    /**
+     * A readable name for the AI that made suggestions, from the value logged on the decision.
+     *
+     * @param string $ai "lmslabs", or "own-ai:<source or vendor>".
+     * @return string
+     */
+    public static function ai_label(string $ai): string {
+        if ($ai === 'lmslabs' || strpos($ai, 'own-ai') !== 0) {
+            return get_string('accuracy_ai_lmslabs', 'quiz_aigrader');
+        }
+        $names = ['moodle' => 'Moodle AI', 'anthropic' => 'Anthropic', 'openai' => 'OpenAI', 'gemini' => 'Google Gemini'];
+        $which = substr($ai, strlen('own-ai:'));
+        return get_string('accuracy_ai_own', 'quiz_aigrader', $names[$which] ?? ($which !== '' ? $which : '-'));
     }
 
     /**

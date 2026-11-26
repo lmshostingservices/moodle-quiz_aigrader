@@ -33,14 +33,16 @@ final class accuracy_test extends \advanced_testcase {
      * @param int $userid The learner.
      * @param float $aimark The AI's suggested mark.
      * @param float $finalmark The approved mark.
+     * @param string|null $model The model logged with the suggestion (own-ai:... on the site's own AI).
      * @return void
      */
-    private function decision(int $userid, float $aimark, float $finalmark): void {
+    private function decision(int $userid, float $aimark, float $finalmark, ?string $model = null): void {
         global $DB;
         $DB->insert_record('quiz_aigrader_decisions', (object)[
             'quizid' => 1, 'courseid' => 1, 'userid' => $userid, 'graderid' => 2, 'qubaid' => 1, 'slot' => 1,
             'questionid' => 1, 'attemptnum' => 1, 'maxmark' => 4, 'aimark' => $aimark, 'finalmark' => $finalmark,
             'markchanged' => abs($aimark - $finalmark) > 0.001 ? 1 : 0, 'timecreated' => time(),
+            'modelversion' => $model,
         ]);
     }
 
@@ -72,5 +74,28 @@ final class accuracy_test extends \advanced_testcase {
         $oversight = service::get_oversight_stats(0, time() + 10);
         $this->assertSame(4, $oversight['decisions']);
         $this->assertSame(3, $oversight['markschanged']);
+    }
+
+    /**
+     * Suggestions made on the site's own AI are compared separately from LMS Labs.
+     */
+    public function test_accuracy_by_ai_used(): void {
+        $this->resetAfterTest();
+        global $DB;
+        $en = $this->getDataGenerator()->create_user();
+        $DB->set_field('user', 'lang', 'en', ['id' => $en->id]);
+        $this->decision($en->id, 3, 3, 'essay-grader-2026-11');
+        $this->decision($en->id, 3, 3);
+        $this->decision($en->id, 4, 2, 'own-ai:anthropic');
+
+        $stats = service::get_accuracy_stats(0, time() + 10);
+        $this->assertCount(2, $stats);
+        $this->assertSame('lmslabs', $stats[0]['ai']);
+        $this->assertSame(2, $stats[0]['decisions']);
+        $this->assertSame('own-ai:anthropic', $stats[1]['ai']);
+        $this->assertEqualsWithDelta(0.5, $stats[1]['avgdiff'], 0.0001);
+        $this->assertSame('LMS Labs', service::ai_label('lmslabs'));
+        $this->assertSame('Your own AI (Anthropic)', service::ai_label('own-ai:anthropic'));
+        $this->assertSame('Your own AI (Moodle AI)', service::ai_label('own-ai:moodle'));
     }
 }

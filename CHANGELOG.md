@@ -8,13 +8,20 @@ LMS Labs premium style. No database changes. Tested on Moodle 4.5, 5.1 and 5.3, 
 ## Added: bring your own API key
 
 - **Bring your own API key (BYOK).** With an LMS Labs BYOK subscription (USD $500 plus GST a year
-  for this plugin, or the All plugins plan) and AI Connect (local_aiconfig 1.1.0 or later) set so
+  for this plugin, or the All plugins plan) and AI Grader Central Config (local_aiconfig 1.1.0 or later) set so
   Text runs on Moodle AI or the site's own key, essays are graded on the site itself with the same
   prompt, rubric rules and feedback format as LMS Labs credits. The learner's answer goes from the
   site straight to the site's own AI provider. No credits are used, the credit balance shows as
   unlimited, and no Client Portal usage is reported for those grades. If the provider fails, the
   grader sees a clear message and no credits are spent as a fallback.
 - Privacy metadata for the question and answer sent to the site's own AI provider.
+- A **Bring your own API key** panel in the plugin settings shows where the site stands (not
+  subscribed, subscribed but on credits, using your own AI) and links to subscribe for this plugin
+  alone at US$500 plus GST a year. The grading screen shows *AI: Your own key* instead of a credit
+  count.
+- Every decision records which AI made the suggestion (`own-ai:<provider>`), and Suggestion
+  accuracy is split by the AI used, so a site can compare its own AI with LMS Labs (EU AI Act,
+  Articles 12 and 15).
 - Known limitation: reference documents uploaded to LMS Labs are only used when grading on credits.
 
 ## Fixed: grading service failures

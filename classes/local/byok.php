@@ -58,6 +58,72 @@ class byok {
             && \local_aiconfig\byok\ai::uses_own_ai(self::COMPONENT, 'text');
     }
 
+    /** Yearly price in US dollars, before GST, of a Bring your own API key licence for this plugin alone. */
+    const PRICE_USD = 500;
+
+    /**
+     * Where this site stands with Bring your own API key, for the settings page and the grading screen.
+     *
+     * @return string One of: noconnect (AI Grader Central Config missing or older than 1.1.0), none (no licence for this
+     *                plugin), credits (licensed, but Text is set to LMS Labs credits or the chosen source is
+     *                not ready), active (essays are graded on the site's own AI).
+     */
+    public static function state(): string {
+        if (!class_exists('\local_aiconfig\byok\licence') || !class_exists('\local_aiconfig\byok\router')) {
+            return 'noconnect';
+        }
+        if (!\local_aiconfig\byok\licence::allows(self::COMPONENT)) {
+            return 'none';
+        }
+        return self::enabled() ? 'active' : 'credits';
+    }
+
+    /**
+     * Which AI made a suggestion on this site, for the decision record: "own-ai:moodle" for Moodle AI, or
+     * "own-ai:" plus the vendor (anthropic, openai, gemini) for the site's own key.
+     *
+     * @return string
+     */
+    public static function model_label(): string {
+        if (!class_exists('\local_aiconfig\byok\router')) {
+            return 'own-ai';
+        }
+        $source = \local_aiconfig\byok\router::source(self::COMPONENT, 'text');
+        if ($source === \local_aiconfig\byok\router::OWNKEY) {
+            return 'own-ai:' . (\local_aiconfig\byok\router::vendor('text') ?? 'key');
+        }
+        return 'own-ai:' . $source;
+    }
+
+    /**
+     * The "Bring your own API key" panel for the plugin settings page: status, price and the next step.
+     *
+     * @return string HTML
+     */
+    public static function settings_html(): string {
+        $state = self::state();
+        $tones = ['noconnect' => 'secondary', 'none' => 'secondary', 'credits' => 'warning', 'active' => 'success'];
+        $icons = ['noconnect' => 'fa-plug', 'none' => 'fa-key', 'credits' => 'fa-coins', 'active' => 'fa-circle-check'];
+        $badge = \html_writer::span(
+            '<i class="fa-solid ' . $icons[$state] . '" aria-hidden="true"></i>'
+                . get_string('byok_state_' . $state, 'quiz_aigrader'),
+            'mds-badge badge mds-badge--subtle mds-badge--has-icon mds-badge--' . $tones[$state]
+        );
+        $html = \html_writer::tag('p', $badge, ['class' => 'aigrader-byok-state']);
+        $html .= \html_writer::tag('p', get_string('byok_desc_' . $state, 'quiz_aigrader', self::PRICE_USD));
+        if ($state === 'noconnect') {
+            return \html_writer::div($html, 'aigrader-byok');
+        }
+        $url = new \moodle_url('/local/aiconfig/byok.php', $state === 'none' ? ['plugin' => self::COMPONENT] : []);
+        $label = get_string($state === 'none' ? 'byok_subscribe' : 'byok_manage', 'quiz_aigrader', self::PRICE_USD);
+        $html .= \html_writer::link(
+            $url,
+            '<i class="fa-solid ' . ($state === 'none' ? 'fa-bolt' : 'fa-sliders') . '" aria-hidden="true"></i> ' . s($label),
+            ['class' => 'mds-btn btn ' . ($state === 'none' ? 'btn-primary' : 'btn-secondary') . ' mds-btn--size-md']
+        );
+        return \html_writer::div($html, 'aigrader-byok');
+    }
+
     /**
      * Grade one essay. Same input fields as the service payload; same output as the service.
      *
@@ -275,6 +341,8 @@ Keep each feedback section to 2-3 concise, actionable sentences.";
             'rubric' => $result['criteria_results'] ?? ($result['rubric'] ?? null),
             'feedback' => $result['feedback'],
             'byok' => true,
+            // Kept on the decision record (EU AI Act, Article 12), so every suggestion says which AI made it.
+            'modelVersion' => self::model_label(),
         ];
         if ($rubric) {
             $criteria = self::criteria($result, $rubric);

@@ -71,11 +71,31 @@ Provider duties (Articles 9 to 17, 43, 47 to 49), due by 2 December 2027:
 The AI model supplier (the model behind the LMS Labs grading service) carries the
 general-purpose AI model duties (Arts 53, 55), not the deployer.
 
+**Bring your own API key.** When a site grades on its own AI (Moodle AI or its own Anthropic,
+OpenAI or Google key), LMS Labs is still the provider of Essay Grader: the intended purpose,
+prompt, criteria rules, oversight features and logs are unchanged. What changes is the
+general-purpose model, which the deployer chooses and contracts for. The deployer then also:
+
+- uses only models that support structured (JSON) answers, with temperature 0, as Essay Grader
+  sets them (Art 26(1));
+- checks accuracy on its own AI before relying on it: the Suggestion accuracy report shows the
+  site's own AI and LMS Labs side by side, and every decision records which AI made the
+  suggestion (Arts 15, 26(5), 12);
+- covers the transfer of learners' answers to its AI provider in its own data protection
+  arrangements, since answers go from the site straight to that provider (GDPR; Privacy API
+  metadata lists it).
+
+LMS Labs designed this option and documents it here, so moving to the site's own AI is a change
+the provider planned for, not a substantial modification by the deployer (Articles 3(23) and
+25(1)(b)). Provider to confirm in the technical documentation and conformity assessment that
+the own-AI option, with its model requirements, is part of the assessed system.
+
 ## 4. What the plugin does for each duty
 
 | Duty | Article | How Essay Grader supports it |
 |---|---|---|
 | Human oversight by design | 14 | Nothing reaches the gradebook until a grader approves it. The grader can change the mark and the feedback first |
+| Logs say which AI suggested | 12 | Every decision records the model: the LMS Labs model version, or `own-ai:<provider>` when the site grades on its own AI. Suggestion accuracy is split by the AI used |
 | Oversight from the dashboard | 14, 26(5) | The AI Essay Grader dashboard block (block_aigrader_dashboard 2.5.0) puts overdue essays first with how long they have waited, reminds graders that AI suggestions are drafts until approved, and shows when AI suggestions are paused. It shows no AI output and never changes a mark |
 | Guard against automation bias | 14(4)(b) | Minimum review time before Approve unlocks; acknowledgement step; review time logged per decision |
 | Understand and interpret the output | 14(4)(c), 86 | Per-criterion breakdown against confirmed criteria; the grader sees why each mark was suggested |
@@ -109,6 +129,9 @@ without human review, to rank or select learners, to detect cheating, or to prof
   approved, and in which direction. Quote those figures, for a period of at least a few hundred
   approvals, as the accuracy this site can expect.
 - It does not see diagrams, images or attachments in the response.
+- On the site's own AI (Bring your own API key), accuracy depends on the model chosen. Compare
+  it with LMS Labs in the Suggestion accuracy report, which splits results by the AI used,
+  before relying on it.
 
 **Human oversight.** Graders must read the learner's answer, not only the suggestion; change
 the mark and feedback whenever they do not match; and approve only what they would have

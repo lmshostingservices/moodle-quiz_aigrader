@@ -164,6 +164,12 @@ if ($ADMIN->fulltree) {
     // Transparency to learners and a site-wide pause, for the EU AI Act and good practice
     // anywhere. See \quiz_aigrader\local\transparency and docs/eu-ai-act.md.
     $settingspage->add(new admin_setting_heading(
+        'quiz_aigrader/byok_heading',
+        get_string('byok_heading', 'quiz_aigrader'),
+        \quiz_aigrader\local\byok::settings_html()
+    ));
+
+    $settingspage->add(new admin_setting_heading(
         'quiz_aigrader/responsibleai_heading',
         get_string('responsibleai_heading', 'quiz_aigrader'),
         get_string('responsibleai_heading_desc', 'quiz_aigrader')

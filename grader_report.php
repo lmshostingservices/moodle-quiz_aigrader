@@ -638,6 +638,7 @@ if (!$accuracy) {
     echo html_writer::start_tag('thead');
     echo html_writer::start_tag('tr', ['class' => 'aigrader-report-headrow']);
     echo html_writer::tag('th', get_string('accuracy_lang', 'quiz_aigrader'), ['class' => 'aigrader-report-th']);
+    echo html_writer::tag('th', get_string('accuracy_ai', 'quiz_aigrader'), ['class' => 'aigrader-report-th']);
     foreach (['accuracy_decisions', 'accuracy_avgdiff', 'accuracy_aihigher', 'accuracy_ailower'] as $key) {
         echo html_writer::tag('th', get_string($key, 'quiz_aigrader'), ['class' => 'aigrader-report-th aigrader-report-th-right']);
     }
@@ -647,6 +648,7 @@ if (!$accuracy) {
     foreach ($accuracy as $row) {
         echo html_writer::start_tag('tr');
         echo html_writer::tag('td', s($languages[$row['lang']] ?? $row['lang']), ['class' => 'aigrader-report-td']);
+        echo html_writer::tag('td', s(\quiz_aigrader\report\service::ai_label($row['ai'])), ['class' => 'aigrader-report-td']);
         echo html_writer::tag('td', $row['decisions'], ['class' => 'aigrader-report-td aigrader-report-td-right']);
         echo html_writer::tag(
             'td',

@@ -47,6 +47,27 @@ database tables, are declared through Moodle's Privacy API — see
 
 Service terms and privacy policy: https://lms-labs.com
 
+## Bring your own API key
+
+Universities and teams that already hold their own AI keys can grade essays on their own AI
+instead of LMS Labs credits:
+
+- **Price:** US$500 plus GST a year for the AI Essay Grader (Stripe yearly subscription), or the
+  All LMS Labs plugins plan. LMS Labs credits stay available for sites that would rather not
+  manage keys.
+- **How:** install AI Grader Central Config (`local_aiconfig` 1.1.0 or later), open
+  *Site administration > Plugins > Activity modules > Quiz > AI Essay Grader > Bring your own API
+  key* and press **Subscribe**. After payment the licence installs itself. In AI Grader Central
+  Config, set **Text** to Moodle AI or your own Anthropic, OpenAI or Google key.
+- **What changes:** essays are graded on the site with the same prompt, criteria rules and
+  feedback format as LMS Labs. The learner's answer goes from the site straight to your AI
+  provider, never through LMS Labs. No credits are used and the grading screen shows
+  *AI: Your own key*. Every decision records which AI made the suggestion, and the Suggestion
+  accuracy report compares your own AI with LMS Labs.
+- **Not included:** reference documents uploaded to LMS Labs are only used when grading on
+  credits.
+- **If the subscription lapses:** a 14-day grace period, then grading returns to LMS Labs credits.
+
 ## Installation
 
 Install as any other Moodle plugin, either from Moodle Marketplace (download the ZIP)

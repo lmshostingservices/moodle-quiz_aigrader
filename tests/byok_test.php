@@ -18,6 +18,7 @@ namespace quiz_aigrader;
 
 use quiz_aigrader\local\byok;
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\quiz_aigrader\local\byok::class)]
 /**
  * Tests for grading on the site's own AI (Bring your own AI).
  *
@@ -26,7 +27,6 @@ use quiz_aigrader\local\byok;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \quiz_aigrader\local\byok
  */
-#[\PHPUnit\Framework\Attributes\CoversClass(\quiz_aigrader\local\byok::class)]
 final class byok_test extends \advanced_testcase {
     /** @var array Requests the mocked provider received. */
     protected $requests = [];
@@ -82,6 +82,34 @@ final class byok_test extends \advanced_testcase {
         set_config('src_text', 'ownkey', 'local_aiconfig');
         unset_config('licencekey', 'local_aiconfig');
         $this->assertFalse(byok::enabled());
+    }
+
+    public function test_settings_panel_follows_the_licence(): void {
+        // Licensed, and text runs on the site's own key.
+        $this->assertSame('active', byok::state());
+        $html = byok::settings_html();
+        $this->assertStringContainsString('Using your own AI', $html);
+        $this->assertStringContainsString('/local/aiconfig/byok.php', $html);
+        $this->assertStringNotContainsString('plugin=quiz_aigrader', $html);
+
+        // Licensed, but text is on credits.
+        set_config('src_text', 'credits', 'local_aiconfig');
+        $this->assertSame('credits', byok::state());
+        $this->assertStringContainsString('Subscribed, using credits', byok::settings_html());
+
+        // No licence: the panel offers this plugin's own yearly subscription at its price.
+        unset_config('licencekey', 'local_aiconfig');
+        $this->assertSame('none', byok::state());
+        $html = byok::settings_html();
+        $this->assertStringContainsString('US$500 plus GST a year', $html);
+        $this->assertStringContainsString('plugin=quiz_aigrader', $html);
+        $this->assertSame(500, byok::PRICE_USD);
+    }
+
+    public function test_decision_record_names_the_own_ai(): void {
+        $this->assertSame('own-ai:anthropic', byok::model_label());
+        set_config('src_text', 'moodle', 'local_aiconfig');
+        $this->assertContains(byok::model_label(), ['own-ai:moodle', 'own-ai:credits']);
     }
 
     public function test_holistic_grade_returns_service_shape(): void {

@@ -117,11 +117,23 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/log', 'cor
      *
      * @param {Number} credits Credits remaining.
      * @param {Boolean} [isUnlimited] True for an unmetered site, which shows an infinity symbol.
+     * @param {Boolean} [byok] True when essays are graded on the site's own AI (no credits used).
      * @return {void}
      */
-    function updateCredits(credits, isUnlimited) {
+    function updateCredits(credits, isUnlimited, byok) {
         const badge = $('#aigrader-credits-badge');
         const count = $('#aigrader-credits-count');
+
+        // Bring your own API key: no credits are counted, so say whose AI is used instead.
+        if (byok) {
+            badge.find('.aigrader-credits-label').text(strings.byok_badge_label);
+            badge.find('.aigrader-credits-icon i').attr('class', 'fa-solid fa-key ag-icon-xs');
+            count.text(strings.byok_badge_value);
+            badge.removeClass('aigrader-credits-low aigrader-credits-empty')
+                .addClass('aigrader-credits-unlimited aigrader-credits-byok');
+            badge.attr('title', strings.byok_badge_title);
+            return;
+        }
 
         // Display "infinity" for unlimited credits
         if (isUnlimited || credits === -1) {
@@ -159,7 +171,7 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/log', 'cor
             log('Credits response:', resp);
 
             if (resp.ok) {
-                updateCredits(resp.credits, resp.isUnlimited);
+                updateCredits(resp.credits, resp.isUnlimited, resp.byok);
                 $('#aigrader-credits-badge').show();
             } else {
                 $('#aigrader-credits-badge').hide();
@@ -2317,7 +2329,10 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/log', 'cor
             {key: 'grading_complete_message', component: 'quiz_aigrader'},
             {key: 'learner_preview', component: 'quiz_aigrader'},
             {key: 'dismiss', component: 'quiz_aigrader'},
-            {key: 'grading_partial_message', component: 'quiz_aigrader'}
+            {key: 'grading_partial_message', component: 'quiz_aigrader'},
+            {key: 'byok_badge_label', component: 'quiz_aigrader'},
+            {key: 'byok_badge_value', component: 'quiz_aigrader'},
+            {key: 'byok_badge_title', component: 'quiz_aigrader'}
         ]).then(result => {
             // Assigned by name: the keys match the language strings, which are snake_case.
             [
@@ -2338,7 +2353,8 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/log', 'cor
                 'policy_not_applied', 'suggested_grade', 'feedback_to_learner', 'edit', 'save_changes',
                 'cancel', 'changes_saved', 'savedtogradebook', 'read_answer_first', 'status_pending',
                 'status_grading', 'status_graded', 'status_approved', 'status_manual', 'criteria_total',
-                'grading_complete_message', 'learner_preview', 'dismiss', 'grading_partial_message'
+                'grading_complete_message', 'learner_preview', 'dismiss', 'grading_partial_message',
+                'byok_badge_label', 'byok_badge_value', 'byok_badge_title'
             ].forEach((name, index) => {
                 strings[name] = result[index];
             });
