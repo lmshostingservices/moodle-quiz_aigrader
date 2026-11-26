@@ -1,5 +1,14 @@
 # Changelog
 
+## 5.1.0 - 2026-11-26
+
+### Added
+- **Bring your own AI key.** When the site has an LMS Labs BYOK licence and AI Connect (local_aiconfig 1.1.0 or later) sets Text to Moodle AI or an own key, essays are graded on the site itself with the same prompt, rubric rules and feedback format as LMS Labs credits. No credits are used, the credit balance shows as unlimited, and no Client Portal usage is reported for those grades. If the provider fails, the teacher sees a clear message and no credits are spent as a fallback.
+- Privacy metadata for the question and answer sent to the site's own AI provider.
+
+### Known limitation
+- Reference documents uploaded to LMS Labs are only used when grading on credits.
+
 ## 5.0.6 - 2026-11-17
 
 ### Fixed
