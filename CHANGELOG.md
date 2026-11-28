@@ -2,7 +2,7 @@
 
 ## 5.3.0 - 2026-11-24
 
-Version: `2026112600`. The screens are rebuilt on the Moodle Design System (MDS), finished in the
+Version: `2026112800`. The screens are rebuilt on the Moodle Design System (MDS), finished in the
 LMS Labs premium style. No database changes. Tested on Moodle 4.5, 5.1 and 5.3, light and dark.
 
 ## Added: bring your own API key
